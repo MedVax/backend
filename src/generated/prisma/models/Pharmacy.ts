@@ -210,7 +210,6 @@ export type PharmacyWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Pharmacy"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Pharmacy"> | Date | string
   owner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  stock?: Prisma.ProductStockListRelationFilter
   orders?: Prisma.OrderListRelationFilter
 }
 
@@ -225,7 +224,6 @@ export type PharmacyOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   owner?: Prisma.UserOrderByWithRelationInput
-  stock?: Prisma.ProductStockOrderByRelationAggregateInput
   orders?: Prisma.OrderOrderByRelationAggregateInput
 }
 
@@ -243,7 +241,6 @@ export type PharmacyWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Pharmacy"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Pharmacy"> | Date | string
   owner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  stock?: Prisma.ProductStockListRelationFilter
   orders?: Prisma.OrderListRelationFilter
 }, "id">
 
@@ -287,7 +284,6 @@ export type PharmacyCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   owner: Prisma.UserCreateNestedOneWithoutPharmaciesInput
-  stock?: Prisma.ProductStockCreateNestedManyWithoutPharmacyInput
   orders?: Prisma.OrderCreateNestedManyWithoutPharmacyInput
 }
 
@@ -301,7 +297,6 @@ export type PharmacyUncheckedCreateInput = {
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  stock?: Prisma.ProductStockUncheckedCreateNestedManyWithoutPharmacyInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutPharmacyInput
 }
 
@@ -315,7 +310,6 @@ export type PharmacyUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   owner?: Prisma.UserUpdateOneRequiredWithoutPharmaciesNestedInput
-  stock?: Prisma.ProductStockUpdateManyWithoutPharmacyNestedInput
   orders?: Prisma.OrderUpdateManyWithoutPharmacyNestedInput
 }
 
@@ -329,7 +323,6 @@ export type PharmacyUncheckedUpdateInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  stock?: Prisma.ProductStockUncheckedUpdateManyWithoutPharmacyNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutPharmacyNestedInput
 }
 
@@ -412,11 +405,6 @@ export type PharmacyMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
-export type PharmacyScalarRelationFilter = {
-  is?: Prisma.PharmacyWhereInput
-  isNot?: Prisma.PharmacyWhereInput
-}
-
 export type PharmacyNullableScalarRelationFilter = {
   is?: Prisma.PharmacyWhereInput | null
   isNot?: Prisma.PharmacyWhereInput | null
@@ -464,20 +452,6 @@ export type PharmacyUncheckedUpdateManyWithoutOwnerNestedInput = {
   deleteMany?: Prisma.PharmacyScalarWhereInput | Prisma.PharmacyScalarWhereInput[]
 }
 
-export type PharmacyCreateNestedOneWithoutStockInput = {
-  create?: Prisma.XOR<Prisma.PharmacyCreateWithoutStockInput, Prisma.PharmacyUncheckedCreateWithoutStockInput>
-  connectOrCreate?: Prisma.PharmacyCreateOrConnectWithoutStockInput
-  connect?: Prisma.PharmacyWhereUniqueInput
-}
-
-export type PharmacyUpdateOneRequiredWithoutStockNestedInput = {
-  create?: Prisma.XOR<Prisma.PharmacyCreateWithoutStockInput, Prisma.PharmacyUncheckedCreateWithoutStockInput>
-  connectOrCreate?: Prisma.PharmacyCreateOrConnectWithoutStockInput
-  upsert?: Prisma.PharmacyUpsertWithoutStockInput
-  connect?: Prisma.PharmacyWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.PharmacyUpdateToOneWithWhereWithoutStockInput, Prisma.PharmacyUpdateWithoutStockInput>, Prisma.PharmacyUncheckedUpdateWithoutStockInput>
-}
-
 export type PharmacyCreateNestedOneWithoutOrdersInput = {
   create?: Prisma.XOR<Prisma.PharmacyCreateWithoutOrdersInput, Prisma.PharmacyUncheckedCreateWithoutOrdersInput>
   connectOrCreate?: Prisma.PharmacyCreateOrConnectWithoutOrdersInput
@@ -503,7 +477,6 @@ export type PharmacyCreateWithoutOwnerInput = {
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  stock?: Prisma.ProductStockCreateNestedManyWithoutPharmacyInput
   orders?: Prisma.OrderCreateNestedManyWithoutPharmacyInput
 }
 
@@ -516,7 +489,6 @@ export type PharmacyUncheckedCreateWithoutOwnerInput = {
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  stock?: Prisma.ProductStockUncheckedCreateNestedManyWithoutPharmacyInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutPharmacyInput
 }
 
@@ -561,74 +533,6 @@ export type PharmacyScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Pharmacy"> | Date | string
 }
 
-export type PharmacyCreateWithoutStockInput = {
-  id?: string
-  name: string
-  address: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  phone?: string | null
-  email?: string | null
-  isActive?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  owner: Prisma.UserCreateNestedOneWithoutPharmaciesInput
-  orders?: Prisma.OrderCreateNestedManyWithoutPharmacyInput
-}
-
-export type PharmacyUncheckedCreateWithoutStockInput = {
-  id?: string
-  name: string
-  address: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  ownerUserId: string
-  phone?: string | null
-  email?: string | null
-  isActive?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutPharmacyInput
-}
-
-export type PharmacyCreateOrConnectWithoutStockInput = {
-  where: Prisma.PharmacyWhereUniqueInput
-  create: Prisma.XOR<Prisma.PharmacyCreateWithoutStockInput, Prisma.PharmacyUncheckedCreateWithoutStockInput>
-}
-
-export type PharmacyUpsertWithoutStockInput = {
-  update: Prisma.XOR<Prisma.PharmacyUpdateWithoutStockInput, Prisma.PharmacyUncheckedUpdateWithoutStockInput>
-  create: Prisma.XOR<Prisma.PharmacyCreateWithoutStockInput, Prisma.PharmacyUncheckedCreateWithoutStockInput>
-  where?: Prisma.PharmacyWhereInput
-}
-
-export type PharmacyUpdateToOneWithWhereWithoutStockInput = {
-  where?: Prisma.PharmacyWhereInput
-  data: Prisma.XOR<Prisma.PharmacyUpdateWithoutStockInput, Prisma.PharmacyUncheckedUpdateWithoutStockInput>
-}
-
-export type PharmacyUpdateWithoutStockInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  address?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  owner?: Prisma.UserUpdateOneRequiredWithoutPharmaciesNestedInput
-  orders?: Prisma.OrderUpdateManyWithoutPharmacyNestedInput
-}
-
-export type PharmacyUncheckedUpdateWithoutStockInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  address?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  ownerUserId?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  orders?: Prisma.OrderUncheckedUpdateManyWithoutPharmacyNestedInput
-}
-
 export type PharmacyCreateWithoutOrdersInput = {
   id?: string
   name: string
@@ -639,7 +543,6 @@ export type PharmacyCreateWithoutOrdersInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   owner: Prisma.UserCreateNestedOneWithoutPharmaciesInput
-  stock?: Prisma.ProductStockCreateNestedManyWithoutPharmacyInput
 }
 
 export type PharmacyUncheckedCreateWithoutOrdersInput = {
@@ -652,7 +555,6 @@ export type PharmacyUncheckedCreateWithoutOrdersInput = {
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  stock?: Prisma.ProductStockUncheckedCreateNestedManyWithoutPharmacyInput
 }
 
 export type PharmacyCreateOrConnectWithoutOrdersInput = {
@@ -681,7 +583,6 @@ export type PharmacyUpdateWithoutOrdersInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   owner?: Prisma.UserUpdateOneRequiredWithoutPharmaciesNestedInput
-  stock?: Prisma.ProductStockUpdateManyWithoutPharmacyNestedInput
 }
 
 export type PharmacyUncheckedUpdateWithoutOrdersInput = {
@@ -694,7 +595,6 @@ export type PharmacyUncheckedUpdateWithoutOrdersInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  stock?: Prisma.ProductStockUncheckedUpdateManyWithoutPharmacyNestedInput
 }
 
 export type PharmacyCreateManyOwnerInput = {
@@ -717,7 +617,6 @@ export type PharmacyUpdateWithoutOwnerInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  stock?: Prisma.ProductStockUpdateManyWithoutPharmacyNestedInput
   orders?: Prisma.OrderUpdateManyWithoutPharmacyNestedInput
 }
 
@@ -730,7 +629,6 @@ export type PharmacyUncheckedUpdateWithoutOwnerInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  stock?: Prisma.ProductStockUncheckedUpdateManyWithoutPharmacyNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutPharmacyNestedInput
 }
 
@@ -751,12 +649,10 @@ export type PharmacyUncheckedUpdateManyWithoutOwnerInput = {
  */
 
 export type PharmacyCountOutputType = {
-  stock: number
   orders: number
 }
 
 export type PharmacyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  stock?: boolean | PharmacyCountOutputTypeCountStockArgs
   orders?: boolean | PharmacyCountOutputTypeCountOrdersArgs
 }
 
@@ -768,13 +664,6 @@ export type PharmacyCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Ext
    * Select specific fields to fetch from the PharmacyCountOutputType
    */
   select?: Prisma.PharmacyCountOutputTypeSelect<ExtArgs> | null
-}
-
-/**
- * PharmacyCountOutputType without action
- */
-export type PharmacyCountOutputTypeCountStockArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.ProductStockWhereInput
 }
 
 /**
@@ -796,7 +685,6 @@ export type PharmacySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   createdAt?: boolean
   updatedAt?: boolean
   owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  stock?: boolean | Prisma.Pharmacy$stockArgs<ExtArgs>
   orders?: boolean | Prisma.Pharmacy$ordersArgs<ExtArgs>
   _count?: boolean | Prisma.PharmacyCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["pharmacy"]>
@@ -842,7 +730,6 @@ export type PharmacySelectScalar = {
 export type PharmacyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "address" | "ownerUserId" | "phone" | "email" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["pharmacy"]>
 export type PharmacyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  stock?: boolean | Prisma.Pharmacy$stockArgs<ExtArgs>
   orders?: boolean | Prisma.Pharmacy$ordersArgs<ExtArgs>
   _count?: boolean | Prisma.PharmacyCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -857,7 +744,6 @@ export type $PharmacyPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   name: "Pharmacy"
   objects: {
     owner: Prisma.$UserPayload<ExtArgs>
-    stock: Prisma.$ProductStockPayload<ExtArgs>[]
     orders: Prisma.$OrderPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -1265,7 +1151,6 @@ readonly fields: PharmacyFieldRefs;
 export interface Prisma__PharmacyClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   owner<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  stock<T extends Prisma.Pharmacy$stockArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Pharmacy$stockArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProductStockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   orders<T extends Prisma.Pharmacy$ordersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Pharmacy$ordersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1698,30 +1583,6 @@ export type PharmacyDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Limit how many Pharmacies to delete.
    */
   limit?: number
-}
-
-/**
- * Pharmacy.stock
- */
-export type Pharmacy$stockArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the ProductStock
-   */
-  select?: Prisma.ProductStockSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the ProductStock
-   */
-  omit?: Prisma.ProductStockOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.ProductStockInclude<ExtArgs> | null
-  where?: Prisma.ProductStockWhereInput
-  orderBy?: Prisma.ProductStockOrderByWithRelationInput | Prisma.ProductStockOrderByWithRelationInput[]
-  cursor?: Prisma.ProductStockWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.ProductStockScalarFieldEnum | Prisma.ProductStockScalarFieldEnum[]
 }
 
 /**

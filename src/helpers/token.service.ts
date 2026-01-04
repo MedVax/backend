@@ -3,8 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import {
   JWT_RESET_PASSWORD_EXPIRATION,
   JWT_RESET_PASSWORD_SECRET,
-  JWT_USER_INVITATION_EXPIRATION,
-  JWT_USER_INVITATION_SECRET,
 } from 'constants/env.constant';
 import { RedisService } from './redis.service';
 
@@ -21,10 +19,6 @@ export enum TokenPurpose {
 }
 
 const TokenSecretsByPurpose = {
-  [TokenPurpose.UserOnboarding]: {
-    secret: JWT_USER_INVITATION_SECRET,
-    expiration: JWT_USER_INVITATION_EXPIRATION,
-  },
   [TokenPurpose.PasswordReset]: {
     secret: JWT_RESET_PASSWORD_SECRET,
     expiration: JWT_RESET_PASSWORD_EXPIRATION,

@@ -8,6 +8,7 @@ import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.serv
 import { CreateOrderDto } from '../dtos/create-order.dto';
 import { UpdateOrderStatusDto } from '../dtos/update-order-status.dto';
 import { PaystackService } from 'modules/services/paystack-service';
+import { StockService } from 'modules/stock/services/stock.service';
 import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
 import type { Order, PaymentStatus } from 'generated/prisma/client';
 import { randomUUID } from 'crypto';
@@ -19,6 +20,7 @@ export class OrdersService {
   constructor(
     private prismaService: PrismaTenancyService,
     private paystackService: PaystackService,
+    private stockService: StockService,
   ) {}
 
   async create(userId: string, dto: CreateOrderDto) {
@@ -28,11 +30,7 @@ export class OrdersService {
       include: {
         items: {
           include: {
-            product: {
-              include: {
-                stock: true,
-              },
-            },
+            product: true,
           },
         },
       },
@@ -64,7 +62,7 @@ export class OrdersService {
       }
     }
 
-    // Calculate total and validate stock
+    // Calculate total
     let totalAmount = 0;
     const orderItems = [];
 
@@ -73,16 +71,16 @@ export class OrdersService {
       const itemTotal = product.price * item.quantity;
       totalAmount += itemTotal;
 
-      // Check stock availability if pharmacy is specified
-      if (dto.pharmacyId) {
-        const stock = product.stock.find(
-          (s) => s.pharmacyId === dto.pharmacyId,
+      // Validate stock availability
+      const stockValidation = await this.stockService.validateStock([
+        { productId: product.id, quantity: item.quantity },
+      ]);
+
+      const validation = stockValidation[0];
+      if (validation.available < validation.requested) {
+        throw new BadRequestException(
+          `Insufficient stock for product ${product.name}. Available: ${validation.available}, Requested: ${validation.requested}`,
         );
-        if (!stock || stock.quantity < item.quantity) {
-          throw new BadRequestException(
-            `Insufficient stock for product ${product.name}`,
-          );
-        }
       }
 
       orderItems.push({
@@ -92,60 +90,102 @@ export class OrdersService {
       });
     }
 
-    // Create order
+    // Reserve stock for all items
     const orderReference = `ORD-${Date.now()}-${randomUUID().split('-')[0]}`;
 
-    const order = await this.prismaService.tenancy.$transaction(async (tx) => {
-      const created = await tx.order.create({
-        data: {
-          userId,
-          pharmacyId: dto.pharmacyId,
-          deliveryAddressId: dto.deliveryAddressId,
-          totalAmount,
-          currency: 'NGN',
-          paymentStatus: 'PENDING',
-          orderStatus: 'PENDING',
-          prescriptionStatus: requiresPrescription ? 'PENDING' : null,
-          notes: dto.notes,
-          items: {
-            create: orderItems,
-          },
-        },
-        include: {
-          items: {
-            include: {
-              product: true,
+    for (const item of orderItems) {
+      await this.stockService.reserveStock(
+        item.productId,
+        item.quantity,
+        orderReference,
+        `Reserve for order creation`,
+      );
+    }
+
+    let order;
+    try {
+      order = await this.prismaService.tenancy.$transaction(async (tx) => {
+        const created = await tx.order.create({
+          data: {
+            userId,
+            pharmacyId: dto.pharmacyId,
+            deliveryAddressId: dto.deliveryAddressId,
+            totalAmount,
+            currency: 'NGN',
+            paymentStatus: 'PENDING',
+            orderStatus: 'PENDING',
+            prescriptionStatus: requiresPrescription ? 'PENDING' : null,
+            notes: dto.notes,
+            items: {
+              create: orderItems,
             },
           },
-          deliveryAddress: true,
-          pharmacy: true,
-        },
-      });
-
-      // Create prescriptions if provided
-      if (dto.prescriptionUploads && dto.prescriptionUploads.length > 0) {
-        await Promise.all(
-          dto.prescriptionUploads.map((url) =>
-            tx.prescription.create({
-              data: {
-                orderId: created.id,
-                userId,
-                uploadedBy: userId,
-                fileUrl: url,
-                status: 'PENDING',
+          include: {
+            items: {
+              include: {
+                product: true,
               },
-            }),
-          ),
-        );
-      }
+            },
+            deliveryAddress: true,
+            pharmacy: true,
+          },
+        });
 
-      // Clear cart after order creation
-      await tx.cartItem.deleteMany({
-        where: { cartId: cart.id },
+        // Create prescriptions if provided
+        if (dto.prescriptionUploads && dto.prescriptionUploads.length > 0) {
+          await Promise.all(
+            dto.prescriptionUploads.map((url) =>
+              tx.prescription.create({
+                data: {
+                  orderId: created.id,
+                  userId,
+                  uploadedBy: userId,
+                  fileUrl: url,
+                  status: 'PENDING',
+                },
+              }),
+            ),
+          );
+        }
+
+        // Update stock movements with actual order ID
+        await tx.stockMovement.updateMany({
+          where: {
+            orderId: null,
+            productId: { in: orderItems.map((i) => i.productId) },
+            createdAt: { gte: new Date(Date.now() - 5000) }, // Last 5 seconds
+          },
+          data: {
+            orderId: created.id,
+            reason: `Reserve for order ${created.id}`,
+          },
+        });
+
+        // Clear cart after order creation
+        await tx.cartItem.deleteMany({
+          where: { cartId: cart.id },
+        });
+
+        return created;
       });
-
-      return created;
-    });
+    } catch (error) {
+      // Release reserved stock if order creation fails
+      for (const item of orderItems) {
+        try {
+          await this.stockService.releaseStock(
+            item.productId,
+            item.quantity,
+            orderReference,
+            `Release due to order creation failure`,
+          );
+        } catch (releaseError) {
+          this.logger.error(
+            `Failed to release stock for product ${item.productId}: ${releaseError.message}`,
+          );
+        }
+      }
+      throw error;
+    }
 
     // Initialize payment
     if (dto.paymentMethod === 'paystack') {
@@ -299,7 +339,6 @@ export class OrdersService {
             product: {
               include: {
                 category: true,
-                stock: true,
               },
             },
           },
@@ -335,9 +374,53 @@ export class OrdersService {
     }
 
     const updateData: any = {};
+    const previousStatus = order.orderStatus;
 
     if (dto.orderStatus) {
       updateData.orderStatus = dto.orderStatus;
+
+      // Handle stock commitment when order is accepted/processing
+      if (
+        (dto.orderStatus === 'ACCEPTED' || dto.orderStatus === 'PROCESSING') &&
+        previousStatus === 'PENDING'
+      ) {
+        // Commit reserved stock
+        for (const item of order.items) {
+          await this.stockService.commitStock(
+            item.productId,
+            item.quantity,
+            order.id,
+            `Commit stock for order ${order.id} - ${dto.orderStatus}`,
+          );
+        }
+      }
+
+      // Handle stock release when order is cancelled
+      if (
+        dto.orderStatus === 'CANCELED' &&
+        (previousStatus === 'PENDING' ||
+          previousStatus === 'ACCEPTED' ||
+          previousStatus === 'PROCESSING')
+      ) {
+        for (const item of order.items) {
+          if (previousStatus === 'PENDING') {
+            // Just release reserved stock
+            await this.stockService.releaseStock(
+              item.productId,
+              item.quantity,
+              order.id,
+              `Release reserved stock for cancelled order ${order.id}`,
+            );
+          } else {
+            // Restore committed stock
+            await this.stockService.adjustStock(
+              item.productId,
+              item.quantity,
+              `Restore stock from cancelled order ${order.id}`,
+            );
+          }
+        }
+      }
     }
 
     if (dto.paymentStatus) {

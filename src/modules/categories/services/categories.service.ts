@@ -7,12 +7,27 @@ import {
 import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.service';
 import { CreateCategoryDto } from '../dtos/create-category.dto';
 import { UpdateCategoryDto } from '../dtos/update-category.dto';
+import { RedisService } from 'services/redis.service';
+
+// Cache configuration
+const CACHE_TTL = 3600; // 1 hour
+const CACHE_PREFIX = {
+  CATEGORY: 'category:',
+  CATEGORY_BY_ID: 'category:id:',
+  CATEGORY_BY_SLUG: 'category:slug:',
+  CATEGORY_LIST: 'category:list:',
+  CATEGORY_HIERARCHY: 'category:hierarchy:',
+  CATEGORY_PARENT: 'category:parent:',
+};
 
 @Injectable()
 export class CategoriesService {
   private logger = new Logger(CategoriesService.name);
 
-  constructor(private prismaService: PrismaTenancyService) {}
+  constructor(
+    private prismaService: PrismaTenancyService,
+    private redisService: RedisService,
+  ) {}
 
   async create(dto: CreateCategoryDto) {
     // Check if slug already exists
@@ -39,7 +54,7 @@ export class CategoriesService {
       }
     }
 
-    return await this.prismaService.tenancy.category.create({
+    const category = await this.prismaService.tenancy.category.create({
       data: dto,
       include: {
         parent: {
@@ -64,12 +79,30 @@ export class CategoriesService {
         },
       },
     });
+
+    // Invalidate cache after creation
+    await this.invalidateListCaches();
+
+    return category;
   }
 
   async findAll(includeSubcategories = false) {
+    // Generate cache key
+    const cacheKey = `${CACHE_PREFIX.CATEGORY_LIST}includeSubcategories:${includeSubcategories}`;
+
+    // Check Redis cache first
+    const cached = await this.redisService.get<any>(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for category list: ${cacheKey}`);
+      return cached;
+    }
+
+    // Cache miss - fetch from database
+    this.logger.debug(`Cache miss for category list: ${cacheKey}`);
+
     const where = includeSubcategories ? {} : { parentId: null };
 
-    return await this.prismaService.tenancy.category.findMany({
+    const categories = await this.prismaService.tenancy.category.findMany({
       where,
       include: {
         parent: {
@@ -102,10 +135,27 @@ export class CategoriesService {
         name: 'asc',
       },
     });
+
+    // Cache the result
+    await this.redisService.set(cacheKey, categories, CACHE_TTL);
+
+    return categories;
   }
 
   async findAllWithHierarchy() {
-    return await this.prismaService.tenancy.category.findMany({
+    const cacheKey = CACHE_PREFIX.CATEGORY_HIERARCHY;
+
+    // Check Redis cache first
+    const cached = await this.redisService.get<any>(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for category hierarchy: ${cacheKey}`);
+      return cached;
+    }
+
+    // Cache miss - fetch from database
+    this.logger.debug(`Cache miss for category hierarchy: ${cacheKey}`);
+
+    const categories = await this.prismaService.tenancy.category.findMany({
       include: {
         parent: {
           select: {
@@ -132,9 +182,27 @@ export class CategoriesService {
       },
       orderBy: [{ parentId: 'asc' }, { name: 'asc' }],
     });
+
+    // Cache the result
+    await this.redisService.set(cacheKey, categories, CACHE_TTL);
+
+    return categories;
   }
 
   async findByParent(parentId: string) {
+    // Generate cache key
+    const cacheKey = `${CACHE_PREFIX.CATEGORY_PARENT}${parentId}`;
+
+    // Check Redis cache first
+    const cached = await this.redisService.get<any>(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for category parent: ${cacheKey}`);
+      return cached;
+    }
+
+    // Cache miss - fetch from database
+    this.logger.debug(`Cache miss for category parent: ${cacheKey}`);
+
     const parent = await this.prismaService.tenancy.category.findUnique({
       where: { id: parentId },
     });
@@ -145,7 +213,7 @@ export class CategoriesService {
       );
     }
 
-    return this.prismaService.tenancy.category.findMany({
+    const subcategories = await this.prismaService.tenancy.category.findMany({
       where: { parentId },
       include: {
         _count: {
@@ -158,9 +226,26 @@ export class CategoriesService {
         name: 'asc',
       },
     });
+
+    // Cache the result
+    await this.redisService.set(cacheKey, subcategories, CACHE_TTL);
+
+    return subcategories;
   }
 
   async findOne(id: string) {
+    const cacheKey = `${CACHE_PREFIX.CATEGORY_BY_ID}${id}`;
+
+    // Check Redis cache first
+    const cached = await this.redisService.get<any>(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for category: ${id}`);
+      return cached;
+    }
+
+    // Cache miss - fetch from database
+    this.logger.debug(`Cache miss for category: ${id}`);
+
     const category = await this.prismaService.tenancy.category.findUnique({
       where: { id },
       include: {
@@ -199,10 +284,25 @@ export class CategoriesService {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
 
+    // Cache the result
+    await this.redisService.set(cacheKey, category, CACHE_TTL);
+
     return category;
   }
 
   async findBySlug(slug: string) {
+    const cacheKey = `${CACHE_PREFIX.CATEGORY_BY_SLUG}${slug}`;
+
+    // Check Redis cache first
+    const cached = await this.redisService.get<any>(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for category slug: ${slug}`);
+      return cached;
+    }
+
+    // Cache miss - fetch from database
+    this.logger.debug(`Cache miss for category slug: ${slug}`);
+
     const category = await this.prismaService.tenancy.category.findUnique({
       where: { slug },
       include: {
@@ -240,11 +340,19 @@ export class CategoriesService {
       throw new NotFoundException(`Category with slug ${slug} not found`);
     }
 
+    // Cache the result (cache by both slug and ID)
+    await this.redisService.set(cacheKey, category, CACHE_TTL);
+    await this.redisService.set(
+      `${CACHE_PREFIX.CATEGORY_BY_ID}${category.id}`,
+      category,
+      CACHE_TTL,
+    );
+
     return category;
   }
 
   async update(id: string, dto: UpdateCategoryDto) {
-    await this.findOne(id); // Check if exists
+    const existing = await this.findOne(id); // Check if exists and get existing category
 
     // Prevent circular reference - can't set parent to self or any descendant
     if (dto.parentId) {
@@ -287,19 +395,21 @@ export class CategoriesService {
     }
 
     // If slug is being updated, check for conflicts
-    if (dto.slug) {
-      const existing = await this.prismaService.tenancy.category.findUnique({
-        where: { slug: dto.slug },
-      });
+    if (dto.slug && dto.slug !== existing.slug) {
+      const slugConflict = await this.prismaService.tenancy.category.findUnique(
+        {
+          where: { slug: dto.slug },
+        },
+      );
 
-      if (existing && existing.id !== id) {
+      if (slugConflict && slugConflict.id !== id) {
         throw new BadRequestException(
           `Category with slug ${dto.slug} already exists`,
         );
       }
     }
 
-    return await this.prismaService.tenancy.category.update({
+    const category = await this.prismaService.tenancy.category.update({
       where: { id },
       data: dto,
       include: {
@@ -325,10 +435,23 @@ export class CategoriesService {
         },
       },
     });
+
+    // Invalidate cache for this category and related caches
+    // If slug changed, invalidate old slug cache too
+    const oldSlug = existing.slug !== category.slug ? existing.slug : undefined;
+    await this.invalidateCategoryCache(id, oldSlug || category.slug);
+    if (oldSlug && oldSlug !== category.slug) {
+      await this.redisService.delete(
+        `${CACHE_PREFIX.CATEGORY_BY_SLUG}${oldSlug}`,
+      );
+    }
+    await this.invalidateListCaches();
+
+    return category;
   }
 
   async remove(id: string) {
-    const category = await this.findOne(id); // Check if exists
+    const category = await this.findOne(id); // Check if exists and get category with counts
 
     // Check if category has products
     if (category._count.products > 0) {
@@ -344,8 +467,47 @@ export class CategoriesService {
       );
     }
 
-    return this.prismaService.tenancy.category.delete({
+    const deleted = await this.prismaService.tenancy.category.delete({
       where: { id },
     });
+
+    // Invalidate cache for this category and related caches
+    await this.invalidateCategoryCache(id, category.slug);
+    await this.invalidateListCaches();
+
+    return deleted;
+  }
+
+  /**
+   * Cache helper methods
+   */
+  private async invalidateCategoryCache(id: string, slug?: string) {
+    try {
+      await this.redisService.delete(`${CACHE_PREFIX.CATEGORY_BY_ID}${id}`);
+      if (slug) {
+        await this.redisService.delete(
+          `${CACHE_PREFIX.CATEGORY_BY_SLUG}${slug}`,
+        );
+      }
+      this.logger.debug(`Invalidated cache for category: ${id}`);
+    } catch (error) {
+      this.logger.error(`Error invalidating category cache for ${id}:`, error);
+    }
+  }
+
+  private async invalidateListCaches() {
+    try {
+      // Delete all list and hierarchy cache keys
+      await Promise.all([
+        this.redisService.deleteByPattern(`${CACHE_PREFIX.CATEGORY_LIST}*`),
+        this.redisService.deleteByPattern(
+          `${CACHE_PREFIX.CATEGORY_HIERARCHY}*`,
+        ),
+        this.redisService.deleteByPattern(`${CACHE_PREFIX.CATEGORY_PARENT}*`),
+      ]);
+      this.logger.debug('Invalidated category list and hierarchy caches');
+    } catch (error) {
+      this.logger.error('Error invalidating category list caches:', error);
+    }
   }
 }

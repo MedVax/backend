@@ -76,3 +76,14 @@ export const ProductType = {
 } as const
 
 export type ProductType = (typeof ProductType)[keyof typeof ProductType]
+
+
+export const StockMovementType = {
+  RESERVE: 'RESERVE',
+  COMMIT: 'COMMIT',
+  RELEASE: 'RELEASE',
+  ADJUSTMENT: 'ADJUSTMENT',
+  RECONCILIATION: 'RECONCILIATION'
+} as const
+
+export type StockMovementType = (typeof StockMovementType)[keyof typeof StockMovementType]

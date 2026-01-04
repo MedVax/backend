@@ -136,6 +136,14 @@ enum ProductType {
   POM
 }
 
+enum StockMovementType {
+  RESERVE
+  COMMIT
+  RELEASE
+  ADJUSTMENT
+  RECONCILIATION
+}
+
 model Category {
   id          String     @id @default(uuid())
   name        String
@@ -153,25 +161,27 @@ model Category {
 }
 
 model Product {
-  id                   String      @id @default(uuid())
+  id                   String          @id @default(uuid())
   name                 String
-  sku                  String      @unique
+  sku                  String          @unique
   description          String?
   price                Int // in minor currency units (kobo/cents)
-  currency             String      @default("NGN")
-  requiresPrescription Boolean     @default(false)
-  productType          ProductType @default(OTC)
+  currency             String          @default("NGN")
+  requiresPrescription Boolean         @default(false)
+  productType          ProductType     @default(OTC)
   categoryId           String?
-  category             Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  images               String[]    @default([])
-  isActive             Boolean     @default(true)
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
-
-  stock         ProductStock[]
-  cartItems     CartItem[]
-  orderItems    OrderItem[]
-  subscriptions Subscription[]
+  category             Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images               String[]        @default([])
+  isActive             Boolean         @default(true)
+  stockQuantity        Int             @default(0)
+  stockReserved        Int             @default(0)
+  version              Int             @default(0)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  cartItems            CartItem[]
+  orderItems           OrderItem[]
+  subscriptions        Subscription[]
+  stockMovements       StockMovement[]
 
   @@index([sku])
   @@index([categoryId])
@@ -190,25 +200,10 @@ model Pharmacy {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  stock  ProductStock[]
   orders Order[]
 
   @@index([ownerUserId])
   @@index([isActive])
-}
-
-model ProductStock {
-  id         String   @id @default(uuid())
-  productId  String
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  pharmacyId String
-  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
-  quantity   Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@unique([productId, pharmacyId])
-  @@index([pharmacyId])
 }
 
 model Address {
@@ -351,4 +346,26 @@ model Subscription {
   @@index([userId])
   @@index([isActive])
   @@index([nextRunDate])
+}
+
+model StockMovement {
+  id             String            @id @default(uuid())
+  productId      String
+  product        Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type           StockMovementType
+  quantity       Int // positive for additions, negative for deductions
+  reservedBefore Int? // snapshot for audit
+  reservedAfter  Int?
+  quantityBefore Int // snapshot for audit
+  quantityAfter  Int
+  orderId        String? // reference to order if applicable
+  reason         String? // description of movement (e.g., "Order #123", "Manual adjustment")
+  createdBy      String? // user/system that created this movement
+  createdAt      DateTime          @default(now())
+  // Append-only table - no updates or deletes allowed at DB level
+
+  @@index([productId])
+  @@index([orderId])
+  @@index([createdAt])
+  @@index([type])
 }

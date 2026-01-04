@@ -63,13 +63,7 @@ export class AuthController {
   @Post('logout')
   @AuthAllow()
   @Response({ status: HttpStatus.OK, message: 'Logged out successful' })
-  logout(
-    @AuthUser() user: User,
-    @Headers('authorization') authorization: Headers,
-  ) {
-    return this.authService.logout(
-      user,
-      authorization.get('authorization')?.split(' ')[1] || '',
-    );
+  logout(@AuthUser() user: User) {
+    return this.authService.logout(user);
   }
 }

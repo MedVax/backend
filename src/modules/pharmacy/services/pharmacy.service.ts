@@ -31,7 +31,6 @@ export class PharmacyService {
         },
         _count: {
           select: {
-            stock: true,
             orders: true,
           },
         },
@@ -53,7 +52,6 @@ export class PharmacyService {
         },
         _count: {
           select: {
-            stock: true,
             orders: true,
           },
         },
@@ -73,11 +71,6 @@ export class PharmacyService {
             email: true,
           },
         },
-        stock: {
-          include: {
-            product: true,
-          },
-        },
         orders: {
           take: 10,
           orderBy: {
@@ -86,7 +79,6 @@ export class PharmacyService {
         },
         _count: {
           select: {
-            stock: true,
             orders: true,
           },
         },
@@ -106,7 +98,6 @@ export class PharmacyService {
       include: {
         _count: {
           select: {
-            stock: true,
             orders: true,
           },
         },

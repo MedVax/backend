@@ -23,11 +23,6 @@ export class CartService {
             product: {
               include: {
                 category: true,
-                stock: {
-                  include: {
-                    pharmacy: true,
-                  },
-                },
               },
             },
           },
@@ -44,11 +39,6 @@ export class CartService {
               product: {
                 include: {
                   category: true,
-                  stock: {
-                    include: {
-                      pharmacy: true,
-                    },
-                  },
                 },
               },
             },
@@ -103,11 +93,6 @@ export class CartService {
           product: {
             include: {
               category: true,
-              stock: {
-                include: {
-                  pharmacy: true,
-                },
-              },
             },
           },
         },
@@ -125,11 +110,6 @@ export class CartService {
         product: {
           include: {
             category: true,
-            stock: {
-              include: {
-                pharmacy: true,
-              },
-            },
           },
         },
       },
@@ -157,11 +137,6 @@ export class CartService {
         product: {
           include: {
             category: true,
-            stock: {
-              include: {
-                pharmacy: true,
-              },
-            },
           },
         },
       },

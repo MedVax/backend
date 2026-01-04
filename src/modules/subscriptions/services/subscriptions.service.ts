@@ -97,7 +97,6 @@ export class SubscriptionsService {
           product: {
             include: {
               category: true,
-              stock: true,
             },
           },
           user: {

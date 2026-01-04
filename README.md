@@ -57,6 +57,20 @@ $ yarn run test:e2e
 $ yarn run test:cov
 ```
 
+## Create Migration
+
+```bash
+# Create a new migration
+$ yarn create-migration
+```
+
+## Run migration
+
+```bash
+# Create a new migration
+$ yarn run-migrations
+```
+
 ## Seed
 
 ```bash

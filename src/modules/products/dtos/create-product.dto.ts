@@ -4,24 +4,10 @@ import {
   IsNumber,
   IsBoolean,
   IsOptional,
-  IsArray,
   IsEnum,
   Min,
-  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ProductType } from 'generated/prisma/enums';
-
-export class ProductStockDto {
-  @ApiProperty({ example: 'pharmacy-uuid' })
-  @IsString()
-  pharmacyId: string;
-
-  @ApiProperty({ example: 100 })
-  @IsNumber()
-  @Min(0)
-  quantity: number;
-}
 
 export class CreateProductDto {
   @ApiProperty({ example: 'Emergency Contraceptive' })
@@ -61,23 +47,4 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   categoryId?: string;
-
-  @ApiPropertyOptional({
-    example: ['https://example.com/image1.jpg'],
-    type: [String],
-  })
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  images?: string[];
-
-  @ApiPropertyOptional({
-    type: [ProductStockDto],
-    description: 'Stock quantities per pharmacy',
-  })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ProductStockDto)
-  @IsOptional()
-  stock?: ProductStockDto[];
 }

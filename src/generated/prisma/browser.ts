@@ -57,11 +57,6 @@ export type Product = Prisma.ProductModel
  */
 export type Pharmacy = Prisma.PharmacyModel
 /**
- * Model ProductStock
- * 
- */
-export type ProductStock = Prisma.ProductStockModel
-/**
  * Model Address
  * 
  */
@@ -96,3 +91,8 @@ export type Prescription = Prisma.PrescriptionModel
  * 
  */
 export type Subscription = Prisma.SubscriptionModel
+/**
+ * Model StockMovement
+ * 
+ */
+export type StockMovement = Prisma.StockMovementModel

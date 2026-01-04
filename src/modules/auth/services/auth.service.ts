@@ -79,11 +79,10 @@ export class AuthService {
       accessToken,
     };
 
-    await this.redisService.set(
-      `token:${accessToken}:userId:${user.id}`,
-      { userId: user.id, ...tokenPayload },
-      JWT_EXPIRATION,
-    );
+    await this.redisService.set(`access-token:userId:${user.id}`, {
+      userId: user.id,
+      ...tokenPayload,
+    });
 
     return tokenPayload;
   }
@@ -129,6 +128,13 @@ export class AuthService {
       true,
       user,
     );
+
+    await this.redisService.set(`access-token:userId:${user.id}`, {
+      userId: user.id,
+      accessToken,
+      expiresIn,
+      refreshToken,
+    });
 
     return {
       accessToken,
@@ -290,16 +296,16 @@ export class AuthService {
     return { token };
   }
 
-  async logout(user: User, accessToken: string) {
+  async logout(user: User) {
     const tokenPayload = await this.redisService.get<TokenPayloadDto>(
-      `token:${accessToken}:userId:${user.id}`,
+      `access-token:userId:${user.id}`,
     );
 
     if (!tokenPayload) {
       throw new BadRequestException('Invalid token');
     }
 
-    await this.redisService.delete(`token:${accessToken}:userId:${user.id}`);
+    await this.redisService.delete(`access-token:userId:${user.id}`);
 
     return null;
   }

@@ -23,6 +23,8 @@ async function bootstrap() {
   });
   const logger = app.get(Logger);
   app.useBodyParser('json', { limit: '10mb' });
+  // Configure body parser for file uploads
+  app.useBodyParser('urlencoded', { extended: true, limit: '10mb' });
   app.use(compression());
 
   // logger

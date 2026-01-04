@@ -4,20 +4,27 @@ import {
   Post,
   Body,
   Patch,
+  Put,
   Param,
   Delete,
   Query,
   HttpStatus,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
+
 import { ProductsService } from '../services/products.service';
 import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
 import { GetProductsFilterQuery } from '../dtos/get-products-filter-query.dto';
 import { Response } from 'metadatas/response.metadata';
-import { AuthUser } from 'params/auth-user.param';
-import type { User } from 'generated/prisma/client';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { QueryFilter } from 'params/query-filter';
 import { QueryOptions } from 'params/query-options';
@@ -25,6 +32,13 @@ import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
 import { UserType } from 'generated/prisma/enums';
 import { PermissionsGuard } from 'src/guards/permission.guard';
 import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.service';
+import { ImageValidationPipe } from 'pipes/image-validation.pipe';
+import { MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES } from 'utils/image-upload.util';
+import { CreateProductBodySchema } from '../doc/create-product-body.schema';
+import { UpdateProductBodySchema } from '../doc/update-product-body.schema';
+import { ReplaceProductBodySchema } from '../doc/replace-product-body.schema';
+import { UploadImagesBodySchema } from '../doc/upload-images-body.schema';
+import { UploadSingleImageBodySchema } from '../doc/upload-single-image-body.schema';
 
 @Controller('products')
 @ApiTags('Products')
@@ -37,13 +51,145 @@ export class ProductsController {
 
   @Post()
   @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      limits: {
+        fileSize: MAX_IMAGE_SIZE,
+      },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error(
+              `Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody(CreateProductBodySchema)
   @Response({
     status: HttpStatus.CREATED,
     message: 'Product created successfully',
   })
-  @ApiOperation({ summary: 'Create a new product (Admin only)' })
-  create(@Body() dto: CreateProductDto, @AuthUser() user: User) {
-    return this.productsService.create(dto, user.id);
+  @ApiOperation({
+    summary: 'Create a new product with optional images (Admin only)',
+    description:
+      'Create a product with optional image uploads. Images can be uploaded during creation or separately using the upload endpoint.',
+  })
+  async create(
+    @Body() body: CreateProductDto,
+    @UploadedFiles(
+      new ParseFilePipe({
+        fileIsRequired: false,
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
+          new FileTypeValidator({ fileType: /(jpeg|jpg|png|webp|gif)/ }),
+        ],
+      }),
+      new ImageValidationPipe(),
+    )
+    files?: Express.Multer.File[],
+  ) {
+    return this.productsService.create(body, files);
+  }
+
+  @Patch(':id')
+  @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      limits: {
+        fileSize: MAX_IMAGE_SIZE,
+      },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error(
+              `Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody(UpdateProductBodySchema)
+  @Response({ status: HttpStatus.OK, message: 'Product updated successfully' })
+  @ApiOperation({
+    summary: 'Update a product with optional images (Admin only)',
+    description:
+      'Update a product. Can upload new images (which will be added to existing images), or update other product fields. Supports both multipart/form-data and application/json.',
+  })
+  async update(
+    @Param('id') id: string,
+    @Body() body: UpdateProductDto,
+    @UploadedFiles(
+      new ParseFilePipe({
+        fileIsRequired: false,
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
+          new FileTypeValidator({ fileType: /(jpeg|jpg|png|webp|gif)/ }),
+        ],
+      }),
+      new ImageValidationPipe(),
+    )
+    files?: Express.Multer.File[],
+  ) {
+    return this.productsService.update(id, body, files);
+  }
+
+  @Put(':id')
+  @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      limits: {
+        fileSize: MAX_IMAGE_SIZE,
+      },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error(
+              `Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody(ReplaceProductBodySchema)
+  @Response({ status: HttpStatus.OK, message: 'Product updated successfully' })
+  @ApiOperation({
+    summary: 'Replace/Update a product with optional images (Admin only)',
+    description:
+      'Update a product (PUT semantics). Can upload new images to replace or add to existing ones based on replaceImages flag. Supports both multipart/form-data and application/json.',
+  })
+  async replace(
+    @Param('id') id: string,
+    @Body() body: UpdateProductDto,
+    @UploadedFiles(
+      new ParseFilePipe({
+        fileIsRequired: false,
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
+          new FileTypeValidator({ fileType: /(jpeg|jpg|png|webp|gif)/ }),
+        ],
+      }),
+      new ImageValidationPipe(),
+    )
+    files?: Express.Multer.File[],
+  ) {
+    return this.productsService.update(id, body, files);
   }
 
   @Get()
@@ -143,14 +289,6 @@ export class ProductsController {
     return this.productsService.findBySku(sku);
   }
 
-  @Patch(':id')
-  @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
-  @Response({ status: HttpStatus.OK, message: 'Product updated successfully' })
-  @ApiOperation({ summary: 'Update a product (Admin only)' })
-  update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
-    return this.productsService.update(id, dto);
-  }
-
   @Delete(':id')
   @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
   @Response({ status: HttpStatus.OK, message: 'Product deleted successfully' })
@@ -159,15 +297,125 @@ export class ProductsController {
     return this.productsService.remove(id);
   }
 
-  @Patch(':id/stock/:pharmacyId')
+  @Post(':id/images')
   @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
-  @Response({ status: HttpStatus.OK, message: 'Stock updated successfully' })
-  @ApiOperation({ summary: 'Update product stock for a pharmacy' })
-  updateStock(
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      limits: {
+        fileSize: MAX_IMAGE_SIZE,
+      },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error(
+              `Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody(UploadImagesBodySchema)
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Images uploaded successfully',
+  })
+  @ApiOperation({
+    summary: 'Upload product images (Admin only)',
+    description:
+      'Upload images for a product. Max 2MB per image, max 10 images total. Allowed types: JPEG, PNG, WebP, GIF',
+  })
+  async uploadImages(
     @Param('id') productId: string,
-    @Param('pharmacyId') pharmacyId: string,
-    @Body('quantity') quantity: number,
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
+          new FileTypeValidator({ fileType: /(jpeg|jpg|png|webp|gif)/ }),
+        ],
+      }),
+      new ImageValidationPipe(),
+    )
+    files: Express.Multer.File[],
   ) {
-    return this.productsService.updateStock(productId, pharmacyId, quantity);
+    if (!files || files.length === 0) {
+      throw new Error('No images provided');
+    }
+
+    return this.productsService.uploadImages(productId, files);
+  }
+
+  @Post(':id/images/single')
+  @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: {
+        fileSize: MAX_IMAGE_SIZE,
+      },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error(
+              `Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody(UploadSingleImageBodySchema)
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Image uploaded successfully',
+  })
+  @ApiOperation({
+    summary: 'Upload a single product image (Admin only)',
+    description:
+      'Upload a single image for a product. Max 2MB. Allowed types: JPEG, PNG, WebP, GIF',
+  })
+  async uploadSingleImage(
+    @Param('id') productId: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
+          new FileTypeValidator({ fileType: /(jpeg|jpg|png|webp|gif)/ }),
+        ],
+      }),
+      new ImageValidationPipe(),
+    )
+    file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new Error('No image provided');
+    }
+
+    return this.productsService.uploadImages(productId, [file]);
+  }
+
+  @Delete(':id/images/:imageUrl')
+  @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Image deleted successfully',
+  })
+  @ApiOperation({
+    summary: 'Delete a product image (Admin only)',
+  })
+  async deleteImage(
+    @Param('id') productId: string,
+    @Param('imageUrl') imageUrl: string,
+  ) {
+    // Decode URL-encoded image URL
+    const decodedImageUrl = decodeURIComponent(imageUrl);
+    return this.productsService.deleteImage(productId, decodedImageUrl);
   }
 }

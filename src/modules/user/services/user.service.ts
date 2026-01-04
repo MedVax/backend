@@ -37,6 +37,7 @@ export class UserService {
     private avatarService: AvatarService,
     private bcryptService: BcryptService,
   ) {}
+
   private logger = new Logger(this.constructor.name);
 
   countWithUrlQuery(

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { JwtModule } from '@nestjs/jwt';
@@ -39,6 +39,8 @@ import { PrescriptionsModule } from './modules/prescriptions/prescriptions.modul
 import { PharmacyModule } from './modules/pharmacy/pharmacy.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { StockModule } from './modules/stock/stock.module';
+import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middleware';
 
 @Module({
   imports: [
@@ -177,8 +179,13 @@ import { PaymentsModule } from './modules/payments/payments.module';
     PharmacyModule,
     SubscriptionsModule,
     PaymentsModule,
+    StockModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TokenToAuthUserMiddleware).forRoutes('*');
+  }
+}
