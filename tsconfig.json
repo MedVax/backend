@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolvePackageJsonExports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "paths": {
+      "constants/*": ["src/constants/*"],
+      "exceptions/*": ["src/exceptions/*"],
+      "filters/*": ["src/filters/*"],
+      "libs/*": ["src/libs/*"],
+      "metadatas/*": ["src/metadatas/*"],
+      "middlewares/*": ["src/middlewares/*"],
+      "modules/*": ["src/modules/*"],
+      "params/*": ["src/params/*"],
+      "pipes/*": ["src/pipes/*"],
+      "repositories/*": ["src/repositories/*"],
+      "services/*": ["src/helpers/*"],
+      "types/*": ["src/types/*"],
+      "utils/*": ["src/utils/*"],
+      "generated/*": ["src/generated/*"]
+    },
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "typeRoots": ["./@types"]
+  }
+}

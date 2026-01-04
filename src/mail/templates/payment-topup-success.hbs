@@ -1,0 +1,49 @@
+{{> head }}
+{{> header }}
+
+<table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td>
+                        <p class="body paragrapy-spacing">Dear {{firstName}},</p>
+                        <p class="body paragrapy-spacing">Thank you for your recent payment of <b>{{amount}}</b>. We’re
+                            pleased to inform you that your account credit has been successfully updated.
+                        </p>
+                        <p class="body paragrapy-spacing">Transaction Details:</p>
+                        <ul>
+                            <li class="body"><strong>Payment Amount:</strong> {{amount}}</li>
+                            <li class="body"><strong>Topup Credit:</strong> {{credit}}</li>
+                            <li class="body"><strong>New Credit Balance:</strong> {{creditBalance}}</li>
+                            <li class="body"><strong>Date:</strong> {{date}}</li>
+                        </ul>
+
+                        <p class="body paragrapy-spacing">You can view your updated account balance and transaction
+                            history by logging into your account</p>
+
+                        <table border="0" cellspacing="0" cellpadding="0"
+                            style="width: 100%;max-width: 200px; margin: 0 auto">
+                            <tr>
+                                <td align="center" style="border-radius: 16px;" bgcolor="#262262">
+                                    <a href={{loginUrl}} target="_blank"
+                                        style="color: #ffffff; display: inline-block; font-size: 16px; padding: 8px 20px; text-decoration: none;">Log
+                                        In</a>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p class="body text-center" style="margin-top: 5px">or copy login url: {{loginUrl}}</p>
+
+                        <p class="body paragrapy-spacing">If you have any questions or need assistance, feel free to
+                            reach out to our support team at {{supportEmail}}.</p>
+                        <p class="body paragrapy-spacing">Thank you for choosing Fraudspect. We appreciate your
+                            continued trust and support!</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{{> footer }}

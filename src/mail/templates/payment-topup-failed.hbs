@@ -1,0 +1,60 @@
+{{> head }}
+{{> header }}
+
+<table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td>
+                        <p class="body paragrapy-spacing">Dear {{firstName}},</p>
+                        <p class="body paragrapy-spacing">We wanted to let you know that your recent attempt to top up
+                            your account with <b>{{amount}}</b> was unsuccessful.
+                        </p>
+                        <p class="body paragrapy-spacing">Transaction Details:</p>
+                        <ul>
+                            <li class="body"><strong>Attempted Top-Up Amount:</strong> {{amount}}</li>
+                            <li class="body"><strong>Date:</strong> {{date}}</li>
+                            <li class="body"><strong>Reason for Failure:</strong> {{failureReason}}</li>
+                        </ul>
+
+                        <p class="body paragrapy-spacing">Unfortunately, the funds were not added to your account. We
+                            recommend checking the following:</p>
+
+                        <ul>
+                            <li class="body">Verify that your payment details are accurate.</li>
+                            <li class="body">Ensure sufficient funds are available in your payment method.</li>
+                            <li class="body">Contact your payment provider for additional information if the issue persists.</li>
+                        </ul>
+
+                        <p class="body paragrapy-spacing">You can retry your top-up by logging into your account</p>
+
+                        <table border="0" cellspacing="0" cellpadding="0"
+                            style="width: 100%;max-width: 200px; margin: 0 auto">
+                            <tr>
+                                <td align="center" style="border-radius: 16px;" bgcolor="#262262">
+                                    <a href={{loginUrl}} target="_blank"
+                                        style="color: #ffffff; display: inline-block; font-size: 16px; padding: 8px 20px; text-decoration: none;">Log
+                                        In</a>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p class="body text-center" style="margin-top: 5px">or copy login url: {{loginUrl}}</p>
+
+
+                        <p class="body paragrapy-spacing">If you continue to experience issues, please don’t hesitate to
+                            contact our support team at {{supportEmail}}.</p>
+
+                        <p class="body paragrapy-spacing">We apologize for any inconvenience this may have caused and
+                            are here to help resolve this as quickly as possible.</p>
+                        <p class="body paragrapy-spacing">Thank you for choosing Fraudspect. We appreciate your
+                            continued trust and support!</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{{> footer }}

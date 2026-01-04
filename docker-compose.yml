@@ -1,0 +1,57 @@
+services:
+  medvax-api:
+    container_name: medvax-api
+    user: root
+    build:
+      dockerfile: Dockerfile
+      context: .
+      target: development
+    env_file:
+      - .env
+    command: yarn start:dev
+    ports:
+      - ${PORT:-3000}:${PORT:-3000}
+    volumes:
+      - ./:/usr/src/app
+    depends_on:
+      redis:
+        condition: service_started
+      database:
+        condition: service_healthy
+
+  database:
+    image: postgres
+    restart: always
+    user: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - '${POSTGRES_PORT_EXPOSE:-5432}:5432'
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis
+    ports:
+      - '${REDIS_PORT_EXPOSE:-6379}:6379'
+    volumes:
+      - redis:/data
+
+volumes:
+  db-data:
+    driver: local
+  redis:
+    driver: local
+  medvax-api:
+    driver: local
+
+networks:
+  default:

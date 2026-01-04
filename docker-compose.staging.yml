@@ -1,0 +1,11 @@
+services:
+  server:
+    image: ${IMAGE_NAME}
+    restart: unless-stopped
+    container_name: fraudspect-prod-api
+    build:
+      dockerfile: Dockerfile.prod
+      context: .
+      # target: production
+    ports:
+      - 3000

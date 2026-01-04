@@ -1,0 +1,41 @@
+{{> head }}
+{{> header }}
+
+<table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td>
+                        <p class="body paragrapy-spacing">Dear {{firstName}},</p>
+                        <p class="body paragrapy-spacing">We're delighted to inform you that your <b>{{userType}}</b>
+                            account has been
+                            successfully created under <b>{{orgName}}</b>. You can now log in and start exploring our
+                            platform.
+                        </p>
+                        <p class="body paragrapy-spacing">Here are your account details:</p>
+                        <ul>
+                            <li class="body"><strong>Email:</strong> {{email}}</li>
+                            <li class="body"><strong>Password:</strong> {{password}}</li>
+                        </ul>
+
+                        <table border="0" cellspacing="0" cellpadding="0"
+                            style="width: 100%;max-width: 200px; margin: 0 auto">
+                            <tr>
+                                <td align="center" style="border-radius: 16px;" bgcolor="#262262">
+                                    <a href={{loginUrl}} target="_blank"
+                                        style="color: #ffffff; display: inline-block; font-size: 16px; padding: 8px 20px; text-decoration: none;">Log
+                                        In</a>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p class="body text-center" style="margin-top: 5px">or copy login url: {{loginUrl}}</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{{> footer }}
