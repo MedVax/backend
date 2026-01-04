@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-base-to-string */
 import * as queueName from 'src/constants/queue.constant';
 import { MailParams } from './helpers/mail.helpers';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';

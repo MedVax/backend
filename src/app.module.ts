@@ -30,6 +30,15 @@ import { AppGlobalModule } from './app-global.module';
 import { RolesModule } from 'modules/roles/roles.module';
 import { UserModule } from './modules/user/user.module';
 import { PrismaTenancyModule } from 'modules/prisma-tenancy/prisma-tenancy.module';
+import { ProductsModule } from './modules/products/products.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { CartModule } from './modules/cart/cart.module';
+import { AddressesModule } from './modules/addresses/addresses.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { PrescriptionsModule } from './modules/prescriptions/prescriptions.module';
+import { PharmacyModule } from './modules/pharmacy/pharmacy.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -158,6 +167,16 @@ import { PrismaTenancyModule } from 'modules/prisma-tenancy/prisma-tenancy.modul
     UserModule,
     AppGlobalModule,
     PrismaTenancyModule,
+    // Ecommerce modules
+    CategoriesModule,
+    ProductsModule,
+    CartModule,
+    AddressesModule,
+    OrdersModule,
+    PrescriptionsModule,
+    PharmacyModule,
+    SubscriptionsModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -57,7 +57,7 @@ export function capitalizeSentences(text: string) {
     return text;
   }
 
-  const sentences = text.split(/\. |\? |\! /);
+  const sentences = text.split(/\. |\? |! /);
 
   const capitalizedSentences = sentences
     .filter((sentence) => sentence.trim() !== '') // Remove empty sentences

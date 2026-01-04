@@ -1,4 +1,4 @@
-import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ResponseOk<T> {
   @ApiProperty({ type: () => String, required: false })
@@ -11,8 +11,6 @@ export class ResponseOk<T> {
   code?: string;
 
   // data property is handled dynamically by ApiResponseOk decorator
-  // @ApiProperty({ type: () => Object, isArray: true, required: false })
-  // @ApiHideProperty()
   data?: T[];
 
   @ApiProperty({ type: () => Number, required: false })

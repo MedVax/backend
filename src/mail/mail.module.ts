@@ -14,7 +14,7 @@ import { join } from 'path';
   imports: [
     BullModule.registerQueue({ name: queueName.EMAIL }),
     MailerModule.forRootAsync({
-      useFactory: async () => {
+      useFactory: () => {
         return {
           transport: {
             host: env.SMTP_HOST,

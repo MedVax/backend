@@ -33,9 +33,9 @@ export function buildFields<T>(
     }
 
     if (typeof fields === 'object' && fields) {
-      for (const key in fields) {
+      Object.keys(fields).forEach((key) => {
         select[key] = !!(fields as any)[key];
-      }
+      });
     }
 
     if (include) {

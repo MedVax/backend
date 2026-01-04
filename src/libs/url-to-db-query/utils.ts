@@ -27,7 +27,10 @@ export function isJson(str?: string) {
     try {
       JSON.parse(str);
       return true;
-    } catch (e) {}
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
   }
   return false;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import { QueryFilter, QuerySchema } from '../types';
 import { Operator } from '../enums';
 import { cast } from '../utils';

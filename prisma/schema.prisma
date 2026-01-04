@@ -41,6 +41,14 @@ model User {
   lastLoginAt    DateTime?
   userRoles      UserRole[]
 
+  // Ecommerce relations
+  pharmacies    Pharmacy[]
+  addresses     Address[]
+  cart          Cart?
+  orders        Order[]
+  prescriptions Prescription[]
+  subscriptions Subscription[]
+
   @@index([email])
 }
 
@@ -87,4 +95,260 @@ model RolePermission {
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
+}
+
+// Ecommerce Models
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  PROCESSING
+  READY_FOR_DISPATCH
+  IN_TRANSIT
+  DELIVERED
+  COMPLETED
+  CANCELED
+  FAILED_PAYMENT
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PrescriptionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SubscriptionFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ProductType {
+  OTC
+  POM
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  slug        String     @unique
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Category[] @relation("CategoryHierarchy")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  products    Product[]
+
+  @@index([slug])
+  @@index([parentId])
+}
+
+model Product {
+  id                   String      @id @default(uuid())
+  name                 String
+  sku                  String      @unique
+  description          String?
+  price                Int // in minor currency units (kobo/cents)
+  currency             String      @default("NGN")
+  requiresPrescription Boolean     @default(false)
+  productType          ProductType @default(OTC)
+  categoryId           String?
+  category             Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images               String[]    @default([])
+  isActive             Boolean     @default(true)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  stock         ProductStock[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  subscriptions Subscription[]
+
+  @@index([sku])
+  @@index([categoryId])
+  @@index([isActive])
+}
+
+model Pharmacy {
+  id          String   @id @default(uuid())
+  name        String
+  address     Json // {line1, city, state, postalCode, country}
+  ownerUserId String
+  owner       User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  phone       String?
+  email       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stock  ProductStock[]
+  orders Order[]
+
+  @@index([ownerUserId])
+  @@index([isActive])
+}
+
+model ProductStock {
+  id         String   @id @default(uuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  pharmacyId String
+  pharmacy   Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+  quantity   Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([productId, pharmacyId])
+  @@index([pharmacyId])
+}
+
+model Address {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String?
+  country    String   @default("Nigeria")
+  phone      String
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  orders Order[]
+
+  @@index([userId])
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+}
+
+model Order {
+  id                 String              @id @default(uuid())
+  userId             String
+  user               User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  pharmacyId         String?
+  pharmacy           Pharmacy?           @relation(fields: [pharmacyId], references: [id], onDelete: SetNull)
+  deliveryAddressId  String?
+  deliveryAddress    Address?            @relation(fields: [deliveryAddressId], references: [id], onDelete: SetNull)
+  totalAmount        Int // in minor currency units
+  currency           String              @default("NGN")
+  paymentStatus      PaymentStatus       @default(PENDING)
+  orderStatus        OrderStatus         @default(PENDING)
+  prescriptionStatus PrescriptionStatus?
+  paymentReference   String?
+  paymentProvider    String? // paystack, flutterwave
+  notes              String?
+  items              OrderItem[]
+  prescriptions      Prescription[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([pharmacyId])
+  @@index([paymentStatus])
+  @@index([orderStatus])
+  @@index([paymentReference])
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int
+  unitPrice Int // price at time of order
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+}
+
+model Prescription {
+  id         String             @id @default(uuid())
+  orderId    String?
+  order      Order?             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  uploadedBy String // user id who uploaded
+  fileUrl    String
+  status     PrescriptionStatus @default(PENDING)
+  reviewedBy String? // clinician/pharmacist id
+  notes      String?
+
+  // Patient info (for patient-submitted prescriptions)
+  patientName     String?
+  patientLocation String?
+  patientEmail    String?
+  patientPhone    String?
+  additionalNote  String?
+
+  // Doctor info (for doctor-submitted prescriptions)
+  prescriberName     String?
+  prescriberEmail    String?
+  prescriberPhone    String?
+  prescriberHospital String?
+  prescriberLocation String?
+  hospitalName       String?
+  drugName           String?
+  dosage             String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+}
+
+model Subscription {
+  id                   String                @id @default(uuid())
+  userId               String
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId            String
+  product              Product               @relation(fields: [productId], references: [id], onDelete: Restrict)
+  frequency            SubscriptionFrequency
+  nextRunDate          DateTime
+  quantity             Int                   @default(1)
+  isActive             Boolean               @default(true)
+  autoCharge           Boolean               @default(false)
+  paymentAuthorization String? // encrypted payment authorization token
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  @@index([userId])
+  @@index([isActive])
+  @@index([nextRunDate])
 }

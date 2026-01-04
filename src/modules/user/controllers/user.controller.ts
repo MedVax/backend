@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
   HttpStatus,
   Param,
   Post,
@@ -26,11 +25,6 @@ import { GetUserDto } from '../dtos/get-user-dto';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
 import { UpdateUserDto } from '../dtos/update-user.dto';
-// import { ApiResponseOk } from 'src/decorators/api-response-ok';
-import { QueryFilter } from 'params/query-filter';
-import { QueryOptions } from 'params/query-options';
-// import { ResponseOk } from 'src/classes/response-ok';
-import { PaginatedResult } from 'src/classes/paginated-result';
 import { PermissionsGuard } from 'src/guards/permission.guard';
 import { populateRole } from 'modules/roles/helpers/roles.helper';
 

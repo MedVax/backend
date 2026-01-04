@@ -47,6 +47,7 @@ export class AuthPasswordService {
     try {
       password = this.bcryptService.hashSync(dto.newPassword);
     } catch (error) {
+      console.error(error);
       throw new BadRequestException('Invalid or expired password reset link');
     }
 
