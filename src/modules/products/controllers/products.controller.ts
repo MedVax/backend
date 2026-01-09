@@ -208,7 +208,12 @@ export class ProductsController {
         { name: { contains: query.search, mode: 'insensitive' } },
         { sku: { contains: query.search, mode: 'insensitive' } },
         { description: { contains: query.search, mode: 'insensitive' } },
+        { brand: { contains: query.search, mode: 'insensitive' } },
       ];
+    }
+
+    if (query.brand) {
+      whereFilter.brand = { contains: query.brand, mode: 'insensitive' };
     }
 
     if (query.categoryId) {

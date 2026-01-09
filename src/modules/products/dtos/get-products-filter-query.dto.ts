@@ -5,11 +5,19 @@ import { ProductType } from 'generated/prisma/enums';
 export class GetProductsFilterQuery {
   @ApiPropertyOptional({
     required: false,
-    description: 'Search by name, SKU, description',
+    description: 'Search by name, SKU, description, brand',
   })
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    required: false,
+    description: 'Filter by brand name',
+  })
+  @IsOptional()
+  @IsString()
+  brand?: string;
 
   @ApiPropertyOptional({
     required: false,

@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsOptional,
   IsEnum,
+  IsArray,
   Min,
 } from 'class-validator';
 import { ProductType } from 'generated/prisma/enums';
@@ -22,6 +23,11 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @ApiPropertyOptional({ example: 'Pfizer' })
+  @IsString()
+  @IsOptional()
+  brand?: string;
 
   @ApiProperty({ example: 4500 })
   @IsNumber()
@@ -47,4 +53,24 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   categoryId?: string;
+
+  @ApiPropertyOptional({
+    example: ['500mg', '1000mg', '250mg'],
+    type: [String],
+    description: 'Available dosages for this product',
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  dosages?: string[];
+
+  @ApiPropertyOptional({
+    example: ['10 tablets', '20 tablets', '30 tablets'],
+    type: [String],
+    description: 'Available package sizes for this product',
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  packageSizes?: string[];
 }

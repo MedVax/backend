@@ -5,11 +5,22 @@ export const UpdateProductBodySchema = {
       name: { type: 'string' },
       sku: { type: 'string' },
       description: { type: 'string' },
+      brand: { type: 'string' },
       price: { type: 'number' },
       currency: { type: 'string' },
       requiresPrescription: { type: 'boolean' },
       productType: { type: 'string', enum: ['OTC', 'POM'] },
       categoryId: { type: 'string' },
+      dosages: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Available dosages for this product',
+      },
+      packageSizes: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Available package sizes for this product',
+      },
       images: {
         type: 'array',
         items: {

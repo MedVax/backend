@@ -1,6 +1,7 @@
 import { Prisma, UserType } from 'generated/prisma/client';
 import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
 import { createBuilder } from 'libs/url-to-db-query/prisma';
+import productUrlToPrismaQueryBuilder from 'modules/products/product-url-to-prisma-query-builder';
 import roleUrlToPrismaQueryBuilder from 'modules/roles/role-url-to-prisma-query-builder';
 import userUrlToPrismaQueryBuilder from 'modules/user/user-url-to-prisma-query-builder';
 import { ClsService } from 'nestjs-cls';
@@ -170,6 +171,7 @@ export const PrismaTenancyClientProvider = {
 const MODEL_QUERY_BUILDERS = {
   Role: roleUrlToPrismaQueryBuilder,
   User: userUrlToPrismaQueryBuilder,
+  Product: productUrlToPrismaQueryBuilder,
 } as {
   // [K in Exclude<
   //   keyof Exclude<
