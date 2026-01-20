@@ -1,0 +1,71 @@
+{{> head }}
+{{> header }}
+
+<table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td>
+                        <p class="body paragrapy-spacing">Dear {{firstName}}{{#if lastName}} {{lastName}}{{/if}},</p>
+                        <p class="body paragrapy-spacing">
+                            Great news! Your session{{#if multipleSessions}}s have{{else}} has{{/if}} been successfully booked with {{consultantName}}.
+                        </p>
+
+                        <div style="background-color: #d4edda; border: 1px solid #28a745; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="margin-top: 0; color: #155724;">Session Booked ✓</h3>
+                            <p style="margin-bottom: 10px;"><strong>Session Type:</strong> {{sessionType}}</p>
+                            <p style="margin-bottom: 0;"><strong>Consultant:</strong> {{consultantName}}</p>
+                        </div>
+
+                        <p class="body paragrapy-spacing"><strong>Session Details:</strong></p>
+                        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            {{#each sessionDetails}}
+                            <div style="margin-bottom: 15px; padding-bottom: 15px; {{#unless @last}}border-bottom: 1px solid #ddd;{{/unless}}">
+                                <p style="margin-bottom: 5px;"><strong>Date & Time:</strong> {{date}}</p>
+                                {{#if meetingUrl}}
+                                <p style="margin-bottom: 0;">
+                                    <strong>Meeting Link:</strong> 
+                                    <a href="{{meetingUrl}}" style="color: #007bff; text-decoration: none;">Join Meeting</a>
+                                </p>
+                                {{/if}}
+                            </div>
+                            {{/each}}
+                        </div>
+
+                        {{#if hasMeetingUrl}}
+                        <div style="background-color: #e7f3ff; border: 1px solid #0066cc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <p style="margin: 0; color: #004085;">
+                                <strong>💡 Tip:</strong> Click the meeting link above to join your session at the scheduled time. 
+                                Make sure you have a stable internet connection and a quiet space.
+                            </p>
+                        </div>
+                        {{/if}}
+
+                        <p class="body paragrapy-spacing">
+                            We'll send you a reminder email 24 hours and 1 hour before your session. 
+                            Please make sure to be ready at the scheduled time.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            If you need to reschedule or cancel your session, please do so at least 12 hours in advance. 
+                            You can manage your sessions through your account dashboard.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            If you have any questions or need assistance, please contact our support team at 
+                            <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            We look forward to your session!
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{{> footer }}
+

@@ -3,6 +3,8 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.service';
 import { CreateOrderDto } from '../dtos/create-order.dto';
@@ -11,7 +13,13 @@ import { PaystackService } from 'modules/services/paystack-service';
 import { StockService } from 'modules/stock/services/stock.service';
 import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
 import type { Order, PaymentStatus } from 'generated/prisma/client';
+import { OrderRecurringFrequency } from 'generated/prisma/enums';
 import { randomUUID } from 'crypto';
+import { addWeeks, addMonths } from 'date-fns';
+import { MailService } from 'src/mail/services/mail.service';
+import { format } from 'date-fns';
+import { TransactionsService } from 'modules/transactions/services/transactions.service';
+import { TransactionType, TransactionStatus } from 'generated/prisma/enums';
 
 @Injectable()
 export class OrdersService {
@@ -21,6 +29,10 @@ export class OrdersService {
     private prismaService: PrismaTenancyService,
     private paystackService: PaystackService,
     private stockService: StockService,
+    @Inject(forwardRef(() => MailService))
+    private mailService: MailService,
+    @Inject(forwardRef(() => TransactionsService))
+    private transactionsService: TransactionsService,
   ) {}
 
   async create(userId: string, dto: CreateOrderDto) {
@@ -50,17 +62,17 @@ export class OrdersService {
     }
 
     // Check if any products require prescription
-    const requiresPrescription = cart.items.some(
-      (item) => item.product.requiresPrescription,
-    );
+    // const requiresPrescription = cart.items.some(
+    //   (item) => item.product.requiresPrescription,
+    // );
 
-    if (requiresPrescription) {
-      if (!dto.prescriptionUploads || dto.prescriptionUploads.length === 0) {
-        throw new BadRequestException(
-          'Prescription uploads required for prescription-only products',
-        );
-      }
-    }
+    // if (requiresPrescription) {
+    //   if (!dto.prescriptionUploads || dto.prescriptionUploads.length === 0) {
+    //     throw new BadRequestException(
+    //       'Prescription uploads required for prescription-only products',
+    //     );
+    //   }
+    // }
 
     // Calculate total
     let totalAmount = 0;
@@ -102,72 +114,296 @@ export class OrdersService {
       );
     }
 
-    let order;
+    let orderResult: { order: any; recurringOrder: any | null } | null = null;
+
     try {
-      order = await this.prismaService.tenancy.$transaction(async (tx) => {
-        const created = await tx.order.create({
-          data: {
-            userId,
-            pharmacyId: dto.pharmacyId,
-            deliveryAddressId: dto.deliveryAddressId,
-            totalAmount,
-            currency: 'NGN',
-            paymentStatus: 'PENDING',
-            orderStatus: 'PENDING',
-            prescriptionStatus: requiresPrescription ? 'PENDING' : null,
-            notes: dto.notes,
-            items: {
-              create: orderItems,
-            },
-          },
-          include: {
-            items: {
-              include: {
-                product: true,
+      orderResult = await this.prismaService.tenancy.$transaction(
+        async (tx) => {
+          let recurringOrder: any = null;
+
+          // Create the original order (one-time order, even if isRecurring is true)
+          const created = await tx.order.create({
+            data: {
+              userId,
+              deliveryAddressId: dto.deliveryAddressId,
+              totalAmount,
+              currency: 'NGN',
+              paymentStatus: 'PENDING',
+              orderStatus: 'PENDING',
+              prescriptionStatus: null,
+              notes: dto.notes,
+              isRecurring: false, // Original order is always one-time
+              items: {
+                create: orderItems,
               },
             },
-            deliveryAddress: true,
-            pharmacy: true,
+            include: {
+              items: {
+                include: {
+                  product: true,
+                },
+              },
+              deliveryAddress: true,
+            },
+          });
+
+          // Create prescriptions if provided
+          if (dto.prescriptionUploads && dto.prescriptionUploads.length > 0) {
+            await Promise.all(
+              dto.prescriptionUploads.map((url) =>
+                tx.prescription.create({
+                  data: {
+                    orderId: created.id,
+                    userId,
+                    uploadedBy: userId,
+                    fileUrl: url,
+                    status: 'PENDING',
+                  },
+                }),
+              ),
+            );
+          }
+
+          // Update stock movements with actual order ID
+          await tx.stockMovement.updateMany({
+            where: {
+              orderId: null,
+              productId: { in: orderItems.map((i) => i.productId) },
+              createdAt: { gte: new Date(Date.now() - 5000) }, // Last 5 seconds
+            },
+            data: {
+              orderId: created.id,
+              reason: `Reserve for order ${created.id}`,
+            },
+          });
+
+          // Clear cart after order creation
+          await tx.cartItem.deleteMany({
+            where: { cartId: cart.id },
+          });
+
+          // If recurring order is requested, create a separate recurring order
+          if (dto.isRecurring && dto.recurringFrequency) {
+            const now = new Date();
+            let nextRunDate: Date | null = null;
+
+            if (dto.recurringFrequency === OrderRecurringFrequency.WEEKLY) {
+              nextRunDate = addWeeks(now, 1);
+            } else if (
+              dto.recurringFrequency === OrderRecurringFrequency.MONTHLY
+            ) {
+              nextRunDate = addMonths(now, 1);
+            }
+
+            // Create recurring order items from original order items
+            const recurringOrderItems = orderItems.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+            }));
+
+            // Create the recurring order (separate from the original order)
+            recurringOrder = await tx.order.create({
+              data: {
+                userId,
+                deliveryAddressId: dto.deliveryAddressId,
+                // Copy guest info if provided (for future anonymous recurring orders)
+                guestFirstName: dto.guestInfo?.firstName,
+                guestLastName: dto.guestInfo?.lastName,
+                guestEmail: dto.guestInfo?.email,
+                guestPhone: dto.guestInfo?.phone,
+                guestAddressLine1: dto.guestInfo?.addressLine1,
+                guestAddressLine2: dto.guestInfo?.addressLine2,
+                guestCity: dto.guestInfo?.city,
+                guestState: dto.guestInfo?.state,
+                guestPostalCode: dto.guestInfo?.postalCode,
+                guestCountry: dto.guestInfo?.country || 'Nigeria',
+                totalAmount,
+                currency: 'NGN',
+                paymentStatus: 'PENDING', // Won't charge until next run date
+                orderStatus: 'PENDING',
+                prescriptionStatus: null,
+                notes: `Recurring order created from order ${created.id}`,
+                isRecurring: true,
+                recurringFrequency: dto.recurringFrequency,
+                recurringDate: now, // Track when recurring order was established
+                nextRunDate,
+                paymentRetryCount: 0,
+                isRecurringActive: true,
+                items: {
+                  create: recurringOrderItems,
+                },
+              },
+              include: {
+                items: {
+                  include: {
+                    product: true,
+                  },
+                },
+                deliveryAddress: true,
+              },
+            });
+          }
+
+          return { order: created, recurringOrder };
+        },
+      );
+
+      const order = orderResult.order;
+      const recurringOrderResult = orderResult.recurringOrder;
+
+      // Send email notification if recurring order was created
+      if (recurringOrderResult) {
+        try {
+          const user = await this.prismaService.tenancy.user.findUnique({
+            where: { id: userId },
+            select: {
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          });
+
+          const email = user?.email || dto.guestInfo?.email;
+          const firstName =
+            user?.firstName || dto.guestInfo?.firstName || 'Customer';
+          const lastName = user?.lastName || dto.guestInfo?.lastName || '';
+
+          if (email) {
+            const itemsSummary = recurringOrderResult.items
+              .map(
+                (item: any) =>
+                  `${item.product.name} (x${item.quantity}) - ₦${(
+                    (item.unitPrice * item.quantity) /
+                    100
+                  ).toFixed(2)}`,
+              )
+              .join('\n');
+
+            const totalAmount = `₦${(recurringOrderResult.totalAmount / 100).toFixed(2)}`;
+            const frequency =
+              dto.recurringFrequency === OrderRecurringFrequency.WEEKLY
+                ? 'weekly'
+                : 'monthly';
+            const nextDeliveryDate = recurringOrderResult.nextRunDate
+              ? format(new Date(recurringOrderResult.nextRunDate), 'PPP')
+              : 'N/A';
+
+            await this.mailService.recurringOrderCreated({
+              to: email,
+              context: {
+                firstName,
+                lastName,
+                orderId: recurringOrderResult.id,
+                frequency,
+                nextDeliveryDate,
+                itemsSummary,
+                totalAmount,
+                supportEmail: process.env.SUPPORT_EMAIL || 'support@medvax.com',
+              },
+            });
+
+            this.logger.log(
+              `Recurring order creation email sent to ${email} for order ${recurringOrderResult.id}`,
+            );
+          }
+        } catch (error) {
+          this.logger.error(
+            `Failed to send recurring order creation email: ${error.message}`,
+          );
+          // Don't throw - we don't want to fail order creation if email fails
+        }
+      }
+
+      // Initialize payment for the original order
+      if (dto.paymentMethod === 'paystack') {
+        const user = await this.prismaService.tenancy.user.findUnique({
+          where: { id: userId },
+        });
+
+        const [transaction, paymentLink] =
+          await this.paystackService.initBilling({
+            reference: orderReference,
+            customer: {
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+            },
+            amount: totalAmount / 100, // Convert from kobo to naira
+            currencyCode: 'NGN',
+            metadata: {
+              orderId: order.id,
+              userId,
+            },
+            returnUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/orders/${order.id}`,
+          });
+
+        const providerReference = transaction.reference || orderReference;
+
+        // Update order with payment reference
+        await this.prismaService.tenancy.order.update({
+          where: { id: order.id },
+          data: {
+            paymentReference: providerReference,
+            paymentProvider: 'paystack',
           },
         });
 
-        // Create prescriptions if provided
-        if (dto.prescriptionUploads && dto.prescriptionUploads.length > 0) {
-          await Promise.all(
-            dto.prescriptionUploads.map((url) =>
-              tx.prescription.create({
-                data: {
-                  orderId: created.id,
-                  userId,
-                  uploadedBy: userId,
-                  fileUrl: url,
-                  status: 'PENDING',
-                },
-              }),
-            ),
+        // Create transaction record
+        try {
+          await this.transactionsService.create({
+            userId,
+            type: TransactionType.ORDER,
+            reference: order.id,
+            providerReference,
+            provider: 'paystack',
+            amount: totalAmount,
+            currency: 'NGN',
+            description: `Payment for order ${order.id}`,
+            orderId: order.id,
+            metadata: transaction,
+            providerResponse: transaction,
+            providerMetadata: {
+              paymentLink: paymentLink.authorization_url,
+            },
+            customerEmail: user.email,
+            customerName: `${user.firstName} ${user.lastName}`,
+            paymentMethod: dto.paymentMethod,
+            paymentChannel: paymentLink.channels?.[0],
+          });
+        } catch (error) {
+          this.logger.error(
+            `Failed to create transaction record: ${error.message}`,
           );
+          // Don't throw - transaction creation failure shouldn't break order creation
         }
 
-        // Update stock movements with actual order ID
-        await tx.stockMovement.updateMany({
-          where: {
-            orderId: null,
-            productId: { in: orderItems.map((i) => i.productId) },
-            createdAt: { gte: new Date(Date.now() - 5000) }, // Last 5 seconds
-          },
-          data: {
-            orderId: created.id,
-            reason: `Reserve for order ${created.id}`,
-          },
-        });
+        return {
+          ...order,
+          paymentUrl: paymentLink.authorization_url,
+          paymentReference: transaction.reference || orderReference,
+          recurringOrder: recurringOrderResult
+            ? {
+                id: recurringOrderResult.id,
+                recurringDate: recurringOrderResult.recurringDate,
+                nextRunDate: recurringOrderResult.nextRunDate,
+                recurringFrequency: recurringOrderResult.recurringFrequency,
+              }
+            : null,
+        };
+      }
 
-        // Clear cart after order creation
-        await tx.cartItem.deleteMany({
-          where: { cartId: cart.id },
-        });
-
-        return created;
-      });
+      return {
+        ...order,
+        recurringOrder: recurringOrderResult
+          ? {
+              id: recurringOrderResult.id,
+              recurringDate: recurringOrderResult.recurringDate,
+              nextRunDate: recurringOrderResult.nextRunDate,
+              recurringFrequency: recurringOrderResult.recurringFrequency,
+            }
+          : null,
+      };
     } catch (error) {
       // Release reserved stock if order creation fails
       for (const item of orderItems) {
@@ -186,48 +422,6 @@ export class OrdersService {
       }
       throw error;
     }
-
-    // Initialize payment
-    if (dto.paymentMethod === 'paystack') {
-      const user = await this.prismaService.tenancy.user.findUnique({
-        where: { id: userId },
-      });
-
-      const [transaction, paymentLink] = await this.paystackService.initBilling(
-        {
-          reference: orderReference,
-          customer: {
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-          },
-          amount: totalAmount / 100, // Convert from kobo to naira
-          currencyCode: 'NGN',
-          metadata: {
-            orderId: order.id,
-            userId,
-          },
-          returnUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/orders/${order.id}`,
-        },
-      );
-
-      // Update order with payment reference
-      await this.prismaService.tenancy.order.update({
-        where: { id: order.id },
-        data: {
-          paymentReference: transaction.reference || orderReference,
-          paymentProvider: 'paystack',
-        },
-      });
-
-      return {
-        ...order,
-        paymentUrl: paymentLink.authorization_url,
-        paymentReference: transaction.reference || orderReference,
-      };
-    }
-
-    return order;
   }
 
   async findAll(
@@ -258,7 +452,6 @@ export class OrdersService {
             },
           },
           deliveryAddress: true,
-          pharmacy: true,
           user: {
             select: {
               id: true,
@@ -286,7 +479,6 @@ export class OrdersService {
             },
           },
           deliveryAddress: true,
-          pharmacy: true,
           user: {
             select: {
               id: true,
@@ -344,7 +536,6 @@ export class OrdersService {
           },
         },
         deliveryAddress: true,
-        pharmacy: true,
         user: {
           select: {
             id: true,
@@ -366,12 +557,6 @@ export class OrdersService {
 
   async updateStatus(id: string, dto: UpdateOrderStatusDto, userId?: string) {
     const order = await this.findOne(id, userId);
-
-    // Only pharmacy/admins can update order status
-    if (order.pharmacyId) {
-      // Verify pharmacy ownership if user is a pharmacist
-      // This would need additional logic based on user roles
-    }
 
     const updateData: any = {};
     const previousStatus = order.orderStatus;
@@ -427,7 +612,7 @@ export class OrdersService {
       updateData.paymentStatus = dto.paymentStatus;
     }
 
-    return this.prismaService.tenancy.order.update({
+    const updatedOrder = await this.prismaService.tenancy.order.update({
       where: { id },
       data: updateData,
       include: {
@@ -437,9 +622,71 @@ export class OrdersService {
           },
         },
         deliveryAddress: true,
-        pharmacy: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
     });
+
+    // Send email notification if order status or payment status changed
+    if (dto.orderStatus || dto.paymentStatus) {
+      try {
+        const email = updatedOrder.user?.email || updatedOrder.guestEmail;
+        const firstName =
+          updatedOrder.user?.firstName ||
+          updatedOrder.guestFirstName ||
+          'Customer';
+        const lastName =
+          updatedOrder.user?.lastName || updatedOrder.guestLastName || '';
+
+        if (email) {
+          const itemsSummary = updatedOrder.items
+            .map(
+              (item: any) =>
+                `${item.product.name} (x${item.quantity}) - ₦${(
+                  (item.unitPrice * item.quantity) /
+                  100
+                ).toFixed(2)}`,
+            )
+            .join('\n');
+
+          const totalAmount = `₦${(updatedOrder.totalAmount / 100).toFixed(2)}`;
+
+          await this.mailService.orderStatusUpdated({
+            to: email,
+            context: {
+              firstName,
+              lastName,
+              orderId: updatedOrder.id,
+              previousOrderStatus: previousStatus,
+              newOrderStatus: dto.orderStatus || updatedOrder.orderStatus,
+              previousPaymentStatus: order.paymentStatus,
+              newPaymentStatus: dto.paymentStatus || updatedOrder.paymentStatus,
+              itemsSummary,
+              totalAmount,
+              orderDate: format(new Date(updatedOrder.createdAt), 'PPP'),
+              supportEmail: process.env.SUPPORT_EMAIL || 'support@medvax.com',
+            },
+          });
+
+          this.logger.log(
+            `Order status update email sent to ${email} for order ${updatedOrder.id}`,
+          );
+        }
+      } catch (error) {
+        this.logger.error(
+          `Failed to send order status update email: ${error.message}`,
+        );
+        // Don't throw - we don't want to fail status update if email fails
+      }
+    }
+
+    return updatedOrder;
   }
 
   async cancel(id: string, userId: string) {
@@ -449,7 +696,9 @@ export class OrdersService {
       throw new BadRequestException('Order cannot be cancelled at this stage');
     }
 
-    return this.prismaService.tenancy.order.update({
+    const previousStatus = order.orderStatus;
+
+    const updatedOrder = await this.prismaService.tenancy.order.update({
       where: { id },
       data: {
         orderStatus: 'CANCELED',
@@ -460,13 +709,103 @@ export class OrdersService {
             product: true,
           },
         },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
     });
+
+    // Send email notification for order cancellation
+    try {
+      const email = updatedOrder.user?.email || updatedOrder.guestEmail;
+      const firstName =
+        updatedOrder.user?.firstName ||
+        updatedOrder.guestFirstName ||
+        'Customer';
+      const lastName =
+        updatedOrder.user?.lastName || updatedOrder.guestLastName || '';
+
+      if (email) {
+        const itemsSummary = updatedOrder.items
+          .map(
+            (item: any) =>
+              `${item.product.name} (x${item.quantity}) - ₦${(
+                (item.unitPrice * item.quantity) /
+                100
+              ).toFixed(2)}`,
+          )
+          .join('\n');
+
+        const totalAmount = `₦${(updatedOrder.totalAmount / 100).toFixed(2)}`;
+
+        // Generate cancellation message
+        const statusMessage =
+          '<strong>✗ Order Cancelled</strong> Your order has been cancelled. If you made a payment, you will receive a refund according to our refund policy.';
+
+        await this.mailService.orderStatusUpdated({
+          to: email,
+          context: {
+            firstName,
+            lastName,
+            orderId: updatedOrder.id,
+            previousOrderStatus: previousStatus,
+            newOrderStatus: 'CANCELED',
+            previousPaymentStatus: order.paymentStatus,
+            newPaymentStatus: updatedOrder.paymentStatus,
+            itemsSummary,
+            totalAmount,
+            orderDate: format(new Date(updatedOrder.createdAt), 'PPP'),
+            statusMessage,
+            statusMessageColor: '#f8d7da',
+            statusMessageBorderColor: '#721c24',
+            statusMessageTextColor: '#721c24',
+            supportEmail: process.env.SUPPORT_EMAIL || 'support@medvax.com',
+          },
+        });
+
+        this.logger.log(
+          `Order cancellation email sent to ${email} for order ${updatedOrder.id}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to send order cancellation email: ${error.message}`,
+      );
+      // Don't throw - we don't want to fail cancellation if email fails
+    }
+
+    return updatedOrder;
   }
 
   async verifyPayment(reference: string) {
     const order = await this.prismaService.tenancy.order.findFirst({
       where: { paymentReference: reference },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                price: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!order) {
@@ -474,10 +813,11 @@ export class OrdersService {
     }
 
     // Verify payment with Paystack
-    const transaction = await this.paystackService.getBillingMethod(reference);
+    const paystackTransaction =
+      await this.paystackService.getBillingMethod(reference);
 
     const paymentStatus: PaymentStatus =
-      transaction.status === 'success' ? 'PAID' : 'FAILED';
+      paystackTransaction.status === 'success' ? 'PAID' : 'FAILED';
 
     // Update order payment status
     const updatedOrder = await this.prismaService.tenancy.order.update({
@@ -492,12 +832,99 @@ export class OrdersService {
             product: true,
           },
         },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
     });
 
+    // Update transaction status
+    try {
+      const transactionStatus =
+        paymentStatus === 'PAID'
+          ? TransactionStatus.SUCCESS
+          : TransactionStatus.FAILED;
+
+      await this.transactionsService.updateByProviderReference(reference, {
+        status: transactionStatus,
+        metadata: paystackTransaction,
+        providerResponse: paystackTransaction,
+        webhookEvent: 'charge.success',
+        webhookPayload: paystackTransaction,
+        completedAt:
+          transactionStatus === TransactionStatus.SUCCESS
+            ? new Date()
+            : undefined,
+        failedAt:
+          transactionStatus === TransactionStatus.FAILED
+            ? new Date()
+            : undefined,
+        ...(paystackTransaction.authorization && {
+          authorizationCode:
+            paystackTransaction.authorization.authorization_code,
+        }),
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to update transaction record: ${error.message}`,
+      );
+      // Don't throw - transaction update failure shouldn't break payment verification
+    }
+
+    // Send payment confirmation email if payment is successful
+    if (paymentStatus === 'PAID') {
+      const email = order.user?.email || order.guestEmail;
+      const firstName =
+        order.user?.firstName || order.guestFirstName || 'Customer';
+      const lastName = order.user?.lastName || order.guestLastName || '';
+
+      if (email) {
+        const itemsSummary = order.items
+          .map(
+            (item) =>
+              `${item.product.name} (x${item.quantity}) - ₦${(
+                (item.product.price * item.quantity) /
+                100
+              ).toFixed(2)}`,
+          )
+          .join('\n');
+
+        const totalAmount = `₦${(order.totalAmount / 100).toFixed(2)}`;
+
+        try {
+          await this.mailService.orderPaymentConfirmed({
+            to: email,
+            context: {
+              firstName,
+              lastName,
+              orderId: order.id,
+              orderDate: format(new Date(order.createdAt), 'PPP'),
+              itemsSummary,
+              totalAmount,
+              paymentReference: reference,
+              supportEmail: process.env.SUPPORT_EMAIL || 'support@medvax.com',
+            },
+          });
+
+          this.logger.log(
+            `Payment confirmation email sent to ${email} for order ${order.id}`,
+          );
+        } catch (error) {
+          this.logger.error(
+            `Failed to send payment confirmation email: ${error.message}`,
+          );
+          // Don't throw - we don't want to fail payment verification if email fails
+        }
+      }
+    }
+
     return {
       order: updatedOrder,
-      transaction,
     };
   }
 

@@ -9,6 +9,9 @@ export const populateRole = {
             select: {
               permission: {
                 select: {
+                  id: true,
+                  name: true,
+                  description: true,
                   value: true,
                 },
               },

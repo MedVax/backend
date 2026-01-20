@@ -8,7 +8,6 @@ import { AuthUser } from 'params/auth-user.param';
 import { UserPasswordChangeDto } from '../dtos/user-password-change.dto';
 import { UserPasswordResetDto } from '../dtos/user-password-reset.dto';
 import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
-import { UserFirstTimePasswordChangeDto } from '../dtos/user-first-time-login-password-change.dto';
 import { AuthPasswordService } from '../services/auth-password.service';
 import { ForgotPasswordDto } from '../dtos/forgot-password';
 
@@ -46,18 +45,5 @@ export class AuthPasswordController {
   })
   changePassword(@Body() dto: UserPasswordChangeDto, @AuthUser() user: User) {
     return this.authPasswordService.change(user?.id, dto);
-  }
-
-  @Put('first-time-change')
-  @AuthUserGuard()
-  @Response({
-    status: HttpStatus.OK,
-    message: 'Password changed successful',
-  })
-  changePasswordFirstTime(
-    @Body() dto: UserFirstTimePasswordChangeDto,
-    @AuthUser() user: User,
-  ) {
-    return this.authPasswordService.firstTimeChange(user?.id, dto);
   }
 }

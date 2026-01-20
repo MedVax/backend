@@ -210,7 +210,6 @@ export type PharmacyWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Pharmacy"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Pharmacy"> | Date | string
   owner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  orders?: Prisma.OrderListRelationFilter
 }
 
 export type PharmacyOrderByWithRelationInput = {
@@ -224,7 +223,6 @@ export type PharmacyOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   owner?: Prisma.UserOrderByWithRelationInput
-  orders?: Prisma.OrderOrderByRelationAggregateInput
 }
 
 export type PharmacyWhereUniqueInput = Prisma.AtLeast<{
@@ -241,7 +239,6 @@ export type PharmacyWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Pharmacy"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Pharmacy"> | Date | string
   owner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  orders?: Prisma.OrderListRelationFilter
 }, "id">
 
 export type PharmacyOrderByWithAggregationInput = {
@@ -284,7 +281,6 @@ export type PharmacyCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   owner: Prisma.UserCreateNestedOneWithoutPharmaciesInput
-  orders?: Prisma.OrderCreateNestedManyWithoutPharmacyInput
 }
 
 export type PharmacyUncheckedCreateInput = {
@@ -297,7 +293,6 @@ export type PharmacyUncheckedCreateInput = {
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutPharmacyInput
 }
 
 export type PharmacyUpdateInput = {
@@ -310,7 +305,6 @@ export type PharmacyUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   owner?: Prisma.UserUpdateOneRequiredWithoutPharmaciesNestedInput
-  orders?: Prisma.OrderUpdateManyWithoutPharmacyNestedInput
 }
 
 export type PharmacyUncheckedUpdateInput = {
@@ -323,7 +317,6 @@ export type PharmacyUncheckedUpdateInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  orders?: Prisma.OrderUncheckedUpdateManyWithoutPharmacyNestedInput
 }
 
 export type PharmacyCreateManyInput = {
@@ -405,11 +398,6 @@ export type PharmacyMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
-export type PharmacyNullableScalarRelationFilter = {
-  is?: Prisma.PharmacyWhereInput | null
-  isNot?: Prisma.PharmacyWhereInput | null
-}
-
 export type PharmacyCreateNestedManyWithoutOwnerInput = {
   create?: Prisma.XOR<Prisma.PharmacyCreateWithoutOwnerInput, Prisma.PharmacyUncheckedCreateWithoutOwnerInput> | Prisma.PharmacyCreateWithoutOwnerInput[] | Prisma.PharmacyUncheckedCreateWithoutOwnerInput[]
   connectOrCreate?: Prisma.PharmacyCreateOrConnectWithoutOwnerInput | Prisma.PharmacyCreateOrConnectWithoutOwnerInput[]
@@ -452,22 +440,6 @@ export type PharmacyUncheckedUpdateManyWithoutOwnerNestedInput = {
   deleteMany?: Prisma.PharmacyScalarWhereInput | Prisma.PharmacyScalarWhereInput[]
 }
 
-export type PharmacyCreateNestedOneWithoutOrdersInput = {
-  create?: Prisma.XOR<Prisma.PharmacyCreateWithoutOrdersInput, Prisma.PharmacyUncheckedCreateWithoutOrdersInput>
-  connectOrCreate?: Prisma.PharmacyCreateOrConnectWithoutOrdersInput
-  connect?: Prisma.PharmacyWhereUniqueInput
-}
-
-export type PharmacyUpdateOneWithoutOrdersNestedInput = {
-  create?: Prisma.XOR<Prisma.PharmacyCreateWithoutOrdersInput, Prisma.PharmacyUncheckedCreateWithoutOrdersInput>
-  connectOrCreate?: Prisma.PharmacyCreateOrConnectWithoutOrdersInput
-  upsert?: Prisma.PharmacyUpsertWithoutOrdersInput
-  disconnect?: Prisma.PharmacyWhereInput | boolean
-  delete?: Prisma.PharmacyWhereInput | boolean
-  connect?: Prisma.PharmacyWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.PharmacyUpdateToOneWithWhereWithoutOrdersInput, Prisma.PharmacyUpdateWithoutOrdersInput>, Prisma.PharmacyUncheckedUpdateWithoutOrdersInput>
-}
-
 export type PharmacyCreateWithoutOwnerInput = {
   id?: string
   name: string
@@ -477,7 +449,6 @@ export type PharmacyCreateWithoutOwnerInput = {
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  orders?: Prisma.OrderCreateNestedManyWithoutPharmacyInput
 }
 
 export type PharmacyUncheckedCreateWithoutOwnerInput = {
@@ -489,7 +460,6 @@ export type PharmacyUncheckedCreateWithoutOwnerInput = {
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutPharmacyInput
 }
 
 export type PharmacyCreateOrConnectWithoutOwnerInput = {
@@ -533,70 +503,6 @@ export type PharmacyScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Pharmacy"> | Date | string
 }
 
-export type PharmacyCreateWithoutOrdersInput = {
-  id?: string
-  name: string
-  address: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  phone?: string | null
-  email?: string | null
-  isActive?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  owner: Prisma.UserCreateNestedOneWithoutPharmaciesInput
-}
-
-export type PharmacyUncheckedCreateWithoutOrdersInput = {
-  id?: string
-  name: string
-  address: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  ownerUserId: string
-  phone?: string | null
-  email?: string | null
-  isActive?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type PharmacyCreateOrConnectWithoutOrdersInput = {
-  where: Prisma.PharmacyWhereUniqueInput
-  create: Prisma.XOR<Prisma.PharmacyCreateWithoutOrdersInput, Prisma.PharmacyUncheckedCreateWithoutOrdersInput>
-}
-
-export type PharmacyUpsertWithoutOrdersInput = {
-  update: Prisma.XOR<Prisma.PharmacyUpdateWithoutOrdersInput, Prisma.PharmacyUncheckedUpdateWithoutOrdersInput>
-  create: Prisma.XOR<Prisma.PharmacyCreateWithoutOrdersInput, Prisma.PharmacyUncheckedCreateWithoutOrdersInput>
-  where?: Prisma.PharmacyWhereInput
-}
-
-export type PharmacyUpdateToOneWithWhereWithoutOrdersInput = {
-  where?: Prisma.PharmacyWhereInput
-  data: Prisma.XOR<Prisma.PharmacyUpdateWithoutOrdersInput, Prisma.PharmacyUncheckedUpdateWithoutOrdersInput>
-}
-
-export type PharmacyUpdateWithoutOrdersInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  address?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  owner?: Prisma.UserUpdateOneRequiredWithoutPharmaciesNestedInput
-}
-
-export type PharmacyUncheckedUpdateWithoutOrdersInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  address?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  ownerUserId?: Prisma.StringFieldUpdateOperationsInput | string
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
 export type PharmacyCreateManyOwnerInput = {
   id?: string
   name: string
@@ -617,7 +523,6 @@ export type PharmacyUpdateWithoutOwnerInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  orders?: Prisma.OrderUpdateManyWithoutPharmacyNestedInput
 }
 
 export type PharmacyUncheckedUpdateWithoutOwnerInput = {
@@ -629,7 +534,6 @@ export type PharmacyUncheckedUpdateWithoutOwnerInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  orders?: Prisma.OrderUncheckedUpdateManyWithoutPharmacyNestedInput
 }
 
 export type PharmacyUncheckedUpdateManyWithoutOwnerInput = {
@@ -644,35 +548,6 @@ export type PharmacyUncheckedUpdateManyWithoutOwnerInput = {
 }
 
 
-/**
- * Count Type PharmacyCountOutputType
- */
-
-export type PharmacyCountOutputType = {
-  orders: number
-}
-
-export type PharmacyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  orders?: boolean | PharmacyCountOutputTypeCountOrdersArgs
-}
-
-/**
- * PharmacyCountOutputType without action
- */
-export type PharmacyCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the PharmacyCountOutputType
-   */
-  select?: Prisma.PharmacyCountOutputTypeSelect<ExtArgs> | null
-}
-
-/**
- * PharmacyCountOutputType without action
- */
-export type PharmacyCountOutputTypeCountOrdersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.OrderWhereInput
-}
-
 
 export type PharmacySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -685,8 +560,6 @@ export type PharmacySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   createdAt?: boolean
   updatedAt?: boolean
   owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  orders?: boolean | Prisma.Pharmacy$ordersArgs<ExtArgs>
-  _count?: boolean | Prisma.PharmacyCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["pharmacy"]>
 
 export type PharmacySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -730,8 +603,6 @@ export type PharmacySelectScalar = {
 export type PharmacyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "address" | "ownerUserId" | "phone" | "email" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["pharmacy"]>
 export type PharmacyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  orders?: boolean | Prisma.Pharmacy$ordersArgs<ExtArgs>
-  _count?: boolean | Prisma.PharmacyCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type PharmacyIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -744,7 +615,6 @@ export type $PharmacyPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   name: "Pharmacy"
   objects: {
     owner: Prisma.$UserPayload<ExtArgs>
-    orders: Prisma.$OrderPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1151,7 +1021,6 @@ readonly fields: PharmacyFieldRefs;
 export interface Prisma__PharmacyClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   owner<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  orders<T extends Prisma.Pharmacy$ordersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Pharmacy$ordersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1583,30 +1452,6 @@ export type PharmacyDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Limit how many Pharmacies to delete.
    */
   limit?: number
-}
-
-/**
- * Pharmacy.orders
- */
-export type Pharmacy$ordersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Order
-   */
-  select?: Prisma.OrderSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Order
-   */
-  omit?: Prisma.OrderOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.OrderInclude<ExtArgs> | null
-  where?: Prisma.OrderWhereInput
-  orderBy?: Prisma.OrderOrderByWithRelationInput | Prisma.OrderOrderByWithRelationInput[]
-  cursor?: Prisma.OrderWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.OrderScalarFieldEnum | Prisma.OrderScalarFieldEnum[]
 }
 
 /**

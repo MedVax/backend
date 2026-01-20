@@ -14,9 +14,20 @@ export class CartService {
 
   constructor(private prismaService: PrismaTenancyService) {}
 
-  async getOrCreateCart(userId: string) {
+  /**
+   * Get or create cart for authenticated user (userId) or anonymous user (sessionId)
+   */
+  async getOrCreateCart(userId?: string, sessionId?: string) {
+    if (!userId && !sessionId) {
+      throw new BadRequestException(
+        'Either userId or sessionId must be provided',
+      );
+    }
+
+    const where = userId ? { userId } : { sessionId };
+
     let cart = await this.prismaService.tenancy.cart.findUnique({
-      where: { userId },
+      where: where as any,
       include: {
         items: {
           include: {
@@ -32,7 +43,10 @@ export class CartService {
 
     if (!cart) {
       cart = await this.prismaService.tenancy.cart.create({
-        data: { userId },
+        data: {
+          ...(userId ? { userId } : {}),
+          ...(sessionId ? { sessionId } : {}),
+        },
         include: {
           items: {
             include: {
@@ -50,12 +64,21 @@ export class CartService {
     return cart;
   }
 
-  async getCart(userId: string) {
-    const cart = await this.getOrCreateCart(userId);
-    return cart;
+  /**
+   * Get cart for authenticated user (userId) or anonymous user (sessionId)
+   */
+  async getCart(userId?: string, sessionId?: string) {
+    return this.getOrCreateCart(userId, sessionId);
   }
 
-  async addItem(userId: string, dto: AddCartItemDto) {
+  /**
+   * Add item to cart (supports both authenticated and anonymous users)
+   */
+  async addItem(
+    userId: string | undefined,
+    sessionId: string | undefined,
+    dto: AddCartItemDto,
+  ) {
     // Verify product exists and is active
     const product = await this.prismaService.tenancy.product.findUnique({
       where: { id: dto.productId },
@@ -70,7 +93,7 @@ export class CartService {
     }
 
     // Get or create cart
-    const cart = await this.getOrCreateCart(userId);
+    const cart = await this.getOrCreateCart(userId, sessionId);
 
     // Check if item already exists in cart
     const existingItem = await this.prismaService.tenancy.cartItem.findUnique({
@@ -84,7 +107,7 @@ export class CartService {
 
     if (existingItem) {
       // Update quantity
-      return this.prismaService.tenancy.cartItem.update({
+      const updatedItem = await this.prismaService.tenancy.cartItem.update({
         where: { id: existingItem.id },
         data: {
           quantity: existingItem.quantity + dto.quantity,
@@ -97,9 +120,10 @@ export class CartService {
           },
         },
       });
+
+      return updatedItem;
     }
 
-    // Create new cart item
     return this.prismaService.tenancy.cartItem.create({
       data: {
         cartId: cart.id,
@@ -116,8 +140,16 @@ export class CartService {
     });
   }
 
-  async updateItem(userId: string, itemId: string, dto: UpdateCartItemDto) {
-    const cart = await this.getOrCreateCart(userId);
+  /**
+   * Update cart item (supports both authenticated and anonymous users)
+   */
+  async updateItem(
+    userId: string | undefined,
+    sessionId: string | undefined,
+    itemId: string,
+    dto: UpdateCartItemDto,
+  ) {
+    const cart = await this.getOrCreateCart(userId, sessionId);
 
     const item = await this.prismaService.tenancy.cartItem.findFirst({
       where: {
@@ -128,6 +160,13 @@ export class CartService {
 
     if (!item) {
       throw new NotFoundException(`Cart item with ID ${itemId} not found`);
+    }
+
+    if (dto.quantity === 0) {
+      await this.prismaService.tenancy.cartItem.delete({
+        where: { id: itemId },
+      });
+      return null;
     }
 
     return this.prismaService.tenancy.cartItem.update({
@@ -143,8 +182,15 @@ export class CartService {
     });
   }
 
-  async removeItem(userId: string, itemId: string) {
-    const cart = await this.getOrCreateCart(userId);
+  /**
+   * Remove item from cart (supports both authenticated and anonymous users)
+   */
+  async removeItem(
+    userId: string | undefined,
+    sessionId: string | undefined,
+    itemId: string,
+  ) {
+    const cart = await this.getOrCreateCart(userId, sessionId);
 
     const item = await this.prismaService.tenancy.cartItem.findFirst({
       where: {
@@ -162,13 +208,111 @@ export class CartService {
     });
   }
 
-  async clearCart(userId: string) {
-    const cart = await this.getOrCreateCart(userId);
+  /**
+   * Clear cart (supports both authenticated and anonymous users)
+   */
+  async clearCart(userId?: string, sessionId?: string) {
+    const cart = await this.getOrCreateCart(userId, sessionId);
 
     await this.prismaService.tenancy.cartItem.deleteMany({
       where: { cartId: cart.id },
     });
 
-    return this.getCart(userId);
+    return this.getCart(userId, sessionId);
+  }
+
+  /**
+   * Merge session cart into user cart (used when user signs up or logs in)
+   */
+  async mergeSessionCartToUserCart(userId: string, sessionId: string) {
+    if (!sessionId) {
+      this.logger.debug('No sessionId provided, skipping cart merge');
+      return null;
+    }
+
+    try {
+      // Get session cart
+      const sessionCart = await this.prismaService.tenancy.cart.findUnique({
+        where: { sessionId },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      });
+
+      // If no session cart or empty, nothing to merge
+      if (
+        !sessionCart ||
+        !sessionCart.items ||
+        sessionCart.items.length === 0
+      ) {
+        this.logger.debug('No session cart found or empty, skipping merge');
+        return null;
+      }
+
+      // Get or create user cart
+      const userCart = await this.getOrCreateCart(userId, undefined);
+
+      // Merge items from session cart to user cart
+      await this.prismaService.tenancy.$transaction(async (tx) => {
+        for (const sessionItem of sessionCart.items) {
+          // Check if item already exists in user cart
+          const existingItem = await tx.cartItem.findUnique({
+            where: {
+              cartId_productId: {
+                cartId: userCart.id,
+                productId: sessionItem.productId,
+              },
+            },
+          });
+
+          if (existingItem) {
+            // Update quantity (add session cart quantity to existing)
+            await tx.cartItem.update({
+              where: { id: existingItem.id },
+              data: {
+                quantity: existingItem.quantity + sessionItem.quantity,
+              },
+            });
+          } else {
+            // Create new item in user cart
+            await tx.cartItem.create({
+              data: {
+                cartId: userCart.id,
+                productId: sessionItem.productId,
+                quantity: sessionItem.quantity,
+              },
+            });
+          }
+
+          // Delete item from session cart
+          await tx.cartItem.delete({
+            where: { id: sessionItem.id },
+          });
+        }
+
+        // Delete session cart after all items are merged
+        await tx.cart.delete({
+          where: { id: sessionCart.id },
+        });
+      });
+
+      this.logger.log(
+        `Successfully merged ${sessionCart.items.length} items from session cart to user cart for user ${userId}`,
+      );
+
+      // Return the updated user cart
+      return this.getCart(userId, undefined);
+    } catch (error) {
+      this.logger.error(
+        `Error merging session cart to user cart: ${error.message}`,
+        error.stack,
+      );
+      // Don't throw - we don't want to block signup/login if cart merge fails
+      return null;
+    }
   }
 }

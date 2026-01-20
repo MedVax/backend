@@ -10,9 +10,12 @@ export class TokenToAuthUserMiddleware implements NestMiddleware {
       if (!req?.authUser) {
         const accessToken = this.extractTokenFromHeader(req);
         if (accessToken) {
-          const { user } = this.jwtService.decode(accessToken);
+          const { user, activeProfile } = this.jwtService.decode(accessToken);
           if (user) {
-            req.authUser = user;
+            req.authUser = {
+              ...user,
+              ...(activeProfile ? { activeProfile } : {}),
+            };
           }
         }
       }

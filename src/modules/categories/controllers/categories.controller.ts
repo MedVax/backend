@@ -9,15 +9,32 @@ import {
   HttpStatus,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { CategoriesService } from '../services/categories.service';
 import { CreateCategoryDto } from '../dtos/create-category.dto';
 import { UpdateCategoryDto } from '../dtos/update-category.dto';
+import { BulkCreateCategoryDto } from '../dtos/bulk-create-category.dto';
 import { Response } from 'metadatas/response.metadata';
 import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
 import { UserType } from 'generated/prisma/enums';
 import { PermissionsGuard } from 'src/guards/permission.guard';
+import { ImageValidationPipe } from 'pipes/image-validation.pipe';
+import { MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES } from 'utils/image-upload.util';
+import { CreateCategoryBodySchema } from '../doc/create-category-body.schema';
+import { UpdateCategoryBodySchema } from '../doc/update-category-body.schema';
 
 @Controller('categories')
 @ApiTags('Categories')
@@ -27,15 +44,67 @@ export class CategoriesController {
 
   @Post()
   @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: {
+        fileSize: MAX_IMAGE_SIZE,
+      },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error(
+              `Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody(CreateCategoryBodySchema)
   @Response({
     status: HttpStatus.CREATED,
     message: 'Category created successfully',
   })
   @ApiOperation({
-    summary: 'Create a new category or subcategory (Admin only)',
+    summary:
+      'Create a new category or subcategory with optional image (Admin only)',
+    description:
+      'Create a category with optional image upload. Image max 2MB. Allowed types: JPEG, PNG, WebP, GIF',
   })
-  create(@Body() dto: CreateCategoryDto) {
-    return this.categoriesService.create(dto);
+  create(
+    @Body() dto: CreateCategoryDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        fileIsRequired: false,
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
+          new FileTypeValidator({ fileType: /(jpeg|jpg|png|webp|gif)/ }),
+        ],
+      }),
+      new ImageValidationPipe(),
+    )
+    file?: Express.Multer.File,
+  ) {
+    return this.categoriesService.create(dto, file);
+  }
+
+  @Post('bulk')
+  @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @Response({
+    status: HttpStatus.CREATED,
+    message: 'Categories created successfully',
+  })
+  @ApiOperation({
+    summary: 'Bulk create categories (Admin only)',
+    description:
+      'Create multiple categories at once. Maximum 100 categories per request. Images are not supported in bulk create - use the update endpoint to add images afterward.',
+  })
+  bulkCreate(@Body() dto: BulkCreateCategoryDto) {
+    return this.categoriesService.bulkCreate(dto);
   }
 
   @Get()
@@ -98,10 +167,49 @@ export class CategoriesController {
 
   @Patch(':id')
   @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @UseInterceptors(
+    FileInterceptor('image', {
+      limits: {
+        fileSize: MAX_IMAGE_SIZE,
+      },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error(
+              `Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody(UpdateCategoryBodySchema)
   @Response({ status: HttpStatus.OK, message: 'Category updated successfully' })
-  @ApiOperation({ summary: 'Update a category (Admin only)' })
-  update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
-    return this.categoriesService.update(id, dto);
+  @ApiOperation({
+    summary: 'Update a category with optional image (Admin only)',
+    description:
+      'Update a category. Can upload an image to replace the existing one. Supports both multipart/form-data and application/json.',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        fileIsRequired: false,
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
+          new FileTypeValidator({ fileType: /(jpeg|jpg|png|webp|gif)/ }),
+        ],
+      }),
+      new ImageValidationPipe(),
+    )
+    file?: Express.Multer.File,
+  ) {
+    return this.categoriesService.update(id, dto, file);
   }
 
   @Delete(':id')

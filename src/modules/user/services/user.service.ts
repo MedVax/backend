@@ -220,10 +220,9 @@ export class UserService {
   async updateProfile(userId: string, dto: UpdateUserProfileDto) {
     const userExist = await this.findOneOrThrow(userId);
     const updateUser = await this.update({
-      ...dto,
+      ...(dto as UpdateUserDto),
       userId,
       type: userExist?.type,
-      ...(dto?.roles ? { roleIds: dto?.roles } : {}),
     });
     return updateUser;
   }
@@ -271,6 +270,12 @@ export class UserService {
         type: true,
         createdAt: true,
         avatar: true,
+        userProfiles: {
+          select: {
+            id: true,
+            type: true,
+          },
+        },
         ...populateRole,
       },
       orderBy: { createdAt: 'desc' },

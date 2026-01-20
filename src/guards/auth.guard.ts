@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { User } from 'generated/prisma/client';
+import { AuthUserType } from 'types/user.types';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -33,7 +34,7 @@ export class AuthGuard implements CanActivate {
     const request = context
       .switchToHttp()
       .getRequest<Request & { authUser: User }>();
-    const user = request.authUser;
+    const user = request.authUser as AuthUserType;
 
     if (!user) {
       throw new UnauthorizedException();
@@ -56,7 +57,8 @@ export class AuthGuard implements CanActivate {
       if (
         !types?.length ||
         user.type === UserType.SUPER_ADMIN ||
-        types.includes(user.type)
+        types.includes(user.type) ||
+        types.includes(user?.activeProfile?.type)
       ) {
         return true;
       }

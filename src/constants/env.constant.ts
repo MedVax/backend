@@ -53,3 +53,10 @@ export const DO_SPACES_KEY = config.getOrThrow('DO_SPACES_KEY');
 export const DO_SPACES_SECRET = config.getOrThrow('DO_SPACES_SECRET');
 export const DO_SPACES_ENDPOINT = config.getOrThrow('DO_SPACES_ENDPOINT');
 export const DO_SPACES_BUCKET = config.getOrThrow('DO_SPACES_BUCKET');
+
+export const SESSION_COOKIE_MAX_AGE =
+  config.get('SESSION_COOKIE_MAX_AGE') || 60 * 60 * 24 * 30; // Default: 30 days in seconds
+
+export const GOOGLE_CLIENT_ID = config.get('GOOGLE_CLIENT_ID');
+export const GOOGLE_CLIENT_SECRET = config.get('GOOGLE_CLIENT_SECRET');
+export const GOOGLE_REDIRECT_URI = config.get('GOOGLE_REDIRECT_URI');

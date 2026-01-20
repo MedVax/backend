@@ -27,6 +27,7 @@ import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
 import { UpdateUserDto } from '../dtos/update-user.dto';
 import { PermissionsGuard } from 'src/guards/permission.guard';
 import { populateRole } from 'modules/roles/helpers/roles.helper';
+import type { AuthUserType } from 'types/user.types';
 
 @Controller('users')
 @ApiTags('Users')
@@ -98,8 +99,13 @@ export class UserController {
     message: 'Profile fetched successfully',
   })
   @AuthUserGuard()
-  getUserDetail(@AuthUser() user: User) {
-    return this.userService.getUser(user?.id);
+  async getUserDetail(@AuthUser() user: AuthUserType) {
+    const activeProfile = user?.activeProfile;
+    const userData = await this.userService.getUser(user?.id);
+    return {
+      ...userData,
+      activeProfile,
+    };
   }
 
   @Get('/:id')

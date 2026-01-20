@@ -96,7 +96,7 @@ export class OrdersController {
     status: HttpStatus.OK,
     message: 'Order status updated successfully',
   })
-  @ApiOperation({ summary: 'Update order status (Admin/Pharmacy only)' })
+  @ApiOperation({ summary: 'Update order status (Admin only)' })
   updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateOrderStatusDto,

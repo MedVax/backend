@@ -73,4 +73,38 @@ export class CreateProductDto {
   @IsString({ each: true })
   @IsOptional()
   packageSizes?: string[];
+
+  @ApiPropertyOptional({
+    example: 'Take one tablet daily with water after meals',
+    description: 'Instructions on how to use this product',
+  })
+  @IsString()
+  @IsOptional()
+  howToUse?: string;
+
+  @ApiPropertyOptional({
+    example: ['Paracetamol', 'Caffeine', 'Codeine'],
+    type: [String],
+    description: 'List of active ingredients in this product',
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  ingredients?: string[];
+
+  @ApiPropertyOptional({
+    example: 'Store in a cool, dry place. Keep away from children.',
+    description: 'Pharmacy advice or warnings for this product',
+  })
+  @IsString()
+  @IsOptional()
+  pharmacyAdvise?: string;
+
+  @ApiPropertyOptional({
+    example: 'Weight: 500mg, Form: Tablets, Pack size: 20 tablets',
+    description: 'Product specifications and technical details',
+  })
+  @IsString()
+  @IsOptional()
+  specification?: string;
 }

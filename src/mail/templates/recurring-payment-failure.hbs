@@ -1,0 +1,47 @@
+{{> head }}
+{{> header }}
+
+<table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td>
+                        <p class="body paragrapy-spacing">Dear {{firstName}},</p>
+                        <p class="body paragrapy-spacing">
+                            We attempted to process the payment for your recurring order, but the payment could not be completed.
+                        </p>
+
+                        <div style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="margin-top: 0; color: #856404;">Payment Failed</h3>
+                            <p style="margin-bottom: 10px;"><strong>Order ID:</strong> {{orderId}}</p>
+                            <p style="margin-bottom: 10px;"><strong>Order Date:</strong> {{orderDate}}</p>
+                            <p style="margin-bottom: 10px;"><strong>Retry Attempt:</strong> {{retryCount}} of {{maxRetries}}</p>
+                        </div>
+
+                        <p class="body paragrapy-spacing">
+                            We will automatically retry the payment. If payment continues to fail after {{maxRetries}} attempts, 
+                            your recurring order will be automatically cancelled to prevent further charge attempts.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            Please ensure that your payment method has sufficient funds and is up to date. 
+                            You may also want to check with your bank or payment provider if there are any issues.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            If you need assistance or would like to update your payment method, please contact our support team at 
+                            <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            Thank you for your understanding.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{{> footer }}

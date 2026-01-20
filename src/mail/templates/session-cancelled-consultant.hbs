@@ -1,0 +1,42 @@
+{{> head }}
+{{> header }}
+
+<table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td>
+                        <p class="body paragrapy-spacing">Dear {{firstName}}{{#if lastName}} {{lastName}}{{/if}},</p>
+                        <p class="body paragrapy-spacing">
+                            The session with {{clientName}} scheduled for {{sessionDate}} has been cancelled.
+                        </p>
+
+                        <div style="background-color: #fff3cd; border: 1px solid #856404; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="margin-top: 0; color: #856404;">Session Cancelled</h3>
+                            <p style="margin-bottom: 10px;"><strong>Original Date:</strong> {{sessionDate}}</p>
+                            <p style="margin-bottom: 10px;"><strong>Client:</strong> {{clientName}}</p>
+                            <p style="margin-bottom: 0;"><strong>Reason:</strong> {{reason}}</p>
+                        </div>
+
+                        <p class="body paragrapy-spacing">
+                            This session has been removed from your schedule. You may want to update your availability if needed.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            If you have any questions, please contact our support team at 
+                            <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            Thank you for your understanding.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{{> footer }}
+

@@ -18,6 +18,8 @@ import { PermissionsGuard } from './guards/permission.guard';
 import { UploadsService } from './uploads/uploads.service';
 import { UploadsModule } from './uploads/uploads.module';
 import { DigitalOceanService } from 'modules/services/digital-ocean.service';
+import { SessionCookieService } from 'services/session-cookie.service';
+import { GoogleCalendarService } from 'src/services/google-calendar.service';
 
 const providers = [
   OtpService,
@@ -31,6 +33,8 @@ const providers = [
   UploadsService,
   DigitalOceanService,
   AvatarService,
+  SessionCookieService,
+  GoogleCalendarService,
 ];
 
 @Global()

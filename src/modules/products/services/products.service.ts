@@ -64,7 +64,20 @@ export class ProductsService {
         async (trx) => {
           const productResult = await trx.product.create({
             data: {
-              ...dto,
+              name: dto.name,
+              sku: dto.sku,
+              description: dto.description,
+              price: dto.price,
+              currency: dto.currency,
+              requiresPrescription: dto.requiresPrescription,
+              productType: dto.productType,
+              categoryId: dto.categoryId,
+              dosages: dto.dosages,
+              packageSizes: dto.packageSizes,
+              howToUse: dto.howToUse,
+              ingredients: dto.ingredients,
+              pharmacyAdvise: dto.pharmacyAdvise,
+              specification: dto.specification,
             },
           });
 
@@ -101,12 +114,8 @@ export class ProductsService {
     }
   }
 
-  async update(
-    id: string,
-    dto: UpdateProductDto,
-    files?: Express.Multer.File[],
-  ) {
-    const existing = await this.findOneOrThrow(id);
+  async update(dto: UpdateProductDto, files?: Express.Multer.File[]) {
+    const existing = await this.findOneOrThrow(dto.id);
 
     if (dto.sku && dto.sku !== existing.sku) {
       const skuConflict = await this.prismaService.tenancy.product.findUnique({
@@ -131,7 +140,9 @@ export class ProductsService {
       const productData = {
         ...(dto?.name ? { name: dto.name } : {}),
         ...(dto?.sku ? { sku: dto.sku } : {}),
-        ...(dto?.description ? { description: dto.description } : {}),
+        ...(dto?.description !== undefined
+          ? { description: dto.description }
+          : {}),
         ...(dto?.price ? { price: dto.price } : {}),
         ...(dto?.currency ? { currency: dto.currency } : {}),
         ...(dto?.requiresPrescription
@@ -141,17 +152,31 @@ export class ProductsService {
         ...(dto?.categoryId
           ? { category: { connect: { id: dto.categoryId } } }
           : {}),
+        ...(dto?.dosages !== undefined ? { dosages: dto.dosages } : {}),
+        ...(dto?.packageSizes !== undefined
+          ? { packageSizes: dto.packageSizes }
+          : {}),
+        ...(dto?.howToUse !== undefined ? { howToUse: dto.howToUse } : {}),
+        ...(dto?.ingredients !== undefined
+          ? { ingredients: dto.ingredients }
+          : {}),
+        ...(dto?.pharmacyAdvise !== undefined
+          ? { pharmacyAdvise: dto.pharmacyAdvise }
+          : {}),
+        ...(dto?.specification !== undefined
+          ? { specification: dto.specification }
+          : {}),
         images: [...attachmentsUrls],
       };
 
       const productUpdateResult =
         await this.prismaService.tenancy.product.update({
-          where: { id },
+          where: { id: dto.id },
           data: productData,
         });
 
       // Invalidate cache for this product and related caches
-      await this.invalidateProductCache(id, existing.sku);
+      await this.invalidateProductCache(dto.id, existing.sku);
       await this.invalidateListAndSearchCaches();
 
       return productUpdateResult;
@@ -554,7 +579,6 @@ export class ProductsService {
 
   private async invalidateListAndSearchCaches() {
     try {
-      // Delete all list and search cache keys
       await Promise.all([
         this.redisService.deleteByPattern(`${CACHE_PREFIX.PRODUCT_LIST}*`),
         this.redisService.deleteByPattern(`${CACHE_PREFIX.PRODUCT_SEARCH}*`),

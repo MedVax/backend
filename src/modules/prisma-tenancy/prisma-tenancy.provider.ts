@@ -4,6 +4,8 @@ import { createBuilder } from 'libs/url-to-db-query/prisma';
 import productUrlToPrismaQueryBuilder from 'modules/products/product-url-to-prisma-query-builder';
 import roleUrlToPrismaQueryBuilder from 'modules/roles/role-url-to-prisma-query-builder';
 import userUrlToPrismaQueryBuilder from 'modules/user/user-url-to-prisma-query-builder';
+import sessionUrlToPrismaQueryBuilder from 'modules/sessions/session-url-to-prisma-query-builder';
+import transactionUrlToPrismaQueryBuilder from 'modules/transactions/transaction-url-to-prisma-query-builder';
 import { ClsService } from 'nestjs-cls';
 import { PaginatedResult } from 'src/classes/paginated-result';
 
@@ -172,6 +174,11 @@ const MODEL_QUERY_BUILDERS = {
   Role: roleUrlToPrismaQueryBuilder,
   User: userUrlToPrismaQueryBuilder,
   Product: productUrlToPrismaQueryBuilder,
+  Session: sessionUrlToPrismaQueryBuilder,
+  Transaction: transactionUrlToPrismaQueryBuilder,
+  // Order: orderUrlToPrismaQueryBuilder,
+  // Cart: cartUrlToPrismaQueryBuilder,
+  // CartItem: cartItemUrlToPrismaQueryBuilder,
 } as {
   // [K in Exclude<
   //   keyof Exclude<

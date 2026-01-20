@@ -98,7 +98,7 @@ export class ProductsController {
     return this.productsService.create(body, files);
   }
 
-  @Patch(':id')
+  @Patch()
   @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
   @UseInterceptors(
     FilesInterceptor('images', 10, {
@@ -128,7 +128,6 @@ export class ProductsController {
       'Update a product. Can upload new images (which will be added to existing images), or update other product fields. Supports both multipart/form-data and application/json.',
   })
   async update(
-    @Param('id') id: string,
     @Body() body: UpdateProductDto,
     @UploadedFiles(
       new ParseFilePipe({
@@ -142,10 +141,10 @@ export class ProductsController {
     )
     files?: Express.Multer.File[],
   ) {
-    return this.productsService.update(id, body, files);
+    return this.productsService.update(body, files);
   }
 
-  @Put(':id')
+  @Put()
   @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
   @UseInterceptors(
     FilesInterceptor('images', 10, {
@@ -175,7 +174,6 @@ export class ProductsController {
       'Update a product (PUT semantics). Can upload new images to replace or add to existing ones based on replaceImages flag. Supports both multipart/form-data and application/json.',
   })
   async replace(
-    @Param('id') id: string,
     @Body() body: UpdateProductDto,
     @UploadedFiles(
       new ParseFilePipe({
@@ -189,7 +187,7 @@ export class ProductsController {
     )
     files?: Express.Multer.File[],
   ) {
-    return this.productsService.update(id, body, files);
+    return this.productsService.update(body, files);
   }
 
   @Get()

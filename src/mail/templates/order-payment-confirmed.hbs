@@ -1,0 +1,48 @@
+{{> head }}
+{{> header }}
+
+<table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td>
+                        <p class="body paragrapy-spacing">Dear {{firstName}}{{#if lastName}} {{lastName}}{{/if}},</p>
+                        <p class="body paragrapy-spacing">
+                            Great news! Your payment has been successfully verified and your order has been confirmed.
+                        </p>
+
+                        <div style="background-color: #d4edda; border: 1px solid #28a745; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="margin-top: 0; color: #155724;">Payment Confirmed ✓</h3>
+                            <p style="margin-bottom: 10px;"><strong>Order ID:</strong> {{orderId}}</p>
+                            <p style="margin-bottom: 10px;"><strong>Payment Reference:</strong> {{paymentReference}}</p>
+                            <p style="margin-bottom: 10px;"><strong>Order Date:</strong> {{orderDate}}</p>
+                            <p style="margin-bottom: 0;"><strong>Total Amount:</strong> {{totalAmount}}</p>
+                        </div>
+
+                        <p class="body paragrapy-spacing"><strong>Order Details:</strong></p>
+                        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">{{itemsSummary}}</pre>
+                            <p style="margin-top: 15px; margin-bottom: 0; font-weight: bold;">Total: {{totalAmount}}</p>
+                        </div>
+
+                        <p class="body paragrapy-spacing">
+                            Your order is now being processed and will be prepared for delivery. We'll send you updates on your order status as it progresses.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            If you have any questions about your order or need to make any changes, please contact our support team at 
+                            <a href="mailto:{{supportEmail}}">{{supportEmail}}</a> and include your Order ID ({{orderId}}) for faster assistance.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            Thank you for your purchase! We appreciate your business.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{{> footer }}

@@ -8,6 +8,7 @@ import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import 'dotenv/config';
+import cookieParser from 'cookie-parser';
 
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from 'filters/http-exception-fliter';
@@ -23,6 +24,8 @@ async function bootstrap() {
   });
   const logger = app.get(Logger);
   app.useBodyParser('json', { limit: '10mb' });
+  app.use(cookieParser());
+
   // Configure body parser for file uploads
   app.useBodyParser('urlencoded', { extended: true, limit: '10mb' });
   app.use(compression());

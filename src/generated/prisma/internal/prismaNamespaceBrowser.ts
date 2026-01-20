@@ -51,6 +51,10 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  UserProfile: 'UserProfile',
+  UserProfileClient: 'UserProfileClient',
+  UserProfileConsultant: 'UserProfileConsultant',
+  ConsultantAvailability: 'ConsultantAvailability',
   Role: 'Role',
   Permission: 'Permission',
   UserRole: 'UserRole',
@@ -65,7 +69,16 @@ export const ModelName = {
   OrderItem: 'OrderItem',
   Prescription: 'Prescription',
   Subscription: 'Subscription',
-  StockMovement: 'StockMovement'
+  StockMovement: 'StockMovement',
+  Session: 'Session',
+  SessionParticipant: 'SessionParticipant',
+  SessionInvitee: 'SessionInvitee',
+  SessionActivity: 'SessionActivity',
+  SessionRescheduleRequest: 'SessionRescheduleRequest',
+  SessionReview: 'SessionReview',
+  SessionGift: 'SessionGift',
+  CalendarIntegration: 'CalendarIntegration',
+  Transaction: 'Transaction'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -92,7 +105,9 @@ export const UserScalarFieldEnum = {
   firstName: 'firstName',
   lastName: 'lastName',
   type: 'type',
+  gender: 'gender',
   status: 'status',
+  emailVerified: 'emailVerified',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   firstTimeLogin: 'firstTimeLogin',
@@ -100,6 +115,74 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const UserProfileScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserProfileScalarFieldEnum = (typeof UserProfileScalarFieldEnum)[keyof typeof UserProfileScalarFieldEnum]
+
+
+export const UserProfileClientScalarFieldEnum = {
+  id: 'id',
+  coverName: 'coverName',
+  referral: 'referral',
+  channel: 'channel',
+  useCoverName: 'useCoverName',
+  symptoms: 'symptoms',
+  hasBookedSession: 'hasBookedSession',
+  userProfileId: 'userProfileId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt',
+  userProfileConsultantId: 'userProfileConsultantId'
+} as const
+
+export type UserProfileClientScalarFieldEnum = (typeof UserProfileClientScalarFieldEnum)[keyof typeof UserProfileClientScalarFieldEnum]
+
+
+export const UserProfileConsultantScalarFieldEnum = {
+  id: 'id',
+  introVideo: 'introVideo',
+  bio: 'bio',
+  rate: 'rate',
+  jobTitle: 'jobTitle',
+  areaOfExpertise: 'areaOfExpertise',
+  yearsOfExperience: 'yearsOfExperience',
+  faith: 'faith',
+  availabilityPeriod: 'availabilityPeriod',
+  offerFaithTherapy: 'offerFaithTherapy',
+  hasSetAvailability: 'hasSetAvailability',
+  rating: 'rating',
+  timezone: 'timezone',
+  userProfileId: 'userProfileId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+} as const
+
+export type UserProfileConsultantScalarFieldEnum = (typeof UserProfileConsultantScalarFieldEnum)[keyof typeof UserProfileConsultantScalarFieldEnum]
+
+
+export const ConsultantAvailabilityScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  consultantId: 'consultantId',
+  dayOfWeek: 'dayOfWeek',
+  dateString: 'dateString',
+  date: 'date',
+  slots: 'slots',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+} as const
+
+export type ConsultantAvailabilityScalarFieldEnum = (typeof ConsultantAvailabilityScalarFieldEnum)[keyof typeof ConsultantAvailabilityScalarFieldEnum]
 
 
 export const RoleScalarFieldEnum = {
@@ -149,6 +232,7 @@ export const CategoryScalarFieldEnum = {
   name: 'name',
   description: 'description',
   slug: 'slug',
+  image: 'image',
   parentId: 'parentId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -162,7 +246,6 @@ export const ProductScalarFieldEnum = {
   name: 'name',
   sku: 'sku',
   description: 'description',
-  brand: 'brand',
   price: 'price',
   currency: 'currency',
   requiresPrescription: 'requiresPrescription',
@@ -171,6 +254,10 @@ export const ProductScalarFieldEnum = {
   images: 'images',
   dosages: 'dosages',
   packageSizes: 'packageSizes',
+  howToUse: 'howToUse',
+  ingredients: 'ingredients',
+  pharmacyAdvise: 'pharmacyAdvise',
+  specification: 'specification',
   isActive: 'isActive',
   stockQuantity: 'stockQuantity',
   stockReserved: 'stockReserved',
@@ -218,6 +305,7 @@ export type AddressScalarFieldEnum = (typeof AddressScalarFieldEnum)[keyof typeo
 export const CartScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  sessionId: 'sessionId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -240,8 +328,17 @@ export type CartItemScalarFieldEnum = (typeof CartItemScalarFieldEnum)[keyof typ
 export const OrderScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
-  pharmacyId: 'pharmacyId',
   deliveryAddressId: 'deliveryAddressId',
+  guestFirstName: 'guestFirstName',
+  guestLastName: 'guestLastName',
+  guestEmail: 'guestEmail',
+  guestPhone: 'guestPhone',
+  guestAddressLine1: 'guestAddressLine1',
+  guestAddressLine2: 'guestAddressLine2',
+  guestCity: 'guestCity',
+  guestState: 'guestState',
+  guestPostalCode: 'guestPostalCode',
+  guestCountry: 'guestCountry',
   totalAmount: 'totalAmount',
   currency: 'currency',
   paymentStatus: 'paymentStatus',
@@ -250,6 +347,12 @@ export const OrderScalarFieldEnum = {
   paymentReference: 'paymentReference',
   paymentProvider: 'paymentProvider',
   notes: 'notes',
+  isRecurring: 'isRecurring',
+  recurringFrequency: 'recurringFrequency',
+  recurringDate: 'recurringDate',
+  nextRunDate: 'nextRunDate',
+  paymentRetryCount: 'paymentRetryCount',
+  isRecurringActive: 'isRecurringActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -334,6 +437,185 @@ export const StockMovementScalarFieldEnum = {
 export type StockMovementScalarFieldEnum = (typeof StockMovementScalarFieldEnum)[keyof typeof StockMovementScalarFieldEnum]
 
 
+export const SessionScalarFieldEnum = {
+  id: 'id',
+  clientId: 'clientId',
+  consultantId: 'consultantId',
+  status: 'status',
+  sessionType: 'sessionType',
+  scheduledDate: 'scheduledDate',
+  scheduledDateString: 'scheduledDateString',
+  meetingId: 'meetingId',
+  meetingUrl: 'meetingUrl',
+  metadata: 'metadata',
+  clientTimezone: 'clientTimezone',
+  note: 'note',
+  rescheduled: 'rescheduled',
+  changeLog: 'changeLog',
+  deleted: 'deleted',
+  deletedAt: 'deletedAt',
+  calendarEventId: 'calendarEventId',
+  calendarIntegrationId: 'calendarIntegrationId',
+  paidBy: 'paidBy',
+  subscriptionId: 'subscriptionId',
+  giftId: 'giftId',
+  hmoId: 'hmoId',
+  hmoNumber: 'hmoNumber',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SessionScalarFieldEnum = (typeof SessionScalarFieldEnum)[keyof typeof SessionScalarFieldEnum]
+
+
+export const SessionParticipantScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  userId: 'userId',
+  email: 'email',
+  name: 'name',
+  joined: 'joined',
+  joinedAt: 'joinedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SessionParticipantScalarFieldEnum = (typeof SessionParticipantScalarFieldEnum)[keyof typeof SessionParticipantScalarFieldEnum]
+
+
+export const SessionInviteeScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  email: 'email',
+  name: 'name',
+  token: 'token',
+  accepted: 'accepted',
+  acceptedAt: 'acceptedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SessionInviteeScalarFieldEnum = (typeof SessionInviteeScalarFieldEnum)[keyof typeof SessionInviteeScalarFieldEnum]
+
+
+export const SessionActivityScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  activityType: 'activityType',
+  userId: 'userId',
+  metadata: 'metadata',
+  meetingStartTime: 'meetingStartTime',
+  meetingEndTime: 'meetingEndTime',
+  duration: 'duration',
+  createdAt: 'createdAt'
+} as const
+
+export type SessionActivityScalarFieldEnum = (typeof SessionActivityScalarFieldEnum)[keyof typeof SessionActivityScalarFieldEnum]
+
+
+export const SessionRescheduleRequestScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  requestedBy: 'requestedBy',
+  requestedDate: 'requestedDate',
+  requestedDateString: 'requestedDateString',
+  reason: 'reason',
+  status: 'status',
+  respondedBy: 'respondedBy',
+  respondedAt: 'respondedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SessionRescheduleRequestScalarFieldEnum = (typeof SessionRescheduleRequestScalarFieldEnum)[keyof typeof SessionRescheduleRequestScalarFieldEnum]
+
+
+export const SessionReviewScalarFieldEnum = {
+  id: 'id',
+  sessionId: 'sessionId',
+  rating: 'rating',
+  comment: 'comment',
+  reviewedBy: 'reviewedBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SessionReviewScalarFieldEnum = (typeof SessionReviewScalarFieldEnum)[keyof typeof SessionReviewScalarFieldEnum]
+
+
+export const SessionGiftScalarFieldEnum = {
+  id: 'id',
+  giftFrom: 'giftFrom',
+  giftTo: 'giftTo',
+  giftToEmail: 'giftToEmail',
+  sessionsLeft: 'sessionsLeft',
+  totalSessions: 'totalSessions',
+  message: 'message',
+  isRedeemed: 'isRedeemed',
+  redeemedAt: 'redeemedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SessionGiftScalarFieldEnum = (typeof SessionGiftScalarFieldEnum)[keyof typeof SessionGiftScalarFieldEnum]
+
+
+export const CalendarIntegrationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  provider: 'provider',
+  accessToken: 'accessToken',
+  refreshToken: 'refreshToken',
+  tokenExpiry: 'tokenExpiry',
+  isConnected: 'isConnected',
+  providerEmail: 'providerEmail',
+  calendarId: 'calendarId',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  lastSyncedAt: 'lastSyncedAt'
+} as const
+
+export type CalendarIntegrationScalarFieldEnum = (typeof CalendarIntegrationScalarFieldEnum)[keyof typeof CalendarIntegrationScalarFieldEnum]
+
+
+export const TransactionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  reference: 'reference',
+  providerReference: 'providerReference',
+  provider: 'provider',
+  status: 'status',
+  amount: 'amount',
+  currency: 'currency',
+  description: 'description',
+  orderId: 'orderId',
+  sessionId: 'sessionId',
+  metadata: 'metadata',
+  providerResponse: 'providerResponse',
+  providerMetadata: 'providerMetadata',
+  paymentMethod: 'paymentMethod',
+  paymentChannel: 'paymentChannel',
+  authorizationCode: 'authorizationCode',
+  customerCode: 'customerCode',
+  customerEmail: 'customerEmail',
+  customerName: 'customerName',
+  webhookEvent: 'webhookEvent',
+  webhookPayload: 'webhookPayload',
+  initiatedAt: 'initiatedAt',
+  completedAt: 'completedAt',
+  failedAt: 'failedAt',
+  refundedAt: 'refundedAt',
+  errorMessage: 'errorMessage',
+  errorCode: 'errorCode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TransactionScalarFieldEnum = (typeof TransactionScalarFieldEnum)[keyof typeof TransactionScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -347,6 +629,14 @@ export const JsonNullValueInput = {
 } as const
 
 export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: 'DbNull',
+  JsonNull: 'JsonNull'
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {

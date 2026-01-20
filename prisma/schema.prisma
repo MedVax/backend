@@ -26,6 +26,37 @@ enum UserStatus {
   DEACTIVATED
 }
 
+enum UserProfileType {
+  CLIENT
+  CONSULTANT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum AvailabilityType {
+  CUSTOM
+  WEEKLY
+}
+
+enum AvailabilityPeriod {
+  WEEKDAYS
+  WEEKENDS
+  MIXED
+}
+
+enum DateLabel {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
 model User {
   id             String     @id @default(uuid())
   avatar         String?
@@ -34,7 +65,9 @@ model User {
   firstName      String
   lastName       String
   type           UserType
+  gender         String?
   status         UserStatus @default(ACTIVE)
+  emailVerified  Boolean    @default(false)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   firstTimeLogin Boolean    @default(false)
@@ -42,14 +75,90 @@ model User {
   userRoles      UserRole[]
 
   // Ecommerce relations
-  pharmacies    Pharmacy[]
-  addresses     Address[]
-  cart          Cart?
-  orders        Order[]
-  prescriptions Prescription[]
-  subscriptions Subscription[]
+  pharmacies           Pharmacy[]
+  addresses            Address[]
+  cart                 Cart?
+  orders               Order[]
+  prescriptions        Prescription[]
+  subscriptions        Subscription[]
+  userProfiles         UserProfile[]
+  transactions         Transaction[]
+  calendarIntegrations CalendarIntegration[]
 
   @@index([email])
+}
+
+model UserProfile {
+  id                     String                  @id @default(uuid())
+  userId                 String
+  type                   UserProfileType
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  userProfileClients     UserProfileClient[]
+  userProfileConsultants UserProfileConsultant[]
+}
+
+model UserProfileClient {
+  id                      String                 @id @default(uuid())
+  coverName               String?
+  referral                String?
+  channel                 String?
+  useCoverName            Boolean?               @default(false)
+  symptoms                String[]               @default([])
+  hasBookedSession        Boolean?               @default(false)
+  sessions                Session[]
+  userProfileId           String
+  userProfile             UserProfile            @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  deletedAt               DateTime?
+  userProfileConsultant   UserProfileConsultant? @relation(fields: [userProfileConsultantId], references: [id])
+  userProfileConsultantId String?
+
+  @@index([userProfileId])
+  @@index([deletedAt])
+}
+
+model UserProfileConsultant {
+  id                 String                   @id @default(uuid())
+  introVideo         String?
+  bio                String?
+  rate               Float?
+  jobTitle           String?
+  areaOfExpertise    String[]
+  yearsOfExperience  Int?
+  faith              String?
+  clients            UserProfileClient[]
+  availability       ConsultantAvailability[]
+  availabilityPeriod AvailabilityPeriod?
+  offerFaithTherapy  Boolean?
+  hasSetAvailability Boolean                  @default(false)
+  rating             Float?
+  timezone           String? // Consultant's timezone (e.g., 'Africa/Lagos')
+  sessions           Session[]
+  userProfile        UserProfile?             @relation(fields: [userProfileId], references: [id])
+  userProfileId      String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  deletedAt          DateTime?
+
+  @@index([userProfileId])
+  @@index([deletedAt])
+}
+
+model ConsultantAvailability {
+  id           String                @unique @default(uuid())
+  type         AvailabilityType
+  consultantId String
+  consultant   UserProfileConsultant @relation(fields: [consultantId], references: [id])
+  dayOfWeek    DateLabel?
+  dateString   String?
+  date         DateTime?
+  slots        Int[]
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  deletedAt    DateTime?
 }
 
 model Role {
@@ -119,6 +228,24 @@ enum PaymentStatus {
   PARTIALLY_REFUNDED
 }
 
+enum TransactionType {
+  ORDER
+  SESSION
+  RECURRING_ORDER
+  SUBSCRIPTION
+  REFUND
+  OTHER
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
 enum PrescriptionStatus {
   PENDING
   APPROVED
@@ -127,6 +254,11 @@ enum PrescriptionStatus {
 
 enum SubscriptionFrequency {
   DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum OrderRecurringFrequency {
   WEEKLY
   MONTHLY
 }
@@ -144,11 +276,35 @@ enum StockMovementType {
   RECONCILIATION
 }
 
+enum SessionStatus {
+  COMPLETED
+  UPCOMING
+  PENDING
+  CANCELED
+  DECLINED
+  PENDING_APPROVAL
+  APPROVED
+}
+
+enum SessionType {
+  INDIVIDUAL
+  COUPLE
+  CONSULTATION
+}
+
+enum OrganizationSponsor {
+  CLIENT
+  ORG
+  HMO
+  ORG_CLIENT
+}
+
 model Category {
   id          String     @id @default(uuid())
   name        String
   description String?
   slug        String     @unique
+  image       String?
   parentId    String?
   parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
   children    Category[] @relation("CategoryHierarchy")
@@ -172,6 +328,12 @@ model Product {
   categoryId           String?
   category             Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   images               String[]        @default([])
+  dosages              String[]        @default([])
+  packageSizes         String[]        @default([])
+  howToUse             String?
+  ingredients          String[]        @default([])
+  pharmacyAdvise       String?
+  specification        String?
   isActive             Boolean         @default(true)
   stockQuantity        Int             @default(0)
   stockReserved        Int             @default(0)
@@ -200,8 +362,6 @@ model Pharmacy {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  orders Order[]
-
   @@index([ownerUserId])
   @@index([isActive])
 }
@@ -228,11 +388,15 @@ model Address {
 
 model Cart {
   id        String     @id @default(uuid())
-  userId    String     @unique
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?    @unique
+  sessionId String?    @unique
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   items     CartItem[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([sessionId])
 }
 
 model CartItem {
@@ -250,31 +414,52 @@ model CartItem {
 }
 
 model Order {
-  id                 String              @id @default(uuid())
-  userId             String
-  user               User                @relation(fields: [userId], references: [id], onDelete: Restrict)
-  pharmacyId         String?
-  pharmacy           Pharmacy?           @relation(fields: [pharmacyId], references: [id], onDelete: SetNull)
+  id                 String                   @id @default(uuid())
+  userId             String?
+  user               User?                    @relation(fields: [userId], references: [id], onDelete: Restrict)
   deliveryAddressId  String?
-  deliveryAddress    Address?            @relation(fields: [deliveryAddressId], references: [id], onDelete: SetNull)
+  deliveryAddress    Address?                 @relation(fields: [deliveryAddressId], references: [id], onDelete: SetNull)
+  // Guest information for anonymous orders
+  guestFirstName     String?
+  guestLastName      String?
+  guestEmail         String?
+  guestPhone         String?
+  // Guest address for anonymous orders
+  guestAddressLine1  String?
+  guestAddressLine2  String?
+  guestCity          String?
+  guestState         String?
+  guestPostalCode    String?
+  guestCountry       String?
   totalAmount        Int // in minor currency units
-  currency           String              @default("NGN")
-  paymentStatus      PaymentStatus       @default(PENDING)
-  orderStatus        OrderStatus         @default(PENDING)
+  currency           String                   @default("NGN")
+  paymentStatus      PaymentStatus            @default(PENDING)
+  orderStatus        OrderStatus              @default(PENDING)
   prescriptionStatus PrescriptionStatus?
   paymentReference   String?
   paymentProvider    String? // paystack, flutterwave
   notes              String?
+  isRecurring        Boolean                  @default(false)
+  recurringFrequency OrderRecurringFrequency?
+  recurringDate      DateTime? // When the recurring order schedule was established
+  nextRunDate        DateTime? // When the next recurring order should be created
+  paymentRetryCount  Int                      @default(0) // Number of payment retry attempts
+  isRecurringActive  Boolean                  @default(true) // Whether recurring order is active (false after 3 failed retries)
   items              OrderItem[]
   prescriptions      Prescription[]
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  transactions       Transaction[]
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
 
   @@index([userId])
-  @@index([pharmacyId])
   @@index([paymentStatus])
   @@index([orderStatus])
   @@index([paymentReference])
+  @@index([guestEmail])
+  @@index([isRecurring])
+  @@index([recurringFrequency])
+  @@index([nextRunDate])
+  @@index([isRecurringActive])
 }
 
 model OrderItem {
@@ -340,6 +525,7 @@ model Subscription {
   isActive             Boolean               @default(true)
   autoCharge           Boolean               @default(false)
   paymentAuthorization String? // encrypted payment authorization token
+  sessions             Session[]
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
@@ -368,4 +554,250 @@ model StockMovement {
   @@index([orderId])
   @@index([createdAt])
   @@index([type])
+}
+
+model Session {
+  id                  String                @id @default(uuid())
+  clientId            String
+  client              UserProfileClient     @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  consultantId        String
+  consultant          UserProfileConsultant @relation(fields: [consultantId], references: [id], onDelete: Restrict)
+  status              SessionStatus         @default(PENDING)
+  sessionType         SessionType           @default(INDIVIDUAL)
+  scheduledDate       DateTime
+  scheduledDateString String                @unique
+  meetingId           String?
+  meetingUrl          String?
+  metadata            Json?
+  clientTimezone      String?
+  note                String?
+  rescheduled         Boolean               @default(false)
+  changeLog           Json? // Array of status changes
+  deleted             Boolean               @default(false)
+  deletedAt           DateTime?
+
+  // Calendar integration
+  calendarEventId       String? // Google Calendar event ID
+  calendarIntegrationId String? // Reference to which calendar integration was used
+  calendarIntegration   CalendarIntegration? @relation(fields: [calendarIntegrationId], references: [id], onDelete: SetNull)
+
+  // Payment & Quota
+  paidBy         OrganizationSponsor @default(CLIENT)
+  subscriptionId String?
+  subscription   Subscription?       @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  giftId         String?
+  gift           SessionGift?        @relation(fields: [giftId], references: [id], onDelete: SetNull)
+  hmoId          String?
+  hmoNumber      String?
+
+  // Relations
+  participants       SessionParticipant[]
+  invitees           SessionInvitee[]
+  activities         SessionActivity[]
+  rescheduleRequests SessionRescheduleRequest[]
+  review             SessionReview?
+  transactions       Transaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([consultantId])
+  @@index([status])
+  @@index([scheduledDate])
+  @@index([scheduledDateString])
+  @@index([sessionType])
+  @@index([subscriptionId])
+  @@index([giftId])
+  @@index([deleted])
+  @@index([calendarEventId])
+  @@index([calendarIntegrationId])
+}
+
+model SessionParticipant {
+  id        String    @id @default(uuid())
+  sessionId String
+  session   Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId    String?
+  email     String
+  name      String
+  joined    Boolean   @default(false)
+  joinedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([sessionId, email])
+  @@index([sessionId])
+  @@index([userId])
+}
+
+model SessionInvitee {
+  id         String    @id @default(uuid())
+  sessionId  String
+  session    Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  email      String
+  name       String
+  token      String    @unique
+  accepted   Boolean   @default(false)
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([sessionId, email])
+  @@index([sessionId])
+  @@index([token])
+}
+
+model SessionActivity {
+  id               String    @id @default(uuid())
+  sessionId        String
+  session          Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  activityType     String // JOIN, LEAVE, END, etc.
+  userId           String?
+  metadata         Json?
+  meetingStartTime DateTime?
+  meetingEndTime   DateTime?
+  duration         Int? // in seconds
+  createdAt        DateTime  @default(now())
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model SessionRescheduleRequest {
+  id                  String    @id @default(uuid())
+  sessionId           String
+  session             Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  requestedBy         String // userId
+  requestedDate       DateTime
+  requestedDateString String
+  reason              String?
+  status              String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  respondedBy         String?
+  respondedAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([sessionId])
+  @@index([status])
+  @@index([requestedBy])
+}
+
+model SessionReview {
+  id         String   @id @default(uuid())
+  sessionId  String   @unique
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  rating     Int // 1-5
+  comment    String?
+  reviewedBy String // userId (client)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([rating])
+}
+
+model SessionGift {
+  id            String    @id @default(uuid())
+  giftFrom      String // userId who gifted
+  giftTo        String? // userId who received (optional for pending)
+  giftToEmail   String // email of recipient
+  sessionsLeft  Int       @default(0)
+  totalSessions Int
+  message       String?
+  isRedeemed    Boolean   @default(false)
+  redeemedAt    DateTime?
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([giftFrom])
+  @@index([giftTo])
+  @@index([giftToEmail])
+  @@index([isRedeemed])
+}
+
+model CalendarIntegration {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      String // 'google', 'outlook', 'apple', etc.
+  accessToken   String // Encrypted access token
+  refreshToken  String? // Encrypted refresh token
+  tokenExpiry   DateTime? // Token expiry timestamp
+  isConnected   Boolean   @default(true)
+  providerEmail String? // Email associated with the calendar account
+  calendarId    String? // Primary calendar ID (for Google: usually 'primary')
+  metadata      Json? // Additional provider-specific data
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastSyncedAt  DateTime? // Last time calendar was synced
+  sessions      Session[] // Sessions using this calendar integration
+
+  @@unique([userId, provider])
+  @@index([userId])
+  @@index([provider])
+  @@index([isConnected])
+}
+
+model Transaction {
+  id                String            @id @default(uuid())
+  userId            String?
+  user              User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type              TransactionType
+  reference         String            @unique // Internal reference (e.g., order ID, session ID)
+  providerReference String            @unique // Payment provider reference (e.g., Paystack reference)
+  provider          String // paystack, flutterwave, stripe, etc.
+  status            TransactionStatus @default(PENDING)
+  amount            Int // Amount in minor currency units (kobo for NGN)
+  currency          String            @default("NGN")
+  description       String?
+
+  // Related entity IDs
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  sessionId String?
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  // Metadata from payment provider
+  metadata         Json? // Full response from payment provider
+  providerResponse Json? // Detailed provider response
+  providerMetadata Json? // Additional provider metadata
+
+  // Payment details
+  paymentMethod     String? // card, bank, ussd, etc.
+  paymentChannel    String? // paystack channel used
+  authorizationCode String? // For recurring payments
+  customerCode      String? // Payment provider customer code
+  customerEmail     String?
+  customerName      String?
+
+  // Webhook information
+  webhookEvent   String? // Event type from provider webhook
+  webhookPayload Json? // Full webhook payload
+
+  // Timestamps
+  initiatedAt DateTime  @default(now())
+  completedAt DateTime?
+  failedAt    DateTime?
+  refundedAt  DateTime?
+
+  // Error tracking
+  errorMessage String?
+  errorCode    String?
+
+  // Audit
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([reference])
+  @@index([providerReference])
+  @@index([provider])
+  @@index([orderId])
+  @@index([sessionId])
+  @@index([createdAt])
+  @@index([status, createdAt])
 }

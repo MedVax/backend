@@ -6,7 +6,7 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserStatus, UserType } from 'generated/prisma/enums';
+import { UserProfileType, UserStatus, UserType } from 'generated/prisma/enums';
 import { randomUUID } from 'crypto';
 
 import { Prisma, User } from 'generated/prisma/client';
@@ -25,13 +25,14 @@ import { BcryptService } from 'services/bcrypt.service';
 import { VerifyOtpDTO } from '../dtos/verify-otp.dto';
 import { OtpPurpose, OtpService } from 'services/otp.service';
 import { MailService } from 'src/mail/services/mail.service';
-import { SendVerifyOtpDTO } from '../dtos/send-verify-otp.dto';
 import { UserSignupDto } from '../dtos/user-signup';
 import { normalizeString } from 'utils/string-util';
-import { TokenPurpose, TokenService } from 'services/token.service';
+import { TokenService } from 'services/token.service';
 import { AvatarService } from 'services/avatar.service';
 import { populateRole } from 'modules/roles/helpers/roles.helper';
 import { RedisService } from 'services/redis.service';
+import { CartService } from 'modules/cart/services/cart.service';
+import { forwardRef, Inject } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
@@ -45,6 +46,8 @@ export class AuthService {
     private tokenService: TokenService,
     private avatarService: AvatarService,
     private redisService: RedisService,
+    @Inject(forwardRef(() => CartService))
+    private cartService: CartService,
   ) {}
 
   private logger = new Logger(this.constructor.name);
@@ -62,9 +65,10 @@ export class AuthService {
   public async createToken(
     finalToken: boolean,
     user: Prisma.UserGetPayload<any>,
+    activeProfile?: { id: string; type: string } | null,
   ): Promise<TokenPayloadDto> {
     const accessToken = await this.jwtService.signAsync(
-      { user },
+      { user, activeProfile },
       {
         secret: JWT_REFRESH_SECRET,
         expiresIn: finalToken ? JWT_REFRESH_EXPIRATION : '10m',
@@ -143,20 +147,13 @@ export class AuthService {
     };
   }
 
-  async signin(dto: UserSigninDto) {
-    let user = await this.prismaService.user.findFirst({
+  async signin(dto: UserSigninDto, sessionId?: string) {
+    const user = await this.prismaService.user.findFirst({
       where: {
         email: dto.email,
       },
       omit: {
         password: false,
-      },
-      include: {
-        userRoles: {
-          include: {
-            role: true,
-          },
-        },
       },
     });
 
@@ -173,44 +170,88 @@ export class AuthService {
       );
     }
 
-    user = await this.prismaService.user.update({
+    const updatedUser = await this.prismaService.user.update({
       where: {
         id: user.id,
       },
       data: { lastLoginAt: new Date().toISOString() },
       include: {
-        userRoles: {
-          include: {
-            role: true,
+        ...populateRole,
+        userProfiles: {
+          select: {
+            id: true,
+            type: true,
+            userProfileClients: {
+              select: {
+                id: true,
+              },
+            },
+            userProfileConsultants: {
+              select: {
+                id: true,
+              },
+            },
           },
         },
       },
     });
 
-    const userToken = await this.createToken(true, user);
+    let activeProfile: {
+      id: string;
+      type: string;
+      userProfileClient?: string;
+      userProfileConsultant?: string;
+    } | null = null;
+
+    if (dto.profileType) {
+      const profileWithType = updatedUser.userProfiles.find(
+        (profile) => profile.type === dto.profileType,
+      );
+
+      if (!profileWithType) {
+        throw new BadRequestException(
+          `No ${dto.profileType?.toString()} profile found for this user`,
+        );
+      }
+      activeProfile = {
+        id: profileWithType.id,
+        type: profileWithType.type,
+        userProfileClient: profileWithType.userProfileClients[0]?.id,
+        userProfileConsultant: profileWithType.userProfileConsultants[0]?.id,
+      };
+    } else if (
+      updatedUser.userProfiles &&
+      updatedUser.userProfiles.length > 0
+    ) {
+      // Use the first profile as default if no profileType specified
+      activeProfile = {
+        id: updatedUser.userProfiles[0].id,
+        type: updatedUser.userProfiles[0].type,
+        userProfileClient:
+          updatedUser.userProfiles[0].userProfileClients[0]?.id,
+        userProfileConsultant:
+          updatedUser.userProfiles[0].userProfileConsultants[0]?.id,
+      };
+    }
+
+    // Merge session cart to user cart if sessionId exists
+    if (sessionId) {
+      await this.cartService.mergeSessionCartToUserCart(
+        updatedUser.id,
+        sessionId,
+      );
+    }
+
+    const userToken = await this.createToken(true, updatedUser, activeProfile);
 
     return {
-      user,
+      user: updatedUser,
+      activeProfile,
       ...userToken,
     };
   }
 
-  async adminSignin(dto: UserSigninDto) {
-    const user = await this.prismaService.user.findFirst({
-      where: {
-        email: dto.email,
-      },
-    });
-    if (![UserType.ADMIN, UserType.SUPER_ADMIN].includes(user?.type as any)) {
-      this.logger.error(
-        `User ${dto.email} tried to login with invalid user type ${user?.type}`,
-      );
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    return this.signin(dto);
-  }
-
-  async signup(dto: UserSignupDto) {
+  async signup(dto: UserSignupDto, sessionId?: string) {
     const { firstName, lastName, password, email } = dto;
 
     const existingUser = await this.prismaService.user.findFirst({
@@ -235,43 +276,77 @@ export class AuthService {
         type: UserType.USER,
         lastLoginAt: new Date(),
         firstTimeLogin: false,
-      },
-      include: {
-        userRoles: {
-          include: {
-            role: true,
+        userProfiles: {
+          create: {
+            type: UserProfileType.CLIENT,
           },
         },
       },
+      include: {
+        userProfiles: {
+          select: {
+            id: true,
+            type: true,
+            userProfileClients: {
+              select: {
+                id: true,
+              },
+            },
+            userProfileConsultants: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+        ...populateRole,
+      },
     });
 
-    const userToken = await this.createToken(true, user);
+    const activeProfile = {
+      id: user.userProfiles[0].id,
+      type: user.userProfiles[0].type,
+      userProfileClient: user.userProfiles[0].userProfileClients[0]?.id,
+      userProfileConsultant: user.userProfiles[0].userProfileConsultants[0]?.id,
+    };
 
-    return { user, ...userToken };
+    // Merge session cart to user cart if sessionId exists
+    if (sessionId) {
+      await this.cartService.mergeSessionCartToUserCart(user.id, sessionId);
+    }
+
+    const userToken = await this.createToken(true, user, activeProfile);
+
+    return { user, activeProfile, ...userToken };
   }
 
-  async sendVerificationOTP(dto: SendVerifyOtpDTO) {
-    const { email } = dto;
+  async sendVerificationOTP(user: User) {
+    const existingUser = await this.prismaService.user.findUnique({
+      where: { email: user.email },
+    });
+
+    if (existingUser?.emailVerified) {
+      throw new BadRequestException('Email already verified');
+    }
 
     const { otp } = await this.otpService.generateOTPForUser(
-      email,
+      user.email,
       OtpPurpose.EmailVerification,
     );
 
     await this.mailService.sendVerificationOTP({
       context: { otp },
-      to: email,
+      to: user.email,
     });
 
-    return { email };
+    return null;
   }
 
-  async verifyEmailWithOTP(dto: VerifyOtpDTO) {
-    const { email, otp } = dto;
-    const user = await this.userService.get(email);
+  async verifyEmailWithOTP(dto: VerifyOtpDTO, user: User) {
+    const { otp } = dto;
 
     const isValidOtp = await this.otpService.validateOTP({
-      email,
+      email: user.email,
       otp: String(otp),
       purpose: OtpPurpose.EmailVerification,
     });
@@ -281,19 +356,17 @@ export class AuthService {
     }
 
     await this.otpService.deleteOtp({
-      email,
+      email: user.email,
       otp: String(otp),
       purpose: OtpPurpose.EmailVerification,
     });
 
-    if (user) throw new ConflictException('Email already exists, kindly login');
+    await this.prismaService.user.update({
+      where: { id: user.id },
+      data: { emailVerified: true },
+    });
 
-    const token = await this.tokenService.generateToken(
-      { email },
-      TokenPurpose.UserOnboarding,
-    );
-
-    return { token };
+    return null;
   }
 
   async logout(user: User) {

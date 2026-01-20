@@ -1,5 +1,15 @@
 import { ApiTags } from '@nestjs/swagger';
-import { Body, Controller, Headers, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpStatus,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
+import type { Request, Response as ExpressResponse } from 'express';
 
 import { AuthAllow } from 'metadatas/auth-allow.metadata';
 import { Response } from 'metadatas/response.metadata';
@@ -7,49 +17,74 @@ import { UserSigninDto } from '../dtos/user-signin.dto';
 import { UserRefreshTokenDto } from '../dtos/user-refresh-token.dto';
 import { AuthService } from '../services/auth.service';
 import { VerifyOtpDTO } from '../dtos/verify-otp.dto';
-import { SendVerifyOtpDTO } from '../dtos/send-verify-otp.dto';
 import { UserSignupDto } from '../dtos/user-signup';
 import { AuthUser } from 'params/auth-user.param';
 import type { User } from 'generated/prisma/client';
+import { SessionCookieService } from 'services/session-cookie.service';
 
 @Controller('auth')
 @ApiTags('Auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private sessionCookieService: SessionCookieService,
+  ) {}
 
   @Post('signup')
   @AuthAllow()
-  @Response({ status: HttpStatus.OK, message: 'Account Created successful' })
-  signupUser(@Body() dto: UserSignupDto) {
-    return this.authService.signup(dto);
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Account Created successful',
+  })
+  async signupUser(
+    @Body() dto: UserSignupDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ) {
+    // Get sessionId from cookies if it exists
+    const sessionId = this.sessionCookieService.getSessionId(req);
+    const result = await this.authService.signup(dto, sessionId);
+
+    // Clear session cookie after successful signup since user is now authenticated
+    if (sessionId) {
+      this.sessionCookieService.clearSessionCookie(res);
+    }
+
+    return result;
   }
 
-  @Post('/signup/validate-email-otp')
+  @Post('/validate-email-otp')
   @AuthAllow()
   @Response({ status: HttpStatus.OK, message: 'Verified successful' })
-  verifyEmailWithOtp(@Body() dto: VerifyOtpDTO) {
-    return this.authService.verifyEmailWithOTP(dto);
+  verifyEmailWithOtp(@AuthUser() user: User, @Body() dto: VerifyOtpDTO) {
+    return this.authService.verifyEmailWithOTP(dto, user);
   }
 
-  @Post('/signup/verify-email')
+  @Get('/verify-email')
   @AuthAllow()
   @Response({ status: HttpStatus.OK, message: 'OTP sent successful' })
-  sendVerifyOtp(@Body() dto: SendVerifyOtpDTO) {
-    return this.authService.sendVerificationOTP(dto);
+  sendVerifyOtp(@AuthUser() user: User) {
+    return this.authService.sendVerificationOTP(user);
   }
 
   @Post('signin')
   @AuthAllow()
   @Response({ status: HttpStatus.OK, message: 'Signin successful' })
-  signinUser(@Body() dto: UserSigninDto) {
-    return this.authService.signin(dto);
-  }
+  async signinUser(
+    @Body() dto: UserSigninDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ) {
+    // Get sessionId from cookies if it exists
+    const sessionId = this.sessionCookieService.getSessionId(req);
+    const result = await this.authService.signin(dto, sessionId);
 
-  @Post('signin/admin')
-  @AuthAllow()
-  @Response({ status: HttpStatus.OK, message: 'Signin successful' })
-  signinUserAdmin(@Body() dto: UserSigninDto) {
-    return this.authService.adminSignin(dto);
+    // Clear session cookie after successful signin since user is now authenticated
+    if (sessionId) {
+      this.sessionCookieService.clearSessionCookie(res);
+    }
+
+    return result;
   }
 
   @Post('refresh-token')

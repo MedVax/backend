@@ -22,6 +22,26 @@ export * from './enums.js';
  */
 export type User = Prisma.UserModel
 /**
+ * Model UserProfile
+ * 
+ */
+export type UserProfile = Prisma.UserProfileModel
+/**
+ * Model UserProfileClient
+ * 
+ */
+export type UserProfileClient = Prisma.UserProfileClientModel
+/**
+ * Model UserProfileConsultant
+ * 
+ */
+export type UserProfileConsultant = Prisma.UserProfileConsultantModel
+/**
+ * Model ConsultantAvailability
+ * 
+ */
+export type ConsultantAvailability = Prisma.ConsultantAvailabilityModel
+/**
  * Model Role
  * 
  */
@@ -96,3 +116,48 @@ export type Subscription = Prisma.SubscriptionModel
  * 
  */
 export type StockMovement = Prisma.StockMovementModel
+/**
+ * Model Session
+ * 
+ */
+export type Session = Prisma.SessionModel
+/**
+ * Model SessionParticipant
+ * 
+ */
+export type SessionParticipant = Prisma.SessionParticipantModel
+/**
+ * Model SessionInvitee
+ * 
+ */
+export type SessionInvitee = Prisma.SessionInviteeModel
+/**
+ * Model SessionActivity
+ * 
+ */
+export type SessionActivity = Prisma.SessionActivityModel
+/**
+ * Model SessionRescheduleRequest
+ * 
+ */
+export type SessionRescheduleRequest = Prisma.SessionRescheduleRequestModel
+/**
+ * Model SessionReview
+ * 
+ */
+export type SessionReview = Prisma.SessionReviewModel
+/**
+ * Model SessionGift
+ * 
+ */
+export type SessionGift = Prisma.SessionGiftModel
+/**
+ * Model CalendarIntegration
+ * 
+ */
+export type CalendarIntegration = Prisma.CalendarIntegrationModel
+/**
+ * Model Transaction
+ * 
+ */
+export type Transaction = Prisma.TransactionModel

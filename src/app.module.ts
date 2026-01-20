@@ -40,6 +40,11 @@ import { PharmacyModule } from './modules/pharmacy/pharmacy.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { StockModule } from './modules/stock/stock.module';
+import { ClientsModule } from './modules/clients/clients.module';
+import { ConsultantsModule } from './modules/consultants/consultants.module';
+import { SessionsModule } from './modules/sessions/sessions.module';
+import { TransactionsModule } from './modules/transactions/transactions.module';
+import { CalendarIntegrationModule } from './modules/calendar-integration/calendar-integration.module';
 import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middleware';
 
 @Module({
@@ -167,6 +172,8 @@ import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middle
     RolesModule,
     PermissionsModule,
     UserModule,
+    ClientsModule,
+    ConsultantsModule,
     AppGlobalModule,
     PrismaTenancyModule,
     // Ecommerce modules
@@ -180,6 +187,9 @@ import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middle
     SubscriptionsModule,
     PaymentsModule,
     StockModule,
+    SessionsModule,
+    TransactionsModule,
+    CalendarIntegrationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

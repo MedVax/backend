@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { UserPasswordChangeDto } from '../dtos/user-password-change.dto';
 import { UserPasswordResetDto } from '../dtos/user-password-reset.dto';
@@ -11,7 +6,6 @@ import { TokenPurpose, TokenService } from 'src/helpers/token.service';
 import { MailService } from 'src/mail/services/mail.service';
 import { FRONTEND_URL } from 'constants/env.constant';
 import { capitalizeSentence } from 'types/index.types';
-import { UserFirstTimePasswordChangeDto } from '../dtos/user-first-time-login-password-change.dto';
 import UserService from 'modules/user/services/user.service';
 import { BcryptService } from 'services/bcrypt.service';
 
@@ -26,38 +20,6 @@ export class AuthPasswordService {
   ) {}
 
   private logger = new Logger(this.constructor.name);
-
-  async firstTimeChange(userId: string, dto: UserFirstTimePasswordChangeDto) {
-    const user = await this.prismaService.user.findFirstOrThrow({
-      where: { id: userId },
-      omit: { password: false },
-    });
-
-    if (!user?.firstTimeLogin) {
-      throw new ForbiddenException(
-        'Password change only allowed for first-time login',
-      );
-    }
-
-    if (this.bcryptService.compareSync(dto.newPassword, user.password)) {
-      throw new BadRequestException(`New password is the same as the previous`);
-    }
-    let password;
-
-    try {
-      password = this.bcryptService.hashSync(dto.newPassword);
-    } catch (error) {
-      console.error(error);
-      throw new BadRequestException('Invalid or expired password reset link');
-    }
-
-    await this.prismaService.user.update({
-      where: { id: userId },
-      data: { password, firstTimeLogin: false },
-    });
-
-    return null;
-  }
 
   async change(userId: string, dto: UserPasswordChangeDto) {
     const user = await this.prismaService.user.findFirstOrThrow({
@@ -115,9 +77,13 @@ export class AuthPasswordService {
       token,
       purpose: TokenPurpose.PasswordReset,
     });
-    if (!tokenData) throw new BadRequestException('Invalid OTP');
 
-    const user = await this.userService.findOneOrThrow(tokenData?.email);
+    if (!tokenData?.payload?.email)
+      throw new BadRequestException('Invalid token');
+
+    const user = await this.userService.findOneOrThrow(
+      tokenData?.payload?.email,
+    );
 
     await this.prismaService.user.update({
       where: { id: user?.id },

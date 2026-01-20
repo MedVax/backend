@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 
 import { RolesService } from '../services/roles.service';
-import { CreateRoleDto } from '../dtos/roles.dto';
+import { CreateRoleDto, RoleDto } from '../dtos/roles.dto';
 import { AuthUser } from 'params/auth-user.param';
 
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
@@ -23,6 +23,7 @@ import {
   PermissionMatchModeEnum,
 } from 'modules/permissions/enums/permissions.enum';
 import type { User } from 'generated/prisma/client';
+import { ApiResponseOk } from 'src/decorators/api-response-ok';
 
 const rolePermissionsArray = [
   PermissionEnum.VIEW_ROLES,
@@ -48,7 +49,8 @@ export class RolesController {
   @Get()
   @RequirePermissions(rolePermissionsArray, PermissionMatchModeEnum.EVERY)
   @HttpCode(HttpStatus.OK)
-  // @ApiResponseOk(RoleDto)
+  @ApiResponseOk(RoleDto)
+  @Response({ status: HttpStatus.OK, message: 'Roles fetched successfully' })
   findAllRoles(
     @Query() paginationQueryParams: PaginationQuery,
     @Query() filterQuery: GetRolesFilterQuery,

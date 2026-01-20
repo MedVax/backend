@@ -7,7 +7,10 @@ import {
 import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.service';
 import { CreateCategoryDto } from '../dtos/create-category.dto';
 import { UpdateCategoryDto } from '../dtos/update-category.dto';
+import { BulkCreateCategoryDto } from '../dtos/bulk-create-category.dto';
 import { RedisService } from 'services/redis.service';
+import { UploadsService } from 'src/uploads/uploads.service';
+import { generateCategoryImageFileName } from 'utils/file-utils';
 
 // Cache configuration
 const CACHE_TTL = 3600; // 1 hour
@@ -27,9 +30,10 @@ export class CategoriesService {
   constructor(
     private prismaService: PrismaTenancyService,
     private redisService: RedisService,
+    private uploadsService: UploadsService,
   ) {}
 
-  async create(dto: CreateCategoryDto) {
+  async create(dto: CreateCategoryDto, file?: Express.Multer.File) {
     // Check if slug already exists
     const existing = await this.prismaService.tenancy.category.findUnique({
       where: { slug: dto.slug },
@@ -54,36 +58,215 @@ export class CategoriesService {
       }
     }
 
-    const category = await this.prismaService.tenancy.category.create({
-      data: dto,
-      include: {
-        parent: {
+    try {
+      let imageUrl: string | undefined;
+
+      // Upload image if provided
+      if (file) {
+        // Create category first to get the ID
+        const categoryResult = await this.prismaService.tenancy.category.create(
+          {
+            data: dto,
+          },
+        );
+
+        const fileName = generateCategoryImageFileName(categoryResult, file);
+        imageUrl = await this.uploadsService.initialize(file.buffer, fileName, {
+          ContentType: file.mimetype,
+          CacheControl: 'max-age=31536000', // 1 year cache
+        });
+
+        // Update category with image URL
+        const category = await this.prismaService.tenancy.category.update({
+          where: { id: categoryResult.id },
+          data: { image: imageUrl },
+          include: {
+            parent: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+            children: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+            _count: {
+              select: {
+                products: true,
+                children: true,
+              },
+            },
+          },
+        });
+
+        // Invalidate cache after creation
+        await this.invalidateListCaches();
+
+        return category;
+      }
+
+      // Create category without image
+      const category = await this.prismaService.tenancy.category.create({
+        data: dto,
+        include: {
+          parent: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+          children: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+          _count: {
+            select: {
+              products: true,
+              children: true,
+            },
+          },
+        },
+      });
+
+      // Invalidate cache after creation
+      await this.invalidateListCaches();
+
+      return category;
+    } catch (error) {
+      this.logger.error('Error during category creation with image:', error);
+      throw new BadRequestException(
+        `Failed to create category: ${error.message || 'Unknown error'}`,
+      );
+    }
+  }
+
+  async bulkCreate(dto: BulkCreateCategoryDto) {
+    // Check for duplicate slugs in the request
+    const slugs = dto.categories.map((cat) => cat.slug);
+    const duplicateSlugs = slugs.filter(
+      (slug, index) => slugs.indexOf(slug) !== index,
+    );
+    if (duplicateSlugs.length > 0) {
+      throw new BadRequestException(
+        `Duplicate slugs found in request: ${duplicateSlugs.join(', ')}`,
+      );
+    }
+
+    // Check if any slugs already exist in the database
+    const existingCategories =
+      await this.prismaService.tenancy.category.findMany({
+        where: {
+          slug: {
+            in: slugs,
+          },
+        },
+        select: {
+          slug: true,
+        },
+      });
+
+    if (existingCategories.length > 0) {
+      const existingSlugs = existingCategories.map((cat) => cat.slug);
+      throw new BadRequestException(
+        `Categories with slugs already exist: ${existingSlugs.join(', ')}`,
+      );
+    }
+
+    // Validate all parentIds exist if provided
+    const parentIds = dto.categories
+      .map((cat) => cat.parentId)
+      .filter((id): id is string => !!id);
+    const uniqueParentIds = [...new Set(parentIds)];
+
+    if (uniqueParentIds.length > 0) {
+      const existingParents =
+        await this.prismaService.tenancy.category.findMany({
+          where: {
+            id: {
+              in: uniqueParentIds,
+            },
+          },
           select: {
             id: true,
-            name: true,
-            slug: true,
           },
-        },
-        children: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
-        },
-        _count: {
-          select: {
-            products: true,
-            children: true,
-          },
-        },
-      },
-    });
+        });
 
-    // Invalidate cache after creation
-    await this.invalidateListCaches();
+      const existingParentIds = existingParents.map((p) => p.id);
+      const missingParents = uniqueParentIds.filter(
+        (id) => !existingParentIds.includes(id),
+      );
 
-    return category;
+      if (missingParents.length > 0) {
+        throw new NotFoundException(
+          `Parent categories not found: ${missingParents.join(', ')}`,
+        );
+      }
+    }
+
+    try {
+      // Create all categories in a transaction
+      const categories = await this.prismaService.tenancy.$transaction(
+        async (tx) => {
+          const createdCategories = await Promise.all(
+            dto.categories.map((categoryDto) =>
+              tx.category.create({
+                data: categoryDto,
+                include: {
+                  parent: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                    },
+                  },
+                  children: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                    },
+                  },
+                  _count: {
+                    select: {
+                      products: true,
+                      children: true,
+                    },
+                  },
+                },
+              }),
+            ),
+          );
+
+          return createdCategories;
+        },
+      );
+
+      // Invalidate cache after bulk creation
+      await this.invalidateListCaches();
+
+      this.logger.log(
+        `Bulk created ${categories.length} categories successfully`,
+      );
+
+      return {
+        count: categories.length,
+        categories,
+      };
+    } catch (error) {
+      this.logger.error('Error during bulk category creation:', error);
+      throw new BadRequestException(
+        `Failed to create categories: ${error.message || 'Unknown error'}`,
+      );
+    }
   }
 
   async findAll(includeSubcategories = false) {
@@ -351,7 +534,7 @@ export class CategoriesService {
     return category;
   }
 
-  async update(id: string, dto: UpdateCategoryDto) {
+  async update(id: string, dto: UpdateCategoryDto, file?: Express.Multer.File) {
     const existing = await this.findOne(id); // Check if exists and get existing category
 
     // Prevent circular reference - can't set parent to self or any descendant
@@ -409,45 +592,78 @@ export class CategoriesService {
       }
     }
 
-    const category = await this.prismaService.tenancy.category.update({
-      where: { id },
-      data: dto,
-      include: {
-        parent: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
-        },
-        children: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
-        },
-        _count: {
-          select: {
-            products: true,
-            children: true,
-          },
-        },
-      },
-    });
+    try {
+      let imageUrl: string | undefined;
 
-    // Invalidate cache for this category and related caches
-    // If slug changed, invalidate old slug cache too
-    const oldSlug = existing.slug !== category.slug ? existing.slug : undefined;
-    await this.invalidateCategoryCache(id, oldSlug || category.slug);
-    if (oldSlug && oldSlug !== category.slug) {
-      await this.redisService.delete(
-        `${CACHE_PREFIX.CATEGORY_BY_SLUG}${oldSlug}`,
+      // Upload image if provided
+      if (file) {
+        const fileName = generateCategoryImageFileName(existing, file);
+        imageUrl = await this.uploadsService.initialize(file.buffer, fileName, {
+          ContentType: file.mimetype,
+          CacheControl: 'max-age=31536000', // 1 year cache
+        });
+      }
+
+      const categoryData: any = {
+        ...(dto.name ? { name: dto.name } : {}),
+        ...(dto.description !== undefined
+          ? { description: dto.description }
+          : {}),
+        ...(dto.slug ? { slug: dto.slug } : {}),
+        ...(dto.parentId !== undefined
+          ? dto.parentId
+            ? { parent: { connect: { id: dto.parentId } } }
+            : { parent: { disconnect: true } }
+          : {}),
+        ...(imageUrl ? { image: imageUrl } : {}),
+      };
+
+      const category = await this.prismaService.tenancy.category.update({
+        where: { id },
+        data: categoryData,
+        include: {
+          parent: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+          children: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+          _count: {
+            select: {
+              products: true,
+              children: true,
+            },
+          },
+        },
+      });
+
+      // Invalidate cache for this category and related caches
+      // If slug changed, invalidate old slug cache too
+      const oldSlug =
+        existing.slug !== category.slug ? existing.slug : undefined;
+      await this.invalidateCategoryCache(id, oldSlug || category.slug);
+      if (oldSlug && oldSlug !== category.slug) {
+        await this.redisService.delete(
+          `${CACHE_PREFIX.CATEGORY_BY_SLUG}${oldSlug}`,
+        );
+      }
+      await this.invalidateListCaches();
+
+      return category;
+    } catch (error) {
+      this.logger.error('Error during category update with image:', error);
+      throw new BadRequestException(
+        `Failed to update category: ${error.message || 'Unknown error'}`,
       );
     }
-    await this.invalidateListCaches();
-
-    return category;
   }
 
   async remove(id: string) {

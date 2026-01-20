@@ -1,0 +1,51 @@
+{{> head }}
+{{> header }}
+
+<table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td>
+                        <p class="body paragrapy-spacing">Dear {{firstName}},</p>
+                        <p class="body paragrapy-spacing">
+                            We regret to inform you that your recurring order has been cancelled due to multiple failed payment attempts.
+                        </p>
+
+                        <div style="background-color: #f8d7da; border: 1px solid #dc3545; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="margin-top: 0; color: #721c24;">Order Cancelled</h3>
+                            <p style="margin-bottom: 10px;"><strong>Order ID:</strong> {{orderId}}</p>
+                            <p style="margin-bottom: 0;"><strong>Original Order Date:</strong> {{orderDate}}</p>
+                        </div>
+
+                        <p class="body paragrapy-spacing">
+                            After 3 unsuccessful payment attempts, we have automatically cancelled your recurring order 
+                            to prevent any further charge attempts.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            If you would like to set up a new recurring order, please:
+                        </p>
+
+                        <ul style="margin: 20px 0; padding-left: 30px;">
+                            <li style="margin-bottom: 10px;">Ensure your payment method is valid and has sufficient funds</li>
+                            <li style="margin-bottom: 10px;">Contact your bank or payment provider if there are any restrictions</li>
+                            <li style="margin-bottom: 10px;">Create a new recurring order through your account</li>
+                        </ul>
+
+                        <p class="body paragrapy-spacing">
+                            If you have any questions or need assistance setting up a new recurring order, 
+                            please contact our support team at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            We apologize for any inconvenience this may cause.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{{> footer }}

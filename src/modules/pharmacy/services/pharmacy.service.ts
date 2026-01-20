@@ -29,11 +29,6 @@ export class PharmacyService {
             email: true,
           },
         },
-        _count: {
-          select: {
-            orders: true,
-          },
-        },
       },
     });
   }
@@ -48,11 +43,6 @@ export class PharmacyService {
             firstName: true,
             lastName: true,
             email: true,
-          },
-        },
-        _count: {
-          select: {
-            orders: true,
           },
         },
       },
@@ -71,17 +61,6 @@ export class PharmacyService {
             email: true,
           },
         },
-        orders: {
-          take: 10,
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
-        _count: {
-          select: {
-            orders: true,
-          },
-        },
       },
     });
 
@@ -95,13 +74,7 @@ export class PharmacyService {
   async findByOwner(ownerId: string) {
     return this.prismaService.tenancy.pharmacy.findMany({
       where: { ownerUserId: ownerId },
-      include: {
-        _count: {
-          select: {
-            orders: true,
-          },
-        },
-      },
+      include: {},
     });
   }
 

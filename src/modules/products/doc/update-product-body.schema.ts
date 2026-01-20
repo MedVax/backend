@@ -30,6 +30,23 @@ export const UpdateProductBodySchema = {
         description:
           'Product images. If uploaded, these will be added to existing images. Can also pass image URLs in the images array as strings.',
       },
+      howToUse: {
+        type: 'string',
+        description: 'Instructions on how to use this product',
+      },
+      ingredients: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'List of active ingredients in this product',
+      },
+      pharmacyAdvise: {
+        type: 'string',
+        description: 'Pharmacy advice or warnings for this product',
+      },
+      specification: {
+        type: 'string',
+        description: 'Product specifications and technical details',
+      },
     },
   },
   required: false,

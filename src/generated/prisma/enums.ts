@@ -26,6 +26,52 @@ export const UserStatus = {
 export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus]
 
 
+export const UserProfileType = {
+  CLIENT: 'CLIENT',
+  CONSULTANT: 'CONSULTANT'
+} as const
+
+export type UserProfileType = (typeof UserProfileType)[keyof typeof UserProfileType]
+
+
+export const Gender = {
+  MALE: 'MALE',
+  FEMALE: 'FEMALE'
+} as const
+
+export type Gender = (typeof Gender)[keyof typeof Gender]
+
+
+export const AvailabilityType = {
+  CUSTOM: 'CUSTOM',
+  WEEKLY: 'WEEKLY'
+} as const
+
+export type AvailabilityType = (typeof AvailabilityType)[keyof typeof AvailabilityType]
+
+
+export const AvailabilityPeriod = {
+  WEEKDAYS: 'WEEKDAYS',
+  WEEKENDS: 'WEEKENDS',
+  MIXED: 'MIXED'
+} as const
+
+export type AvailabilityPeriod = (typeof AvailabilityPeriod)[keyof typeof AvailabilityPeriod]
+
+
+export const DateLabel = {
+  MONDAY: 'MONDAY',
+  TUESDAY: 'TUESDAY',
+  WEDNESDAY: 'WEDNESDAY',
+  THURSDAY: 'THURSDAY',
+  FRIDAY: 'FRIDAY',
+  SATURDAY: 'SATURDAY',
+  SUNDAY: 'SUNDAY'
+} as const
+
+export type DateLabel = (typeof DateLabel)[keyof typeof DateLabel]
+
+
 export const OrderStatus = {
   PENDING: 'PENDING',
   ACCEPTED: 'ACCEPTED',
@@ -52,6 +98,30 @@ export const PaymentStatus = {
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
 
 
+export const TransactionType = {
+  ORDER: 'ORDER',
+  SESSION: 'SESSION',
+  RECURRING_ORDER: 'RECURRING_ORDER',
+  SUBSCRIPTION: 'SUBSCRIPTION',
+  REFUND: 'REFUND',
+  OTHER: 'OTHER'
+} as const
+
+export type TransactionType = (typeof TransactionType)[keyof typeof TransactionType]
+
+
+export const TransactionStatus = {
+  PENDING: 'PENDING',
+  SUCCESS: 'SUCCESS',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED',
+  REFUNDED: 'REFUNDED',
+  PARTIALLY_REFUNDED: 'PARTIALLY_REFUNDED'
+} as const
+
+export type TransactionStatus = (typeof TransactionStatus)[keyof typeof TransactionStatus]
+
+
 export const PrescriptionStatus = {
   PENDING: 'PENDING',
   APPROVED: 'APPROVED',
@@ -68,6 +138,14 @@ export const SubscriptionFrequency = {
 } as const
 
 export type SubscriptionFrequency = (typeof SubscriptionFrequency)[keyof typeof SubscriptionFrequency]
+
+
+export const OrderRecurringFrequency = {
+  WEEKLY: 'WEEKLY',
+  MONTHLY: 'MONTHLY'
+} as const
+
+export type OrderRecurringFrequency = (typeof OrderRecurringFrequency)[keyof typeof OrderRecurringFrequency]
 
 
 export const ProductType = {
@@ -87,3 +165,35 @@ export const StockMovementType = {
 } as const
 
 export type StockMovementType = (typeof StockMovementType)[keyof typeof StockMovementType]
+
+
+export const SessionStatus = {
+  COMPLETED: 'COMPLETED',
+  UPCOMING: 'UPCOMING',
+  PENDING: 'PENDING',
+  CANCELED: 'CANCELED',
+  DECLINED: 'DECLINED',
+  PENDING_APPROVAL: 'PENDING_APPROVAL',
+  APPROVED: 'APPROVED'
+} as const
+
+export type SessionStatus = (typeof SessionStatus)[keyof typeof SessionStatus]
+
+
+export const SessionType = {
+  INDIVIDUAL: 'INDIVIDUAL',
+  COUPLE: 'COUPLE',
+  CONSULTATION: 'CONSULTATION'
+} as const
+
+export type SessionType = (typeof SessionType)[keyof typeof SessionType]
+
+
+export const OrganizationSponsor = {
+  CLIENT: 'CLIENT',
+  ORG: 'ORG',
+  HMO: 'HMO',
+  ORG_CLIENT: 'ORG_CLIENT'
+} as const
+
+export type OrganizationSponsor = (typeof OrganizationSponsor)[keyof typeof OrganizationSponsor]

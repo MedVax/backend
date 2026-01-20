@@ -39,6 +39,27 @@ export const CreateProductBodySchema = {
         },
         description: 'Product images (max 2MB each, max 10 images)',
       },
+      howToUse: {
+        type: 'string',
+        example: 'Take one tablet daily with water after meals',
+        description: 'Instructions on how to use this product',
+      },
+      ingredients: {
+        type: 'array',
+        items: { type: 'string' },
+        example: ['Paracetamol', 'Caffeine', 'Codeine'],
+        description: 'List of active ingredients in this product',
+      },
+      pharmacyAdvise: {
+        type: 'string',
+        example: 'Store in a cool, dry place. Keep away from children.',
+        description: 'Pharmacy advice or warnings for this product',
+      },
+      specification: {
+        type: 'string',
+        example: 'Weight: 500mg, Form: Tablets, Pack size: 20 tablets',
+        description: 'Product specifications and technical details',
+      },
     },
   },
 };

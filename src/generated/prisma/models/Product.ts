@@ -44,14 +44,14 @@ export type ProductMinAggregateOutputType = {
   name: string | null
   sku: string | null
   description: string | null
-  brand: string | null
   price: number | null
   currency: string | null
   requiresPrescription: boolean | null
   productType: $Enums.ProductType | null
   categoryId: string | null
-  dosages: string | null
-  packageSizes: string | null
+  howToUse: string | null
+  pharmacyAdvise: string | null
+  specification: string | null
   isActive: boolean | null
   stockQuantity: number | null
   stockReserved: number | null
@@ -65,14 +65,14 @@ export type ProductMaxAggregateOutputType = {
   name: string | null
   sku: string | null
   description: string | null
-  brand: string | null
   price: number | null
   currency: string | null
   requiresPrescription: boolean | null
   productType: $Enums.ProductType | null
   categoryId: string | null
-  dosages: string | null
-  packageSizes: string | null
+  howToUse: string | null
+  pharmacyAdvise: string | null
+  specification: string | null
   isActive: boolean | null
   stockQuantity: number | null
   stockReserved: number | null
@@ -86,7 +86,6 @@ export type ProductCountAggregateOutputType = {
   name: number
   sku: number
   description: number
-  brand: number
   price: number
   currency: number
   requiresPrescription: number
@@ -95,6 +94,10 @@ export type ProductCountAggregateOutputType = {
   images: number
   dosages: number
   packageSizes: number
+  howToUse: number
+  ingredients: number
+  pharmacyAdvise: number
+  specification: number
   isActive: number
   stockQuantity: number
   stockReserved: number
@@ -124,14 +127,14 @@ export type ProductMinAggregateInputType = {
   name?: true
   sku?: true
   description?: true
-  brand?: true
   price?: true
   currency?: true
   requiresPrescription?: true
   productType?: true
   categoryId?: true
-  dosages?: true
-  packageSizes?: true
+  howToUse?: true
+  pharmacyAdvise?: true
+  specification?: true
   isActive?: true
   stockQuantity?: true
   stockReserved?: true
@@ -145,14 +148,14 @@ export type ProductMaxAggregateInputType = {
   name?: true
   sku?: true
   description?: true
-  brand?: true
   price?: true
   currency?: true
   requiresPrescription?: true
   productType?: true
   categoryId?: true
-  dosages?: true
-  packageSizes?: true
+  howToUse?: true
+  pharmacyAdvise?: true
+  specification?: true
   isActive?: true
   stockQuantity?: true
   stockReserved?: true
@@ -166,7 +169,6 @@ export type ProductCountAggregateInputType = {
   name?: true
   sku?: true
   description?: true
-  brand?: true
   price?: true
   currency?: true
   requiresPrescription?: true
@@ -175,6 +177,10 @@ export type ProductCountAggregateInputType = {
   images?: true
   dosages?: true
   packageSizes?: true
+  howToUse?: true
+  ingredients?: true
+  pharmacyAdvise?: true
+  specification?: true
   isActive?: true
   stockQuantity?: true
   stockReserved?: true
@@ -275,15 +281,18 @@ export type ProductGroupByOutputType = {
   name: string
   sku: string
   description: string | null
-  brand: string | null
   price: number
   currency: string
   requiresPrescription: boolean
   productType: $Enums.ProductType
   categoryId: string | null
   images: string[]
-  dosages: string | null
-  packageSizes: string | null
+  dosages: string[]
+  packageSizes: string[]
+  howToUse: string | null
+  ingredients: string[]
+  pharmacyAdvise: string | null
+  specification: string | null
   isActive: boolean
   stockQuantity: number
   stockReserved: number
@@ -320,15 +329,18 @@ export type ProductWhereInput = {
   name?: Prisma.StringFilter<"Product"> | string
   sku?: Prisma.StringFilter<"Product"> | string
   description?: Prisma.StringNullableFilter<"Product"> | string | null
-  brand?: Prisma.StringNullableFilter<"Product"> | string | null
   price?: Prisma.IntFilter<"Product"> | number
   currency?: Prisma.StringFilter<"Product"> | string
   requiresPrescription?: Prisma.BoolFilter<"Product"> | boolean
   productType?: Prisma.EnumProductTypeFilter<"Product"> | $Enums.ProductType
   categoryId?: Prisma.StringNullableFilter<"Product"> | string | null
   images?: Prisma.StringNullableListFilter<"Product">
-  dosages?: Prisma.StringNullableFilter<"Product"> | string | null
-  packageSizes?: Prisma.StringNullableFilter<"Product"> | string | null
+  dosages?: Prisma.StringNullableListFilter<"Product">
+  packageSizes?: Prisma.StringNullableListFilter<"Product">
+  howToUse?: Prisma.StringNullableFilter<"Product"> | string | null
+  ingredients?: Prisma.StringNullableListFilter<"Product">
+  pharmacyAdvise?: Prisma.StringNullableFilter<"Product"> | string | null
+  specification?: Prisma.StringNullableFilter<"Product"> | string | null
   isActive?: Prisma.BoolFilter<"Product"> | boolean
   stockQuantity?: Prisma.IntFilter<"Product"> | number
   stockReserved?: Prisma.IntFilter<"Product"> | number
@@ -347,15 +359,18 @@ export type ProductOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   sku?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
-  brand?: Prisma.SortOrderInput | Prisma.SortOrder
   price?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   requiresPrescription?: Prisma.SortOrder
   productType?: Prisma.SortOrder
   categoryId?: Prisma.SortOrderInput | Prisma.SortOrder
   images?: Prisma.SortOrder
-  dosages?: Prisma.SortOrderInput | Prisma.SortOrder
-  packageSizes?: Prisma.SortOrderInput | Prisma.SortOrder
+  dosages?: Prisma.SortOrder
+  packageSizes?: Prisma.SortOrder
+  howToUse?: Prisma.SortOrderInput | Prisma.SortOrder
+  ingredients?: Prisma.SortOrder
+  pharmacyAdvise?: Prisma.SortOrderInput | Prisma.SortOrder
+  specification?: Prisma.SortOrderInput | Prisma.SortOrder
   isActive?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrder
   stockReserved?: Prisma.SortOrder
@@ -377,15 +392,18 @@ export type ProductWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.ProductWhereInput | Prisma.ProductWhereInput[]
   name?: Prisma.StringFilter<"Product"> | string
   description?: Prisma.StringNullableFilter<"Product"> | string | null
-  brand?: Prisma.StringNullableFilter<"Product"> | string | null
   price?: Prisma.IntFilter<"Product"> | number
   currency?: Prisma.StringFilter<"Product"> | string
   requiresPrescription?: Prisma.BoolFilter<"Product"> | boolean
   productType?: Prisma.EnumProductTypeFilter<"Product"> | $Enums.ProductType
   categoryId?: Prisma.StringNullableFilter<"Product"> | string | null
   images?: Prisma.StringNullableListFilter<"Product">
-  dosages?: Prisma.StringNullableFilter<"Product"> | string | null
-  packageSizes?: Prisma.StringNullableFilter<"Product"> | string | null
+  dosages?: Prisma.StringNullableListFilter<"Product">
+  packageSizes?: Prisma.StringNullableListFilter<"Product">
+  howToUse?: Prisma.StringNullableFilter<"Product"> | string | null
+  ingredients?: Prisma.StringNullableListFilter<"Product">
+  pharmacyAdvise?: Prisma.StringNullableFilter<"Product"> | string | null
+  specification?: Prisma.StringNullableFilter<"Product"> | string | null
   isActive?: Prisma.BoolFilter<"Product"> | boolean
   stockQuantity?: Prisma.IntFilter<"Product"> | number
   stockReserved?: Prisma.IntFilter<"Product"> | number
@@ -404,15 +422,18 @@ export type ProductOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   sku?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
-  brand?: Prisma.SortOrderInput | Prisma.SortOrder
   price?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   requiresPrescription?: Prisma.SortOrder
   productType?: Prisma.SortOrder
   categoryId?: Prisma.SortOrderInput | Prisma.SortOrder
   images?: Prisma.SortOrder
-  dosages?: Prisma.SortOrderInput | Prisma.SortOrder
-  packageSizes?: Prisma.SortOrderInput | Prisma.SortOrder
+  dosages?: Prisma.SortOrder
+  packageSizes?: Prisma.SortOrder
+  howToUse?: Prisma.SortOrderInput | Prisma.SortOrder
+  ingredients?: Prisma.SortOrder
+  pharmacyAdvise?: Prisma.SortOrderInput | Prisma.SortOrder
+  specification?: Prisma.SortOrderInput | Prisma.SortOrder
   isActive?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrder
   stockReserved?: Prisma.SortOrder
@@ -434,15 +455,18 @@ export type ProductScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"Product"> | string
   sku?: Prisma.StringWithAggregatesFilter<"Product"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
-  brand?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   price?: Prisma.IntWithAggregatesFilter<"Product"> | number
   currency?: Prisma.StringWithAggregatesFilter<"Product"> | string
   requiresPrescription?: Prisma.BoolWithAggregatesFilter<"Product"> | boolean
   productType?: Prisma.EnumProductTypeWithAggregatesFilter<"Product"> | $Enums.ProductType
   categoryId?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   images?: Prisma.StringNullableListFilter<"Product">
-  dosages?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
-  packageSizes?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  dosages?: Prisma.StringNullableListFilter<"Product">
+  packageSizes?: Prisma.StringNullableListFilter<"Product">
+  howToUse?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  ingredients?: Prisma.StringNullableListFilter<"Product">
+  pharmacyAdvise?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
+  specification?: Prisma.StringNullableWithAggregatesFilter<"Product"> | string | null
   isActive?: Prisma.BoolWithAggregatesFilter<"Product"> | boolean
   stockQuantity?: Prisma.IntWithAggregatesFilter<"Product"> | number
   stockReserved?: Prisma.IntWithAggregatesFilter<"Product"> | number
@@ -456,14 +480,17 @@ export type ProductCreateInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -482,15 +509,18 @@ export type ProductUncheckedCreateInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   categoryId?: string | null
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -508,14 +538,17 @@ export type ProductUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -534,15 +567,18 @@ export type ProductUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -560,15 +596,18 @@ export type ProductCreateManyInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   categoryId?: string | null
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -582,14 +621,17 @@ export type ProductUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -603,15 +645,18 @@ export type ProductUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -630,20 +675,11 @@ export type ProductOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type StringNullableListFilter<$PrismaModel = never> = {
-  equals?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
-  has?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
-  hasEvery?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
-  hasSome?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
-  isEmpty?: boolean
-}
-
 export type ProductCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   sku?: Prisma.SortOrder
   description?: Prisma.SortOrder
-  brand?: Prisma.SortOrder
   price?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   requiresPrescription?: Prisma.SortOrder
@@ -652,6 +688,10 @@ export type ProductCountOrderByAggregateInput = {
   images?: Prisma.SortOrder
   dosages?: Prisma.SortOrder
   packageSizes?: Prisma.SortOrder
+  howToUse?: Prisma.SortOrder
+  ingredients?: Prisma.SortOrder
+  pharmacyAdvise?: Prisma.SortOrder
+  specification?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrder
   stockReserved?: Prisma.SortOrder
@@ -672,14 +712,14 @@ export type ProductMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   sku?: Prisma.SortOrder
   description?: Prisma.SortOrder
-  brand?: Prisma.SortOrder
   price?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   requiresPrescription?: Prisma.SortOrder
   productType?: Prisma.SortOrder
   categoryId?: Prisma.SortOrder
-  dosages?: Prisma.SortOrder
-  packageSizes?: Prisma.SortOrder
+  howToUse?: Prisma.SortOrder
+  pharmacyAdvise?: Prisma.SortOrder
+  specification?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrder
   stockReserved?: Prisma.SortOrder
@@ -693,14 +733,14 @@ export type ProductMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   sku?: Prisma.SortOrder
   description?: Prisma.SortOrder
-  brand?: Prisma.SortOrder
   price?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   requiresPrescription?: Prisma.SortOrder
   productType?: Prisma.SortOrder
   categoryId?: Prisma.SortOrder
-  dosages?: Prisma.SortOrder
-  packageSizes?: Prisma.SortOrder
+  howToUse?: Prisma.SortOrder
+  pharmacyAdvise?: Prisma.SortOrder
+  specification?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   stockQuantity?: Prisma.SortOrder
   stockReserved?: Prisma.SortOrder
@@ -767,6 +807,18 @@ export type ProductCreateimagesInput = {
   set: string[]
 }
 
+export type ProductCreatedosagesInput = {
+  set: string[]
+}
+
+export type ProductCreatepackageSizesInput = {
+  set: string[]
+}
+
+export type ProductCreateingredientsInput = {
+  set: string[]
+}
+
 export type IntFieldUpdateOperationsInput = {
   set?: number
   increment?: number
@@ -780,6 +832,21 @@ export type EnumProductTypeFieldUpdateOperationsInput = {
 }
 
 export type ProductUpdateimagesInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type ProductUpdatedosagesInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type ProductUpdatepackageSizesInput = {
+  set?: string[]
+  push?: string | string[]
+}
+
+export type ProductUpdateingredientsInput = {
   set?: string[]
   push?: string | string[]
 }
@@ -845,14 +912,17 @@ export type ProductCreateWithoutCategoryInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -870,14 +940,17 @@ export type ProductUncheckedCreateWithoutCategoryInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -924,15 +997,18 @@ export type ProductScalarWhereInput = {
   name?: Prisma.StringFilter<"Product"> | string
   sku?: Prisma.StringFilter<"Product"> | string
   description?: Prisma.StringNullableFilter<"Product"> | string | null
-  brand?: Prisma.StringNullableFilter<"Product"> | string | null
   price?: Prisma.IntFilter<"Product"> | number
   currency?: Prisma.StringFilter<"Product"> | string
   requiresPrescription?: Prisma.BoolFilter<"Product"> | boolean
   productType?: Prisma.EnumProductTypeFilter<"Product"> | $Enums.ProductType
   categoryId?: Prisma.StringNullableFilter<"Product"> | string | null
   images?: Prisma.StringNullableListFilter<"Product">
-  dosages?: Prisma.StringNullableFilter<"Product"> | string | null
-  packageSizes?: Prisma.StringNullableFilter<"Product"> | string | null
+  dosages?: Prisma.StringNullableListFilter<"Product">
+  packageSizes?: Prisma.StringNullableListFilter<"Product">
+  howToUse?: Prisma.StringNullableFilter<"Product"> | string | null
+  ingredients?: Prisma.StringNullableListFilter<"Product">
+  pharmacyAdvise?: Prisma.StringNullableFilter<"Product"> | string | null
+  specification?: Prisma.StringNullableFilter<"Product"> | string | null
   isActive?: Prisma.BoolFilter<"Product"> | boolean
   stockQuantity?: Prisma.IntFilter<"Product"> | number
   stockReserved?: Prisma.IntFilter<"Product"> | number
@@ -946,14 +1022,17 @@ export type ProductCreateWithoutCartItemsInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -971,15 +1050,18 @@ export type ProductUncheckedCreateWithoutCartItemsInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   categoryId?: string | null
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -1012,14 +1094,17 @@ export type ProductUpdateWithoutCartItemsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1037,15 +1122,18 @@ export type ProductUncheckedUpdateWithoutCartItemsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1062,14 +1150,17 @@ export type ProductCreateWithoutOrderItemsInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -1087,15 +1178,18 @@ export type ProductUncheckedCreateWithoutOrderItemsInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   categoryId?: string | null
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -1128,14 +1222,17 @@ export type ProductUpdateWithoutOrderItemsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1153,15 +1250,18 @@ export type ProductUncheckedUpdateWithoutOrderItemsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1178,14 +1278,17 @@ export type ProductCreateWithoutSubscriptionsInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -1203,15 +1306,18 @@ export type ProductUncheckedCreateWithoutSubscriptionsInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   categoryId?: string | null
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -1244,14 +1350,17 @@ export type ProductUpdateWithoutSubscriptionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1269,15 +1378,18 @@ export type ProductUncheckedUpdateWithoutSubscriptionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1294,14 +1406,17 @@ export type ProductCreateWithoutStockMovementsInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -1319,15 +1434,18 @@ export type ProductUncheckedCreateWithoutStockMovementsInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   categoryId?: string | null
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -1360,14 +1478,17 @@ export type ProductUpdateWithoutStockMovementsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1385,15 +1506,18 @@ export type ProductUncheckedUpdateWithoutStockMovementsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1410,14 +1534,17 @@ export type ProductCreateManyCategoryInput = {
   name: string
   sku: string
   description?: string | null
-  brand?: string | null
   price: number
   currency?: string
   requiresPrescription?: boolean
   productType?: $Enums.ProductType
   images?: Prisma.ProductCreateimagesInput | string[]
-  dosages?: string | null
-  packageSizes?: string | null
+  dosages?: Prisma.ProductCreatedosagesInput | string[]
+  packageSizes?: Prisma.ProductCreatepackageSizesInput | string[]
+  howToUse?: string | null
+  ingredients?: Prisma.ProductCreateingredientsInput | string[]
+  pharmacyAdvise?: string | null
+  specification?: string | null
   isActive?: boolean
   stockQuantity?: number
   stockReserved?: number
@@ -1431,14 +1558,17 @@ export type ProductUpdateWithoutCategoryInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1456,14 +1586,17 @@ export type ProductUncheckedUpdateWithoutCategoryInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1481,14 +1614,17 @@ export type ProductUncheckedUpdateManyWithoutCategoryInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   sku?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  brand?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   price?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   requiresPrescription?: Prisma.BoolFieldUpdateOperationsInput | boolean
   productType?: Prisma.EnumProductTypeFieldUpdateOperationsInput | $Enums.ProductType
   images?: Prisma.ProductUpdateimagesInput | string[]
-  dosages?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  packageSizes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dosages?: Prisma.ProductUpdatedosagesInput | string[]
+  packageSizes?: Prisma.ProductUpdatepackageSizesInput | string[]
+  howToUse?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ingredients?: Prisma.ProductUpdateingredientsInput | string[]
+  pharmacyAdvise?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  specification?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   stockQuantity?: Prisma.IntFieldUpdateOperationsInput | number
   stockReserved?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1560,7 +1696,6 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   name?: boolean
   sku?: boolean
   description?: boolean
-  brand?: boolean
   price?: boolean
   currency?: boolean
   requiresPrescription?: boolean
@@ -1569,6 +1704,10 @@ export type ProductSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   images?: boolean
   dosages?: boolean
   packageSizes?: boolean
+  howToUse?: boolean
+  ingredients?: boolean
+  pharmacyAdvise?: boolean
+  specification?: boolean
   isActive?: boolean
   stockQuantity?: boolean
   stockReserved?: boolean
@@ -1588,7 +1727,6 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   name?: boolean
   sku?: boolean
   description?: boolean
-  brand?: boolean
   price?: boolean
   currency?: boolean
   requiresPrescription?: boolean
@@ -1597,6 +1735,10 @@ export type ProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   images?: boolean
   dosages?: boolean
   packageSizes?: boolean
+  howToUse?: boolean
+  ingredients?: boolean
+  pharmacyAdvise?: boolean
+  specification?: boolean
   isActive?: boolean
   stockQuantity?: boolean
   stockReserved?: boolean
@@ -1611,7 +1753,6 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   name?: boolean
   sku?: boolean
   description?: boolean
-  brand?: boolean
   price?: boolean
   currency?: boolean
   requiresPrescription?: boolean
@@ -1620,6 +1761,10 @@ export type ProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   images?: boolean
   dosages?: boolean
   packageSizes?: boolean
+  howToUse?: boolean
+  ingredients?: boolean
+  pharmacyAdvise?: boolean
+  specification?: boolean
   isActive?: boolean
   stockQuantity?: boolean
   stockReserved?: boolean
@@ -1634,7 +1779,6 @@ export type ProductSelectScalar = {
   name?: boolean
   sku?: boolean
   description?: boolean
-  brand?: boolean
   price?: boolean
   currency?: boolean
   requiresPrescription?: boolean
@@ -1643,6 +1787,10 @@ export type ProductSelectScalar = {
   images?: boolean
   dosages?: boolean
   packageSizes?: boolean
+  howToUse?: boolean
+  ingredients?: boolean
+  pharmacyAdvise?: boolean
+  specification?: boolean
   isActive?: boolean
   stockQuantity?: boolean
   stockReserved?: boolean
@@ -1651,7 +1799,7 @@ export type ProductSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "sku" | "description" | "brand" | "price" | "currency" | "requiresPrescription" | "productType" | "categoryId" | "images" | "dosages" | "packageSizes" | "isActive" | "stockQuantity" | "stockReserved" | "version" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
+export type ProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "sku" | "description" | "price" | "currency" | "requiresPrescription" | "productType" | "categoryId" | "images" | "dosages" | "packageSizes" | "howToUse" | "ingredients" | "pharmacyAdvise" | "specification" | "isActive" | "stockQuantity" | "stockReserved" | "version" | "createdAt" | "updatedAt", ExtArgs["result"]["product"]>
 export type ProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   category?: boolean | Prisma.Product$categoryArgs<ExtArgs>
   cartItems?: boolean | Prisma.Product$cartItemsArgs<ExtArgs>
@@ -1681,15 +1829,18 @@ export type $ProductPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     name: string
     sku: string
     description: string | null
-    brand: string | null
     price: number
     currency: string
     requiresPrescription: boolean
     productType: $Enums.ProductType
     categoryId: string | null
     images: string[]
-    dosages: string | null
-    packageSizes: string | null
+    dosages: string[]
+    packageSizes: string[]
+    howToUse: string | null
+    ingredients: string[]
+    pharmacyAdvise: string | null
+    specification: string | null
     isActive: boolean
     stockQuantity: number
     stockReserved: number
@@ -2128,15 +2279,18 @@ export interface ProductFieldRefs {
   readonly name: Prisma.FieldRef<"Product", 'String'>
   readonly sku: Prisma.FieldRef<"Product", 'String'>
   readonly description: Prisma.FieldRef<"Product", 'String'>
-  readonly brand: Prisma.FieldRef<"Product", 'String'>
   readonly price: Prisma.FieldRef<"Product", 'Int'>
   readonly currency: Prisma.FieldRef<"Product", 'String'>
   readonly requiresPrescription: Prisma.FieldRef<"Product", 'Boolean'>
   readonly productType: Prisma.FieldRef<"Product", 'ProductType'>
   readonly categoryId: Prisma.FieldRef<"Product", 'String'>
   readonly images: Prisma.FieldRef<"Product", 'String[]'>
-  readonly dosages: Prisma.FieldRef<"Product", 'String'>
-  readonly packageSizes: Prisma.FieldRef<"Product", 'String'>
+  readonly dosages: Prisma.FieldRef<"Product", 'String[]'>
+  readonly packageSizes: Prisma.FieldRef<"Product", 'String[]'>
+  readonly howToUse: Prisma.FieldRef<"Product", 'String'>
+  readonly ingredients: Prisma.FieldRef<"Product", 'String[]'>
+  readonly pharmacyAdvise: Prisma.FieldRef<"Product", 'String'>
+  readonly specification: Prisma.FieldRef<"Product", 'String'>
   readonly isActive: Prisma.FieldRef<"Product", 'Boolean'>
   readonly stockQuantity: Prisma.FieldRef<"Product", 'Int'>
   readonly stockReserved: Prisma.FieldRef<"Product", 'Int'>

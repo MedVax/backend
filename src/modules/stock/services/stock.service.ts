@@ -14,6 +14,10 @@ import { STOCK } from 'constants/queue.constant';
 
 const CACHE_TTL = 3600; // 1 hour
 const CACHE_PREFIX = 'stock:product:';
+const PRODUCT_CACHE_PREFIX = {
+  PRODUCT_BY_ID: 'product:id:',
+  PRODUCT_BY_SKU: 'product:sku:',
+};
 const HIGH_TRAFFIC_THRESHOLD = 100; // requests per hour
 
 @Injectable()
@@ -202,6 +206,7 @@ export class StockService {
       throw new BadRequestException('Quantity must be positive');
     }
 
+    let productSku: string | undefined;
     await this.prismaService.tenancy.$transaction(async (tx) => {
       const product = await tx.product.findUnique({
         where: { id: productId },
@@ -210,6 +215,8 @@ export class StockService {
       if (!product) {
         throw new NotFoundException(`Product with ID ${productId} not found`);
       }
+
+      productSku = product.sku;
 
       if (product.stockReserved < quantity) {
         throw new BadRequestException(
@@ -248,7 +255,9 @@ export class StockService {
       });
     });
 
+    // Invalidate both stock cache and product cache
     await this.invalidateCache(productId);
+    await this.invalidateProductCache(productId, productSku);
     this.logger.log(
       `Stock committed: Product ${productId}, Quantity: ${quantity}, Order: ${orderId}`,
     );
@@ -267,6 +276,7 @@ export class StockService {
       throw new BadRequestException('Quantity must be positive');
     }
 
+    let productSku: string | undefined;
     await this.prismaService.tenancy.$transaction(async (tx) => {
       const product = await tx.product.findUnique({
         where: { id: productId },
@@ -275,6 +285,8 @@ export class StockService {
       if (!product) {
         throw new NotFoundException(`Product with ID ${productId} not found`);
       }
+
+      productSku = product.sku;
 
       if (product.stockReserved < quantity) {
         throw new BadRequestException(
@@ -310,7 +322,9 @@ export class StockService {
       });
     });
 
+    // Invalidate both stock cache and product cache
     await this.invalidateCache(productId);
+    await this.invalidateProductCache(productId, productSku);
     this.logger.log(
       `Stock released: Product ${productId}, Quantity: ${quantity}, Order: ${orderId}`,
     );
@@ -325,6 +339,7 @@ export class StockService {
     reason: string,
     createdBy?: string,
   ): Promise<void> {
+    let productSku: string | undefined;
     await this.prismaService.tenancy.$transaction(async (tx) => {
       const product = await tx.product.findUnique({
         where: { id: productId },
@@ -333,6 +348,8 @@ export class StockService {
       if (!product) {
         throw new NotFoundException(`Product with ID ${productId} not found`);
       }
+
+      productSku = product.sku;
 
       const quantityBefore = product.stockQuantity;
       const quantityAfter = quantityBefore + quantity;
@@ -369,7 +386,9 @@ export class StockService {
       });
     });
 
+    // Invalidate both stock cache and product cache
     await this.invalidateCache(productId);
+    await this.invalidateProductCache(productId, productSku);
     this.logger.log(
       `Stock adjusted: Product ${productId}, Quantity: ${quantity}, Reason: ${reason}`,
     );
@@ -443,10 +462,35 @@ export class StockService {
   }
 
   /**
-   * Invalidate Redis cache for a product
+   * Invalidate Redis cache for a product (stock cache)
    */
   async invalidateCache(productId: string): Promise<void> {
     const cacheKey = `${CACHE_PREFIX}${productId}`;
     await this.redisService.delete(cacheKey);
+  }
+
+  /**
+   * Invalidate product cache (used by ProductsService)
+   */
+  private async invalidateProductCache(
+    productId: string,
+    sku?: string,
+  ): Promise<void> {
+    try {
+      await this.redisService.delete(
+        `${PRODUCT_CACHE_PREFIX.PRODUCT_BY_ID}${productId}`,
+      );
+      if (sku) {
+        await this.redisService.delete(
+          `${PRODUCT_CACHE_PREFIX.PRODUCT_BY_SKU}${sku}`,
+        );
+      }
+      this.logger.debug(`Invalidated product cache for: ${productId}`);
+    } catch (error) {
+      this.logger.error(
+        `Error invalidating product cache for ${productId}:`,
+        error,
+      );
+    }
   }
 }

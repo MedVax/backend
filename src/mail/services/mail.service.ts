@@ -328,4 +328,350 @@ export class MailService {
       ...params,
     });
   }
+
+  async recurringOrderReminder(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        orderId: string;
+        nextDeliveryDate: string;
+        itemsSummary: string;
+        totalAmount: string;
+        frequency: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'Reminder: Your Recurring Order is Due Tomorrow',
+      template: 'recurring-order-reminder',
+      ...params,
+    });
+  }
+
+  async recurringPaymentFailure(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        orderId: string;
+        orderDate: string;
+        retryCount: number;
+        maxRetries: number;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'Payment Failed for Your Recurring Order',
+      template: 'recurring-payment-failure',
+      ...params,
+    });
+  }
+
+  async recurringOrderCancelled(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        orderId: string;
+        orderDate: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'Your Recurring Order Has Been Cancelled',
+      template: 'recurring-order-cancelled',
+      ...params,
+    });
+  }
+
+  async orderPaymentConfirmed(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        orderId: string;
+        orderDate: string;
+        itemsSummary: string;
+        totalAmount: string;
+        paymentReference: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'Payment Confirmed - Your Order Has Been Received',
+      template: 'order-payment-confirmed',
+      ...params,
+    });
+  }
+
+  async recurringOrderCreated(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        orderId: string;
+        frequency: string;
+        nextDeliveryDate: string;
+        itemsSummary: string;
+        totalAmount: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'Your Recurring Order Has Been Set Up',
+      template: 'recurring-order-created',
+      ...params,
+    });
+  }
+
+  async orderStatusUpdated(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        orderId: string;
+        previousOrderStatus: string;
+        newOrderStatus: string;
+        previousPaymentStatus: string;
+        newPaymentStatus: string;
+        itemsSummary: string;
+        totalAmount: string;
+        orderDate: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'Your Order Status Has Been Updated',
+      template: 'order-status-updated',
+      ...params,
+    });
+  }
+
+  async sessionBooked(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        consultantName: string;
+        sessionDetails: Array<{
+          date: string;
+          meetingUrl?: string;
+          meetingId?: string;
+        }>;
+        sessionType: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'Your Session Has Been Booked',
+      template: 'session-booked',
+      ...params,
+    });
+  }
+
+  async sessionBookedConsultant(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        clientName: string;
+        sessionDetails: Array<{
+          date: string;
+          meetingUrl?: string;
+          meetingId?: string;
+        }>;
+        sessionType: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'New Session Booked',
+      template: 'session-booked-consultant',
+      ...params,
+    });
+  }
+
+  async sessionCancelled(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        consultantName: string;
+        sessionDate: string;
+        reason: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'Session Cancelled',
+      template: 'session-cancelled',
+      ...params,
+    });
+  }
+
+  async sessionCancelledConsultant(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        clientName: string;
+        sessionDate: string;
+        reason: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'Session Cancelled by Client',
+      template: 'session-cancelled-consultant',
+      ...params,
+    });
+  }
+
+  async sessionRescheduled(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        consultantName: string;
+        previousDate: string;
+        newDate: string;
+        meetingUrl?: string;
+        reason: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'Session Rescheduled',
+      template: 'session-rescheduled',
+      ...params,
+    });
+  }
+
+  async sessionRescheduledConsultant(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        clientName: string;
+        previousDate: string;
+        newDate: string;
+        meetingUrl?: string;
+        reason: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: 'Session Rescheduled',
+      template: 'session-rescheduled-consultant',
+      ...params,
+    });
+  }
+
+  async sessionInvitation(
+    params: Optional<
+      MailParams<{
+        name: string;
+        sessionDate: string;
+        consultantName: string;
+        meetingUrl?: string;
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: "You've Been Invited to a Session",
+      template: 'session-invitation',
+      ...params,
+    });
+  }
+
+  async sessionReminder(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        consultantName: string;
+        sessionDate: string;
+        meetingUrl: string;
+        reminderType: '24hours' | '1hour';
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject:
+        params.context.reminderType === '24hours'
+          ? 'Session Reminder - Your Session is Tomorrow'
+          : 'Session Reminder - Your Session is in 1 Hour',
+      template: 'session-reminder',
+      ...params,
+    });
+  }
+
+  async consultantAccountCreated(
+    params: MailParams<{
+      firstName: string;
+      lastName?: string;
+      email: string;
+      password: string;
+      loginUrl: string;
+      supportEmail: string;
+    }>,
+  ): Promise<void> {
+    await this.sendMail({
+      ...params,
+      subject:
+        params.subject ||
+        'Welcome to Medvax - Your Consultant Account is Ready!',
+      template: 'consultant-account-created',
+    });
+  }
+
+  async sessionReminderConsultant(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        clientName: string;
+        sessionDate: string;
+        meetingUrl: string;
+        reminderType: '24hours' | '1hour';
+        supportEmail: string;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject:
+        params.context.reminderType === '24hours'
+          ? 'Session Reminder - Session Tomorrow'
+          : 'Session Reminder - Session in 1 Hour',
+      template: 'session-reminder-consultant',
+      ...params,
+    });
+  }
 }

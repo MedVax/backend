@@ -1,0 +1,60 @@
+{{> head }}
+{{> header }}
+
+<table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td>
+                        <p class="body paragrapy-spacing">Dear {{firstName}}{{#if lastName}} {{lastName}}{{/if}},</p>
+                        <p class="body paragrapy-spacing">
+                            The session with {{clientName}} has been rescheduled.
+                        </p>
+
+                        <div style="background-color: #fff3cd; border: 1px solid #856404; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="margin-top: 0; color: #856404;">Session Rescheduled</h3>
+                            <p style="margin-bottom: 10px;">
+                                <strong>Previous Date:</strong> 
+                                <span style="text-decoration: line-through; color: #666;">{{previousDate}}</span>
+                            </p>
+                            <p style="margin-bottom: 10px;">
+                                <strong>New Date:</strong> 
+                                <span style="font-weight: bold; color: #28a745;">{{newDate}}</span>
+                            </p>
+                            <p style="margin-bottom: 10px;"><strong>Client:</strong> {{clientName}}</p>
+                            {{#if reason}}
+                            <p style="margin-bottom: 0;"><strong>Reason:</strong> {{reason}}</p>
+                            {{/if}}
+                        </div>
+
+                        {{#if meetingUrl}}
+                        <div style="background-color: #e7f3ff; border: 1px solid #0066cc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <p style="margin-bottom: 5px;"><strong>Meeting Link:</strong></p>
+                            <p style="margin: 0;">
+                                <a href="{{meetingUrl}}" style="color: #007bff; text-decoration: none; font-weight: bold;">Join Meeting</a>
+                            </p>
+                        </div>
+                        {{/if}}
+
+                        <p class="body paragrapy-spacing">
+                            Please update your calendar with the new date and time. A reminder email will be sent to you 24 hours and 1 hour before the rescheduled session.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            If you have any questions, please contact our support team at 
+                            <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            Thank you for your flexibility!
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{{> footer }}
+

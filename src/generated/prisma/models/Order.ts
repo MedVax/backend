@@ -27,17 +27,28 @@ export type AggregateOrder = {
 
 export type OrderAvgAggregateOutputType = {
   totalAmount: number | null
+  paymentRetryCount: number | null
 }
 
 export type OrderSumAggregateOutputType = {
   totalAmount: number | null
+  paymentRetryCount: number | null
 }
 
 export type OrderMinAggregateOutputType = {
   id: string | null
   userId: string | null
-  pharmacyId: string | null
   deliveryAddressId: string | null
+  guestFirstName: string | null
+  guestLastName: string | null
+  guestEmail: string | null
+  guestPhone: string | null
+  guestAddressLine1: string | null
+  guestAddressLine2: string | null
+  guestCity: string | null
+  guestState: string | null
+  guestPostalCode: string | null
+  guestCountry: string | null
   totalAmount: number | null
   currency: string | null
   paymentStatus: $Enums.PaymentStatus | null
@@ -46,6 +57,12 @@ export type OrderMinAggregateOutputType = {
   paymentReference: string | null
   paymentProvider: string | null
   notes: string | null
+  isRecurring: boolean | null
+  recurringFrequency: $Enums.OrderRecurringFrequency | null
+  recurringDate: Date | null
+  nextRunDate: Date | null
+  paymentRetryCount: number | null
+  isRecurringActive: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -53,8 +70,17 @@ export type OrderMinAggregateOutputType = {
 export type OrderMaxAggregateOutputType = {
   id: string | null
   userId: string | null
-  pharmacyId: string | null
   deliveryAddressId: string | null
+  guestFirstName: string | null
+  guestLastName: string | null
+  guestEmail: string | null
+  guestPhone: string | null
+  guestAddressLine1: string | null
+  guestAddressLine2: string | null
+  guestCity: string | null
+  guestState: string | null
+  guestPostalCode: string | null
+  guestCountry: string | null
   totalAmount: number | null
   currency: string | null
   paymentStatus: $Enums.PaymentStatus | null
@@ -63,6 +89,12 @@ export type OrderMaxAggregateOutputType = {
   paymentReference: string | null
   paymentProvider: string | null
   notes: string | null
+  isRecurring: boolean | null
+  recurringFrequency: $Enums.OrderRecurringFrequency | null
+  recurringDate: Date | null
+  nextRunDate: Date | null
+  paymentRetryCount: number | null
+  isRecurringActive: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -70,8 +102,17 @@ export type OrderMaxAggregateOutputType = {
 export type OrderCountAggregateOutputType = {
   id: number
   userId: number
-  pharmacyId: number
   deliveryAddressId: number
+  guestFirstName: number
+  guestLastName: number
+  guestEmail: number
+  guestPhone: number
+  guestAddressLine1: number
+  guestAddressLine2: number
+  guestCity: number
+  guestState: number
+  guestPostalCode: number
+  guestCountry: number
   totalAmount: number
   currency: number
   paymentStatus: number
@@ -80,6 +121,12 @@ export type OrderCountAggregateOutputType = {
   paymentReference: number
   paymentProvider: number
   notes: number
+  isRecurring: number
+  recurringFrequency: number
+  recurringDate: number
+  nextRunDate: number
+  paymentRetryCount: number
+  isRecurringActive: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -88,17 +135,28 @@ export type OrderCountAggregateOutputType = {
 
 export type OrderAvgAggregateInputType = {
   totalAmount?: true
+  paymentRetryCount?: true
 }
 
 export type OrderSumAggregateInputType = {
   totalAmount?: true
+  paymentRetryCount?: true
 }
 
 export type OrderMinAggregateInputType = {
   id?: true
   userId?: true
-  pharmacyId?: true
   deliveryAddressId?: true
+  guestFirstName?: true
+  guestLastName?: true
+  guestEmail?: true
+  guestPhone?: true
+  guestAddressLine1?: true
+  guestAddressLine2?: true
+  guestCity?: true
+  guestState?: true
+  guestPostalCode?: true
+  guestCountry?: true
   totalAmount?: true
   currency?: true
   paymentStatus?: true
@@ -107,6 +165,12 @@ export type OrderMinAggregateInputType = {
   paymentReference?: true
   paymentProvider?: true
   notes?: true
+  isRecurring?: true
+  recurringFrequency?: true
+  recurringDate?: true
+  nextRunDate?: true
+  paymentRetryCount?: true
+  isRecurringActive?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -114,8 +178,17 @@ export type OrderMinAggregateInputType = {
 export type OrderMaxAggregateInputType = {
   id?: true
   userId?: true
-  pharmacyId?: true
   deliveryAddressId?: true
+  guestFirstName?: true
+  guestLastName?: true
+  guestEmail?: true
+  guestPhone?: true
+  guestAddressLine1?: true
+  guestAddressLine2?: true
+  guestCity?: true
+  guestState?: true
+  guestPostalCode?: true
+  guestCountry?: true
   totalAmount?: true
   currency?: true
   paymentStatus?: true
@@ -124,6 +197,12 @@ export type OrderMaxAggregateInputType = {
   paymentReference?: true
   paymentProvider?: true
   notes?: true
+  isRecurring?: true
+  recurringFrequency?: true
+  recurringDate?: true
+  nextRunDate?: true
+  paymentRetryCount?: true
+  isRecurringActive?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -131,8 +210,17 @@ export type OrderMaxAggregateInputType = {
 export type OrderCountAggregateInputType = {
   id?: true
   userId?: true
-  pharmacyId?: true
   deliveryAddressId?: true
+  guestFirstName?: true
+  guestLastName?: true
+  guestEmail?: true
+  guestPhone?: true
+  guestAddressLine1?: true
+  guestAddressLine2?: true
+  guestCity?: true
+  guestState?: true
+  guestPostalCode?: true
+  guestCountry?: true
   totalAmount?: true
   currency?: true
   paymentStatus?: true
@@ -141,6 +229,12 @@ export type OrderCountAggregateInputType = {
   paymentReference?: true
   paymentProvider?: true
   notes?: true
+  isRecurring?: true
+  recurringFrequency?: true
+  recurringDate?: true
+  nextRunDate?: true
+  paymentRetryCount?: true
+  isRecurringActive?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -234,9 +328,18 @@ export type OrderGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
 
 export type OrderGroupByOutputType = {
   id: string
-  userId: string
-  pharmacyId: string | null
+  userId: string | null
   deliveryAddressId: string | null
+  guestFirstName: string | null
+  guestLastName: string | null
+  guestEmail: string | null
+  guestPhone: string | null
+  guestAddressLine1: string | null
+  guestAddressLine2: string | null
+  guestCity: string | null
+  guestState: string | null
+  guestPostalCode: string | null
+  guestCountry: string | null
   totalAmount: number
   currency: string
   paymentStatus: $Enums.PaymentStatus
@@ -245,6 +348,12 @@ export type OrderGroupByOutputType = {
   paymentReference: string | null
   paymentProvider: string | null
   notes: string | null
+  isRecurring: boolean
+  recurringFrequency: $Enums.OrderRecurringFrequency | null
+  recurringDate: Date | null
+  nextRunDate: Date | null
+  paymentRetryCount: number
+  isRecurringActive: boolean
   createdAt: Date
   updatedAt: Date
   _count: OrderCountAggregateOutputType | null
@@ -274,9 +383,18 @@ export type OrderWhereInput = {
   OR?: Prisma.OrderWhereInput[]
   NOT?: Prisma.OrderWhereInput | Prisma.OrderWhereInput[]
   id?: Prisma.StringFilter<"Order"> | string
-  userId?: Prisma.StringFilter<"Order"> | string
-  pharmacyId?: Prisma.StringNullableFilter<"Order"> | string | null
+  userId?: Prisma.StringNullableFilter<"Order"> | string | null
   deliveryAddressId?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestFirstName?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestLastName?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestEmail?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestPhone?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestAddressLine1?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestAddressLine2?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestCity?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestState?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestPostalCode?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestCountry?: Prisma.StringNullableFilter<"Order"> | string | null
   totalAmount?: Prisma.IntFilter<"Order"> | number
   currency?: Prisma.StringFilter<"Order"> | string
   paymentStatus?: Prisma.EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
@@ -285,20 +403,35 @@ export type OrderWhereInput = {
   paymentReference?: Prisma.StringNullableFilter<"Order"> | string | null
   paymentProvider?: Prisma.StringNullableFilter<"Order"> | string | null
   notes?: Prisma.StringNullableFilter<"Order"> | string | null
+  isRecurring?: Prisma.BoolFilter<"Order"> | boolean
+  recurringFrequency?: Prisma.EnumOrderRecurringFrequencyNullableFilter<"Order"> | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  nextRunDate?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  paymentRetryCount?: Prisma.IntFilter<"Order"> | number
+  isRecurringActive?: Prisma.BoolFilter<"Order"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
-  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  pharmacy?: Prisma.XOR<Prisma.PharmacyNullableScalarRelationFilter, Prisma.PharmacyWhereInput> | null
+  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   deliveryAddress?: Prisma.XOR<Prisma.AddressNullableScalarRelationFilter, Prisma.AddressWhereInput> | null
   items?: Prisma.OrderItemListRelationFilter
   prescriptions?: Prisma.PrescriptionListRelationFilter
+  transactions?: Prisma.TransactionListRelationFilter
 }
 
 export type OrderOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  userId?: Prisma.SortOrder
-  pharmacyId?: Prisma.SortOrderInput | Prisma.SortOrder
+  userId?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveryAddressId?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestFirstName?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestLastName?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestEmail?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestPhone?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestAddressLine1?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestAddressLine2?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestCity?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestState?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestPostalCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestCountry?: Prisma.SortOrderInput | Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
@@ -307,13 +440,19 @@ export type OrderOrderByWithRelationInput = {
   paymentReference?: Prisma.SortOrderInput | Prisma.SortOrder
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  isRecurring?: Prisma.SortOrder
+  recurringFrequency?: Prisma.SortOrderInput | Prisma.SortOrder
+  recurringDate?: Prisma.SortOrderInput | Prisma.SortOrder
+  nextRunDate?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentRetryCount?: Prisma.SortOrder
+  isRecurringActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
-  pharmacy?: Prisma.PharmacyOrderByWithRelationInput
   deliveryAddress?: Prisma.AddressOrderByWithRelationInput
   items?: Prisma.OrderItemOrderByRelationAggregateInput
   prescriptions?: Prisma.PrescriptionOrderByRelationAggregateInput
+  transactions?: Prisma.TransactionOrderByRelationAggregateInput
 }
 
 export type OrderWhereUniqueInput = Prisma.AtLeast<{
@@ -321,9 +460,18 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.OrderWhereInput | Prisma.OrderWhereInput[]
   OR?: Prisma.OrderWhereInput[]
   NOT?: Prisma.OrderWhereInput | Prisma.OrderWhereInput[]
-  userId?: Prisma.StringFilter<"Order"> | string
-  pharmacyId?: Prisma.StringNullableFilter<"Order"> | string | null
+  userId?: Prisma.StringNullableFilter<"Order"> | string | null
   deliveryAddressId?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestFirstName?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestLastName?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestEmail?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestPhone?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestAddressLine1?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestAddressLine2?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestCity?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestState?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestPostalCode?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestCountry?: Prisma.StringNullableFilter<"Order"> | string | null
   totalAmount?: Prisma.IntFilter<"Order"> | number
   currency?: Prisma.StringFilter<"Order"> | string
   paymentStatus?: Prisma.EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
@@ -332,20 +480,35 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   paymentReference?: Prisma.StringNullableFilter<"Order"> | string | null
   paymentProvider?: Prisma.StringNullableFilter<"Order"> | string | null
   notes?: Prisma.StringNullableFilter<"Order"> | string | null
+  isRecurring?: Prisma.BoolFilter<"Order"> | boolean
+  recurringFrequency?: Prisma.EnumOrderRecurringFrequencyNullableFilter<"Order"> | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  nextRunDate?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  paymentRetryCount?: Prisma.IntFilter<"Order"> | number
+  isRecurringActive?: Prisma.BoolFilter<"Order"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
-  user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
-  pharmacy?: Prisma.XOR<Prisma.PharmacyNullableScalarRelationFilter, Prisma.PharmacyWhereInput> | null
+  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   deliveryAddress?: Prisma.XOR<Prisma.AddressNullableScalarRelationFilter, Prisma.AddressWhereInput> | null
   items?: Prisma.OrderItemListRelationFilter
   prescriptions?: Prisma.PrescriptionListRelationFilter
+  transactions?: Prisma.TransactionListRelationFilter
 }, "id">
 
 export type OrderOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  userId?: Prisma.SortOrder
-  pharmacyId?: Prisma.SortOrderInput | Prisma.SortOrder
+  userId?: Prisma.SortOrderInput | Prisma.SortOrder
   deliveryAddressId?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestFirstName?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestLastName?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestEmail?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestPhone?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestAddressLine1?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestAddressLine2?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestCity?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestState?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestPostalCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  guestCountry?: Prisma.SortOrderInput | Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
@@ -354,6 +517,12 @@ export type OrderOrderByWithAggregationInput = {
   paymentReference?: Prisma.SortOrderInput | Prisma.SortOrder
   paymentProvider?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  isRecurring?: Prisma.SortOrder
+  recurringFrequency?: Prisma.SortOrderInput | Prisma.SortOrder
+  recurringDate?: Prisma.SortOrderInput | Prisma.SortOrder
+  nextRunDate?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentRetryCount?: Prisma.SortOrder
+  isRecurringActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.OrderCountOrderByAggregateInput
@@ -368,9 +537,18 @@ export type OrderScalarWhereWithAggregatesInput = {
   OR?: Prisma.OrderScalarWhereWithAggregatesInput[]
   NOT?: Prisma.OrderScalarWhereWithAggregatesInput | Prisma.OrderScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Order"> | string
-  userId?: Prisma.StringWithAggregatesFilter<"Order"> | string
-  pharmacyId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  userId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   deliveryAddressId?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  guestFirstName?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  guestLastName?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  guestEmail?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  guestPhone?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  guestAddressLine1?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  guestAddressLine2?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  guestCity?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  guestState?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  guestPostalCode?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  guestCountry?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   totalAmount?: Prisma.IntWithAggregatesFilter<"Order"> | number
   currency?: Prisma.StringWithAggregatesFilter<"Order"> | string
   paymentStatus?: Prisma.EnumPaymentStatusWithAggregatesFilter<"Order"> | $Enums.PaymentStatus
@@ -379,12 +557,28 @@ export type OrderScalarWhereWithAggregatesInput = {
   paymentReference?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   paymentProvider?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  isRecurring?: Prisma.BoolWithAggregatesFilter<"Order"> | boolean
+  recurringFrequency?: Prisma.EnumOrderRecurringFrequencyNullableWithAggregatesFilter<"Order"> | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+  nextRunDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+  paymentRetryCount?: Prisma.IntWithAggregatesFilter<"Order"> | number
+  isRecurringActive?: Prisma.BoolWithAggregatesFilter<"Order"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Order"> | Date | string
 }
 
 export type OrderCreateInput = {
   id?: string
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -393,20 +587,35 @@ export type OrderCreateInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutOrdersInput
-  pharmacy?: Prisma.PharmacyCreateNestedOneWithoutOrdersInput
+  user?: Prisma.UserCreateNestedOneWithoutOrdersInput
   deliveryAddress?: Prisma.AddressCreateNestedOneWithoutOrdersInput
   items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
   prescriptions?: Prisma.PrescriptionCreateNestedManyWithoutOrderInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUncheckedCreateInput = {
   id?: string
-  userId: string
-  pharmacyId?: string | null
+  userId?: string | null
   deliveryAddressId?: string | null
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -415,14 +624,31 @@ export type OrderUncheckedCreateInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
   prescriptions?: Prisma.PrescriptionUncheckedCreateNestedManyWithoutOrderInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -431,20 +657,35 @@ export type OrderUpdateInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutOrdersNestedInput
-  pharmacy?: Prisma.PharmacyUpdateOneWithoutOrdersNestedInput
+  user?: Prisma.UserUpdateOneWithoutOrdersNestedInput
   deliveryAddress?: Prisma.AddressUpdateOneWithoutOrdersNestedInput
   items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
   prescriptions?: Prisma.PrescriptionUpdateManyWithoutOrderNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  userId?: Prisma.StringFieldUpdateOperationsInput | string
-  pharmacyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deliveryAddressId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -453,17 +694,33 @@ export type OrderUncheckedUpdateInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
   prescriptions?: Prisma.PrescriptionUncheckedUpdateManyWithoutOrderNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderCreateManyInput = {
   id?: string
-  userId: string
-  pharmacyId?: string | null
+  userId?: string | null
   deliveryAddressId?: string | null
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -472,12 +729,28 @@ export type OrderCreateManyInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type OrderUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -486,15 +759,30 @@ export type OrderUpdateManyMutationInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type OrderUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  userId?: Prisma.StringFieldUpdateOperationsInput | string
-  pharmacyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deliveryAddressId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -503,6 +791,12 @@ export type OrderUncheckedUpdateManyInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -520,8 +814,17 @@ export type OrderOrderByRelationAggregateInput = {
 export type OrderCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  pharmacyId?: Prisma.SortOrder
   deliveryAddressId?: Prisma.SortOrder
+  guestFirstName?: Prisma.SortOrder
+  guestLastName?: Prisma.SortOrder
+  guestEmail?: Prisma.SortOrder
+  guestPhone?: Prisma.SortOrder
+  guestAddressLine1?: Prisma.SortOrder
+  guestAddressLine2?: Prisma.SortOrder
+  guestCity?: Prisma.SortOrder
+  guestState?: Prisma.SortOrder
+  guestPostalCode?: Prisma.SortOrder
+  guestCountry?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
@@ -530,19 +833,35 @@ export type OrderCountOrderByAggregateInput = {
   paymentReference?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isRecurring?: Prisma.SortOrder
+  recurringFrequency?: Prisma.SortOrder
+  recurringDate?: Prisma.SortOrder
+  nextRunDate?: Prisma.SortOrder
+  paymentRetryCount?: Prisma.SortOrder
+  isRecurringActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type OrderAvgOrderByAggregateInput = {
   totalAmount?: Prisma.SortOrder
+  paymentRetryCount?: Prisma.SortOrder
 }
 
 export type OrderMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  pharmacyId?: Prisma.SortOrder
   deliveryAddressId?: Prisma.SortOrder
+  guestFirstName?: Prisma.SortOrder
+  guestLastName?: Prisma.SortOrder
+  guestEmail?: Prisma.SortOrder
+  guestPhone?: Prisma.SortOrder
+  guestAddressLine1?: Prisma.SortOrder
+  guestAddressLine2?: Prisma.SortOrder
+  guestCity?: Prisma.SortOrder
+  guestState?: Prisma.SortOrder
+  guestPostalCode?: Prisma.SortOrder
+  guestCountry?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
@@ -551,6 +870,12 @@ export type OrderMaxOrderByAggregateInput = {
   paymentReference?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isRecurring?: Prisma.SortOrder
+  recurringFrequency?: Prisma.SortOrder
+  recurringDate?: Prisma.SortOrder
+  nextRunDate?: Prisma.SortOrder
+  paymentRetryCount?: Prisma.SortOrder
+  isRecurringActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -558,8 +883,17 @@ export type OrderMaxOrderByAggregateInput = {
 export type OrderMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
-  pharmacyId?: Prisma.SortOrder
   deliveryAddressId?: Prisma.SortOrder
+  guestFirstName?: Prisma.SortOrder
+  guestLastName?: Prisma.SortOrder
+  guestEmail?: Prisma.SortOrder
+  guestPhone?: Prisma.SortOrder
+  guestAddressLine1?: Prisma.SortOrder
+  guestAddressLine2?: Prisma.SortOrder
+  guestCity?: Prisma.SortOrder
+  guestState?: Prisma.SortOrder
+  guestPostalCode?: Prisma.SortOrder
+  guestCountry?: Prisma.SortOrder
   totalAmount?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
@@ -568,12 +902,19 @@ export type OrderMinOrderByAggregateInput = {
   paymentReference?: Prisma.SortOrder
   paymentProvider?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  isRecurring?: Prisma.SortOrder
+  recurringFrequency?: Prisma.SortOrder
+  recurringDate?: Prisma.SortOrder
+  nextRunDate?: Prisma.SortOrder
+  paymentRetryCount?: Prisma.SortOrder
+  isRecurringActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type OrderSumOrderByAggregateInput = {
   totalAmount?: Prisma.SortOrder
+  paymentRetryCount?: Prisma.SortOrder
 }
 
 export type OrderScalarRelationFilter = {
@@ -625,48 +966,6 @@ export type OrderUncheckedUpdateManyWithoutUserNestedInput = {
   connect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
   update?: Prisma.OrderUpdateWithWhereUniqueWithoutUserInput | Prisma.OrderUpdateWithWhereUniqueWithoutUserInput[]
   updateMany?: Prisma.OrderUpdateManyWithWhereWithoutUserInput | Prisma.OrderUpdateManyWithWhereWithoutUserInput[]
-  deleteMany?: Prisma.OrderScalarWhereInput | Prisma.OrderScalarWhereInput[]
-}
-
-export type OrderCreateNestedManyWithoutPharmacyInput = {
-  create?: Prisma.XOR<Prisma.OrderCreateWithoutPharmacyInput, Prisma.OrderUncheckedCreateWithoutPharmacyInput> | Prisma.OrderCreateWithoutPharmacyInput[] | Prisma.OrderUncheckedCreateWithoutPharmacyInput[]
-  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutPharmacyInput | Prisma.OrderCreateOrConnectWithoutPharmacyInput[]
-  createMany?: Prisma.OrderCreateManyPharmacyInputEnvelope
-  connect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
-}
-
-export type OrderUncheckedCreateNestedManyWithoutPharmacyInput = {
-  create?: Prisma.XOR<Prisma.OrderCreateWithoutPharmacyInput, Prisma.OrderUncheckedCreateWithoutPharmacyInput> | Prisma.OrderCreateWithoutPharmacyInput[] | Prisma.OrderUncheckedCreateWithoutPharmacyInput[]
-  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutPharmacyInput | Prisma.OrderCreateOrConnectWithoutPharmacyInput[]
-  createMany?: Prisma.OrderCreateManyPharmacyInputEnvelope
-  connect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
-}
-
-export type OrderUpdateManyWithoutPharmacyNestedInput = {
-  create?: Prisma.XOR<Prisma.OrderCreateWithoutPharmacyInput, Prisma.OrderUncheckedCreateWithoutPharmacyInput> | Prisma.OrderCreateWithoutPharmacyInput[] | Prisma.OrderUncheckedCreateWithoutPharmacyInput[]
-  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutPharmacyInput | Prisma.OrderCreateOrConnectWithoutPharmacyInput[]
-  upsert?: Prisma.OrderUpsertWithWhereUniqueWithoutPharmacyInput | Prisma.OrderUpsertWithWhereUniqueWithoutPharmacyInput[]
-  createMany?: Prisma.OrderCreateManyPharmacyInputEnvelope
-  set?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
-  disconnect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
-  delete?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
-  connect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
-  update?: Prisma.OrderUpdateWithWhereUniqueWithoutPharmacyInput | Prisma.OrderUpdateWithWhereUniqueWithoutPharmacyInput[]
-  updateMany?: Prisma.OrderUpdateManyWithWhereWithoutPharmacyInput | Prisma.OrderUpdateManyWithWhereWithoutPharmacyInput[]
-  deleteMany?: Prisma.OrderScalarWhereInput | Prisma.OrderScalarWhereInput[]
-}
-
-export type OrderUncheckedUpdateManyWithoutPharmacyNestedInput = {
-  create?: Prisma.XOR<Prisma.OrderCreateWithoutPharmacyInput, Prisma.OrderUncheckedCreateWithoutPharmacyInput> | Prisma.OrderCreateWithoutPharmacyInput[] | Prisma.OrderUncheckedCreateWithoutPharmacyInput[]
-  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutPharmacyInput | Prisma.OrderCreateOrConnectWithoutPharmacyInput[]
-  upsert?: Prisma.OrderUpsertWithWhereUniqueWithoutPharmacyInput | Prisma.OrderUpsertWithWhereUniqueWithoutPharmacyInput[]
-  createMany?: Prisma.OrderCreateManyPharmacyInputEnvelope
-  set?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
-  disconnect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
-  delete?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
-  connect?: Prisma.OrderWhereUniqueInput | Prisma.OrderWhereUniqueInput[]
-  update?: Prisma.OrderUpdateWithWhereUniqueWithoutPharmacyInput | Prisma.OrderUpdateWithWhereUniqueWithoutPharmacyInput[]
-  updateMany?: Prisma.OrderUpdateManyWithWhereWithoutPharmacyInput | Prisma.OrderUpdateManyWithWhereWithoutPharmacyInput[]
   deleteMany?: Prisma.OrderScalarWhereInput | Prisma.OrderScalarWhereInput[]
 }
 
@@ -724,6 +1023,10 @@ export type NullableEnumPrescriptionStatusFieldUpdateOperationsInput = {
   set?: $Enums.PrescriptionStatus | null
 }
 
+export type NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput = {
+  set?: $Enums.OrderRecurringFrequency | null
+}
+
 export type OrderCreateNestedOneWithoutItemsInput = {
   create?: Prisma.XOR<Prisma.OrderCreateWithoutItemsInput, Prisma.OrderUncheckedCreateWithoutItemsInput>
   connectOrCreate?: Prisma.OrderCreateOrConnectWithoutItemsInput
@@ -754,8 +1057,34 @@ export type OrderUpdateOneWithoutPrescriptionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.OrderUpdateToOneWithWhereWithoutPrescriptionsInput, Prisma.OrderUpdateWithoutPrescriptionsInput>, Prisma.OrderUncheckedUpdateWithoutPrescriptionsInput>
 }
 
+export type OrderCreateNestedOneWithoutTransactionsInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutTransactionsInput, Prisma.OrderUncheckedCreateWithoutTransactionsInput>
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutTransactionsInput
+  connect?: Prisma.OrderWhereUniqueInput
+}
+
+export type OrderUpdateOneWithoutTransactionsNestedInput = {
+  create?: Prisma.XOR<Prisma.OrderCreateWithoutTransactionsInput, Prisma.OrderUncheckedCreateWithoutTransactionsInput>
+  connectOrCreate?: Prisma.OrderCreateOrConnectWithoutTransactionsInput
+  upsert?: Prisma.OrderUpsertWithoutTransactionsInput
+  disconnect?: Prisma.OrderWhereInput | boolean
+  delete?: Prisma.OrderWhereInput | boolean
+  connect?: Prisma.OrderWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OrderUpdateToOneWithWhereWithoutTransactionsInput, Prisma.OrderUpdateWithoutTransactionsInput>, Prisma.OrderUncheckedUpdateWithoutTransactionsInput>
+}
+
 export type OrderCreateWithoutUserInput = {
   id?: string
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -764,18 +1093,33 @@ export type OrderCreateWithoutUserInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  pharmacy?: Prisma.PharmacyCreateNestedOneWithoutOrdersInput
   deliveryAddress?: Prisma.AddressCreateNestedOneWithoutOrdersInput
   items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
   prescriptions?: Prisma.PrescriptionCreateNestedManyWithoutOrderInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUncheckedCreateWithoutUserInput = {
   id?: string
-  pharmacyId?: string | null
   deliveryAddressId?: string | null
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -784,10 +1128,17 @@ export type OrderUncheckedCreateWithoutUserInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
   prescriptions?: Prisma.PrescriptionUncheckedCreateNestedManyWithoutOrderInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutOrderInput
 }
 
 export type OrderCreateOrConnectWithoutUserInput = {
@@ -821,9 +1172,18 @@ export type OrderScalarWhereInput = {
   OR?: Prisma.OrderScalarWhereInput[]
   NOT?: Prisma.OrderScalarWhereInput | Prisma.OrderScalarWhereInput[]
   id?: Prisma.StringFilter<"Order"> | string
-  userId?: Prisma.StringFilter<"Order"> | string
-  pharmacyId?: Prisma.StringNullableFilter<"Order"> | string | null
+  userId?: Prisma.StringNullableFilter<"Order"> | string | null
   deliveryAddressId?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestFirstName?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestLastName?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestEmail?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestPhone?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestAddressLine1?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestAddressLine2?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestCity?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestState?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestPostalCode?: Prisma.StringNullableFilter<"Order"> | string | null
+  guestCountry?: Prisma.StringNullableFilter<"Order"> | string | null
   totalAmount?: Prisma.IntFilter<"Order"> | number
   currency?: Prisma.StringFilter<"Order"> | string
   paymentStatus?: Prisma.EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
@@ -832,74 +1192,28 @@ export type OrderScalarWhereInput = {
   paymentReference?: Prisma.StringNullableFilter<"Order"> | string | null
   paymentProvider?: Prisma.StringNullableFilter<"Order"> | string | null
   notes?: Prisma.StringNullableFilter<"Order"> | string | null
+  isRecurring?: Prisma.BoolFilter<"Order"> | boolean
+  recurringFrequency?: Prisma.EnumOrderRecurringFrequencyNullableFilter<"Order"> | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  nextRunDate?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  paymentRetryCount?: Prisma.IntFilter<"Order"> | number
+  isRecurringActive?: Prisma.BoolFilter<"Order"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
 }
 
-export type OrderCreateWithoutPharmacyInput = {
-  id?: string
-  totalAmount: number
-  currency?: string
-  paymentStatus?: $Enums.PaymentStatus
-  orderStatus?: $Enums.OrderStatus
-  prescriptionStatus?: $Enums.PrescriptionStatus | null
-  paymentReference?: string | null
-  paymentProvider?: string | null
-  notes?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutOrdersInput
-  deliveryAddress?: Prisma.AddressCreateNestedOneWithoutOrdersInput
-  items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
-  prescriptions?: Prisma.PrescriptionCreateNestedManyWithoutOrderInput
-}
-
-export type OrderUncheckedCreateWithoutPharmacyInput = {
-  id?: string
-  userId: string
-  deliveryAddressId?: string | null
-  totalAmount: number
-  currency?: string
-  paymentStatus?: $Enums.PaymentStatus
-  orderStatus?: $Enums.OrderStatus
-  prescriptionStatus?: $Enums.PrescriptionStatus | null
-  paymentReference?: string | null
-  paymentProvider?: string | null
-  notes?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
-  prescriptions?: Prisma.PrescriptionUncheckedCreateNestedManyWithoutOrderInput
-}
-
-export type OrderCreateOrConnectWithoutPharmacyInput = {
-  where: Prisma.OrderWhereUniqueInput
-  create: Prisma.XOR<Prisma.OrderCreateWithoutPharmacyInput, Prisma.OrderUncheckedCreateWithoutPharmacyInput>
-}
-
-export type OrderCreateManyPharmacyInputEnvelope = {
-  data: Prisma.OrderCreateManyPharmacyInput | Prisma.OrderCreateManyPharmacyInput[]
-  skipDuplicates?: boolean
-}
-
-export type OrderUpsertWithWhereUniqueWithoutPharmacyInput = {
-  where: Prisma.OrderWhereUniqueInput
-  update: Prisma.XOR<Prisma.OrderUpdateWithoutPharmacyInput, Prisma.OrderUncheckedUpdateWithoutPharmacyInput>
-  create: Prisma.XOR<Prisma.OrderCreateWithoutPharmacyInput, Prisma.OrderUncheckedCreateWithoutPharmacyInput>
-}
-
-export type OrderUpdateWithWhereUniqueWithoutPharmacyInput = {
-  where: Prisma.OrderWhereUniqueInput
-  data: Prisma.XOR<Prisma.OrderUpdateWithoutPharmacyInput, Prisma.OrderUncheckedUpdateWithoutPharmacyInput>
-}
-
-export type OrderUpdateManyWithWhereWithoutPharmacyInput = {
-  where: Prisma.OrderScalarWhereInput
-  data: Prisma.XOR<Prisma.OrderUpdateManyMutationInput, Prisma.OrderUncheckedUpdateManyWithoutPharmacyInput>
-}
-
 export type OrderCreateWithoutDeliveryAddressInput = {
   id?: string
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -908,18 +1222,33 @@ export type OrderCreateWithoutDeliveryAddressInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutOrdersInput
-  pharmacy?: Prisma.PharmacyCreateNestedOneWithoutOrdersInput
+  user?: Prisma.UserCreateNestedOneWithoutOrdersInput
   items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
   prescriptions?: Prisma.PrescriptionCreateNestedManyWithoutOrderInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUncheckedCreateWithoutDeliveryAddressInput = {
   id?: string
-  userId: string
-  pharmacyId?: string | null
+  userId?: string | null
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -928,10 +1257,17 @@ export type OrderUncheckedCreateWithoutDeliveryAddressInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
   prescriptions?: Prisma.PrescriptionUncheckedCreateNestedManyWithoutOrderInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutOrderInput
 }
 
 export type OrderCreateOrConnectWithoutDeliveryAddressInput = {
@@ -962,6 +1298,16 @@ export type OrderUpdateManyWithWhereWithoutDeliveryAddressInput = {
 
 export type OrderCreateWithoutItemsInput = {
   id?: string
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -970,19 +1316,34 @@ export type OrderCreateWithoutItemsInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutOrdersInput
-  pharmacy?: Prisma.PharmacyCreateNestedOneWithoutOrdersInput
+  user?: Prisma.UserCreateNestedOneWithoutOrdersInput
   deliveryAddress?: Prisma.AddressCreateNestedOneWithoutOrdersInput
   prescriptions?: Prisma.PrescriptionCreateNestedManyWithoutOrderInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUncheckedCreateWithoutItemsInput = {
   id?: string
-  userId: string
-  pharmacyId?: string | null
+  userId?: string | null
   deliveryAddressId?: string | null
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -991,9 +1352,16 @@ export type OrderUncheckedCreateWithoutItemsInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   prescriptions?: Prisma.PrescriptionUncheckedCreateNestedManyWithoutOrderInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutOrderInput
 }
 
 export type OrderCreateOrConnectWithoutItemsInput = {
@@ -1014,6 +1382,16 @@ export type OrderUpdateToOneWithWhereWithoutItemsInput = {
 
 export type OrderUpdateWithoutItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -1022,19 +1400,34 @@ export type OrderUpdateWithoutItemsInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutOrdersNestedInput
-  pharmacy?: Prisma.PharmacyUpdateOneWithoutOrdersNestedInput
+  user?: Prisma.UserUpdateOneWithoutOrdersNestedInput
   deliveryAddress?: Prisma.AddressUpdateOneWithoutOrdersNestedInput
   prescriptions?: Prisma.PrescriptionUpdateManyWithoutOrderNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateWithoutItemsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  userId?: Prisma.StringFieldUpdateOperationsInput | string
-  pharmacyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deliveryAddressId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -1043,13 +1436,30 @@ export type OrderUncheckedUpdateWithoutItemsInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   prescriptions?: Prisma.PrescriptionUncheckedUpdateManyWithoutOrderNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderCreateWithoutPrescriptionsInput = {
   id?: string
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -1058,19 +1468,34 @@ export type OrderCreateWithoutPrescriptionsInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  user: Prisma.UserCreateNestedOneWithoutOrdersInput
-  pharmacy?: Prisma.PharmacyCreateNestedOneWithoutOrdersInput
+  user?: Prisma.UserCreateNestedOneWithoutOrdersInput
   deliveryAddress?: Prisma.AddressCreateNestedOneWithoutOrdersInput
   items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutOrderInput
 }
 
 export type OrderUncheckedCreateWithoutPrescriptionsInput = {
   id?: string
-  userId: string
-  pharmacyId?: string | null
+  userId?: string | null
   deliveryAddressId?: string | null
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -1079,9 +1504,16 @@ export type OrderUncheckedCreateWithoutPrescriptionsInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutOrderInput
 }
 
 export type OrderCreateOrConnectWithoutPrescriptionsInput = {
@@ -1102,6 +1534,16 @@ export type OrderUpdateToOneWithWhereWithoutPrescriptionsInput = {
 
 export type OrderUpdateWithoutPrescriptionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -1110,19 +1552,34 @@ export type OrderUpdateWithoutPrescriptionsInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutOrdersNestedInput
-  pharmacy?: Prisma.PharmacyUpdateOneWithoutOrdersNestedInput
+  user?: Prisma.UserUpdateOneWithoutOrdersNestedInput
   deliveryAddress?: Prisma.AddressUpdateOneWithoutOrdersNestedInput
   items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateWithoutPrescriptionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  userId?: Prisma.StringFieldUpdateOperationsInput | string
-  pharmacyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deliveryAddressId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -1131,15 +1588,30 @@ export type OrderUncheckedUpdateWithoutPrescriptionsInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutOrderNestedInput
 }
 
-export type OrderCreateManyUserInput = {
+export type OrderCreateWithoutTransactionsInput = {
   id?: string
-  pharmacyId?: string | null
-  deliveryAddressId?: string | null
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -1148,12 +1620,181 @@ export type OrderCreateManyUserInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user?: Prisma.UserCreateNestedOneWithoutOrdersInput
+  deliveryAddress?: Prisma.AddressCreateNestedOneWithoutOrdersInput
+  items?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
+  prescriptions?: Prisma.PrescriptionCreateNestedManyWithoutOrderInput
+}
+
+export type OrderUncheckedCreateWithoutTransactionsInput = {
+  id?: string
+  userId?: string | null
+  deliveryAddressId?: string | null
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
+  totalAmount: number
+  currency?: string
+  paymentStatus?: $Enums.PaymentStatus
+  orderStatus?: $Enums.OrderStatus
+  prescriptionStatus?: $Enums.PrescriptionStatus | null
+  paymentReference?: string | null
+  paymentProvider?: string | null
+  notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  items?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
+  prescriptions?: Prisma.PrescriptionUncheckedCreateNestedManyWithoutOrderInput
+}
+
+export type OrderCreateOrConnectWithoutTransactionsInput = {
+  where: Prisma.OrderWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrderCreateWithoutTransactionsInput, Prisma.OrderUncheckedCreateWithoutTransactionsInput>
+}
+
+export type OrderUpsertWithoutTransactionsInput = {
+  update: Prisma.XOR<Prisma.OrderUpdateWithoutTransactionsInput, Prisma.OrderUncheckedUpdateWithoutTransactionsInput>
+  create: Prisma.XOR<Prisma.OrderCreateWithoutTransactionsInput, Prisma.OrderUncheckedCreateWithoutTransactionsInput>
+  where?: Prisma.OrderWhereInput
+}
+
+export type OrderUpdateToOneWithWhereWithoutTransactionsInput = {
+  where?: Prisma.OrderWhereInput
+  data: Prisma.XOR<Prisma.OrderUpdateWithoutTransactionsInput, Prisma.OrderUncheckedUpdateWithoutTransactionsInput>
+}
+
+export type OrderUpdateWithoutTransactionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+  orderStatus?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  prescriptionStatus?: Prisma.NullableEnumPrescriptionStatusFieldUpdateOperationsInput | $Enums.PrescriptionStatus | null
+  paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneWithoutOrdersNestedInput
+  deliveryAddress?: Prisma.AddressUpdateOneWithoutOrdersNestedInput
+  items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
+  prescriptions?: Prisma.PrescriptionUpdateManyWithoutOrderNestedInput
+}
+
+export type OrderUncheckedUpdateWithoutTransactionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deliveryAddressId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  currency?: Prisma.StringFieldUpdateOperationsInput | string
+  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+  orderStatus?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  prescriptionStatus?: Prisma.NullableEnumPrescriptionStatusFieldUpdateOperationsInput | $Enums.PrescriptionStatus | null
+  paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
+  prescriptions?: Prisma.PrescriptionUncheckedUpdateManyWithoutOrderNestedInput
+}
+
+export type OrderCreateManyUserInput = {
+  id?: string
+  deliveryAddressId?: string | null
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
+  totalAmount: number
+  currency?: string
+  paymentStatus?: $Enums.PaymentStatus
+  orderStatus?: $Enums.OrderStatus
+  prescriptionStatus?: $Enums.PrescriptionStatus | null
+  paymentReference?: string | null
+  paymentProvider?: string | null
+  notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type OrderUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -1162,18 +1803,33 @@ export type OrderUpdateWithoutUserInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  pharmacy?: Prisma.PharmacyUpdateOneWithoutOrdersNestedInput
   deliveryAddress?: Prisma.AddressUpdateOneWithoutOrdersNestedInput
   items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
   prescriptions?: Prisma.PrescriptionUpdateManyWithoutOrderNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  pharmacyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deliveryAddressId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -1182,16 +1838,32 @@ export type OrderUncheckedUpdateWithoutUserInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
   prescriptions?: Prisma.PrescriptionUncheckedUpdateManyWithoutOrderNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  pharmacyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deliveryAddressId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -1200,82 +1872,29 @@ export type OrderUncheckedUpdateManyWithoutUserInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type OrderCreateManyPharmacyInput = {
-  id?: string
-  userId: string
-  deliveryAddressId?: string | null
-  totalAmount: number
-  currency?: string
-  paymentStatus?: $Enums.PaymentStatus
-  orderStatus?: $Enums.OrderStatus
-  prescriptionStatus?: $Enums.PrescriptionStatus | null
-  paymentReference?: string | null
-  paymentProvider?: string | null
-  notes?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type OrderUpdateWithoutPharmacyInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
-  currency?: Prisma.StringFieldUpdateOperationsInput | string
-  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
-  orderStatus?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
-  prescriptionStatus?: Prisma.NullableEnumPrescriptionStatusFieldUpdateOperationsInput | $Enums.PrescriptionStatus | null
-  paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutOrdersNestedInput
-  deliveryAddress?: Prisma.AddressUpdateOneWithoutOrdersNestedInput
-  items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
-  prescriptions?: Prisma.PrescriptionUpdateManyWithoutOrderNestedInput
-}
-
-export type OrderUncheckedUpdateWithoutPharmacyInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  userId?: Prisma.StringFieldUpdateOperationsInput | string
-  deliveryAddressId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
-  currency?: Prisma.StringFieldUpdateOperationsInput | string
-  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
-  orderStatus?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
-  prescriptionStatus?: Prisma.NullableEnumPrescriptionStatusFieldUpdateOperationsInput | $Enums.PrescriptionStatus | null
-  paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
-  prescriptions?: Prisma.PrescriptionUncheckedUpdateManyWithoutOrderNestedInput
-}
-
-export type OrderUncheckedUpdateManyWithoutPharmacyInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  userId?: Prisma.StringFieldUpdateOperationsInput | string
-  deliveryAddressId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
-  currency?: Prisma.StringFieldUpdateOperationsInput | string
-  paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
-  orderStatus?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
-  prescriptionStatus?: Prisma.NullableEnumPrescriptionStatusFieldUpdateOperationsInput | $Enums.PrescriptionStatus | null
-  paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type OrderCreateManyDeliveryAddressInput = {
   id?: string
-  userId: string
-  pharmacyId?: string | null
+  userId?: string | null
+  guestFirstName?: string | null
+  guestLastName?: string | null
+  guestEmail?: string | null
+  guestPhone?: string | null
+  guestAddressLine1?: string | null
+  guestAddressLine2?: string | null
+  guestCity?: string | null
+  guestState?: string | null
+  guestPostalCode?: string | null
+  guestCountry?: string | null
   totalAmount: number
   currency?: string
   paymentStatus?: $Enums.PaymentStatus
@@ -1284,12 +1903,28 @@ export type OrderCreateManyDeliveryAddressInput = {
   paymentReference?: string | null
   paymentProvider?: string | null
   notes?: string | null
+  isRecurring?: boolean
+  recurringFrequency?: $Enums.OrderRecurringFrequency | null
+  recurringDate?: Date | string | null
+  nextRunDate?: Date | string | null
+  paymentRetryCount?: number
+  isRecurringActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type OrderUpdateWithoutDeliveryAddressInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -1298,18 +1933,33 @@ export type OrderUpdateWithoutDeliveryAddressInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  user?: Prisma.UserUpdateOneRequiredWithoutOrdersNestedInput
-  pharmacy?: Prisma.PharmacyUpdateOneWithoutOrdersNestedInput
+  user?: Prisma.UserUpdateOneWithoutOrdersNestedInput
   items?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
   prescriptions?: Prisma.PrescriptionUpdateManyWithoutOrderNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateWithoutDeliveryAddressInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  userId?: Prisma.StringFieldUpdateOperationsInput | string
-  pharmacyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -1318,16 +1968,32 @@ export type OrderUncheckedUpdateWithoutDeliveryAddressInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   items?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
   prescriptions?: Prisma.PrescriptionUncheckedUpdateManyWithoutOrderNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutOrderNestedInput
 }
 
 export type OrderUncheckedUpdateManyWithoutDeliveryAddressInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  userId?: Prisma.StringFieldUpdateOperationsInput | string
-  pharmacyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  userId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestFirstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestLastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine1?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestAddressLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestState?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestPostalCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  guestCountry?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalAmount?: Prisma.IntFieldUpdateOperationsInput | number
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   paymentStatus?: Prisma.EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
@@ -1336,6 +2002,12 @@ export type OrderUncheckedUpdateManyWithoutDeliveryAddressInput = {
   paymentReference?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   paymentProvider?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isRecurring?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  recurringFrequency?: Prisma.NullableEnumOrderRecurringFrequencyFieldUpdateOperationsInput | $Enums.OrderRecurringFrequency | null
+  recurringDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  nextRunDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  paymentRetryCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRecurringActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1348,11 +2020,13 @@ export type OrderUncheckedUpdateManyWithoutDeliveryAddressInput = {
 export type OrderCountOutputType = {
   items: number
   prescriptions: number
+  transactions: number
 }
 
 export type OrderCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   items?: boolean | OrderCountOutputTypeCountItemsArgs
   prescriptions?: boolean | OrderCountOutputTypeCountPrescriptionsArgs
+  transactions?: boolean | OrderCountOutputTypeCountTransactionsArgs
 }
 
 /**
@@ -1379,12 +2053,28 @@ export type OrderCountOutputTypeCountPrescriptionsArgs<ExtArgs extends runtime.T
   where?: Prisma.PrescriptionWhereInput
 }
 
+/**
+ * OrderCountOutputType without action
+ */
+export type OrderCountOutputTypeCountTransactionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TransactionWhereInput
+}
+
 
 export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
-  pharmacyId?: boolean
   deliveryAddressId?: boolean
+  guestFirstName?: boolean
+  guestLastName?: boolean
+  guestEmail?: boolean
+  guestPhone?: boolean
+  guestAddressLine1?: boolean
+  guestAddressLine2?: boolean
+  guestCity?: boolean
+  guestState?: boolean
+  guestPostalCode?: boolean
+  guestCountry?: boolean
   totalAmount?: boolean
   currency?: boolean
   paymentStatus?: boolean
@@ -1393,21 +2083,36 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   paymentReference?: boolean
   paymentProvider?: boolean
   notes?: boolean
+  isRecurring?: boolean
+  recurringFrequency?: boolean
+  recurringDate?: boolean
+  nextRunDate?: boolean
+  paymentRetryCount?: boolean
+  isRecurringActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  pharmacy?: boolean | Prisma.Order$pharmacyArgs<ExtArgs>
+  user?: boolean | Prisma.Order$userArgs<ExtArgs>
   deliveryAddress?: boolean | Prisma.Order$deliveryAddressArgs<ExtArgs>
   items?: boolean | Prisma.Order$itemsArgs<ExtArgs>
   prescriptions?: boolean | Prisma.Order$prescriptionsArgs<ExtArgs>
+  transactions?: boolean | Prisma.Order$transactionsArgs<ExtArgs>
   _count?: boolean | Prisma.OrderCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
 
 export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
-  pharmacyId?: boolean
   deliveryAddressId?: boolean
+  guestFirstName?: boolean
+  guestLastName?: boolean
+  guestEmail?: boolean
+  guestPhone?: boolean
+  guestAddressLine1?: boolean
+  guestAddressLine2?: boolean
+  guestCity?: boolean
+  guestState?: boolean
+  guestPostalCode?: boolean
+  guestCountry?: boolean
   totalAmount?: boolean
   currency?: boolean
   paymentStatus?: boolean
@@ -1416,18 +2121,32 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   paymentReference?: boolean
   paymentProvider?: boolean
   notes?: boolean
+  isRecurring?: boolean
+  recurringFrequency?: boolean
+  recurringDate?: boolean
+  nextRunDate?: boolean
+  paymentRetryCount?: boolean
+  isRecurringActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  pharmacy?: boolean | Prisma.Order$pharmacyArgs<ExtArgs>
+  user?: boolean | Prisma.Order$userArgs<ExtArgs>
   deliveryAddress?: boolean | Prisma.Order$deliveryAddressArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
 
 export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   userId?: boolean
-  pharmacyId?: boolean
   deliveryAddressId?: boolean
+  guestFirstName?: boolean
+  guestLastName?: boolean
+  guestEmail?: boolean
+  guestPhone?: boolean
+  guestAddressLine1?: boolean
+  guestAddressLine2?: boolean
+  guestCity?: boolean
+  guestState?: boolean
+  guestPostalCode?: boolean
+  guestCountry?: boolean
   totalAmount?: boolean
   currency?: boolean
   paymentStatus?: boolean
@@ -1436,18 +2155,32 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   paymentReference?: boolean
   paymentProvider?: boolean
   notes?: boolean
+  isRecurring?: boolean
+  recurringFrequency?: boolean
+  recurringDate?: boolean
+  nextRunDate?: boolean
+  paymentRetryCount?: boolean
+  isRecurringActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  pharmacy?: boolean | Prisma.Order$pharmacyArgs<ExtArgs>
+  user?: boolean | Prisma.Order$userArgs<ExtArgs>
   deliveryAddress?: boolean | Prisma.Order$deliveryAddressArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
 
 export type OrderSelectScalar = {
   id?: boolean
   userId?: boolean
-  pharmacyId?: boolean
   deliveryAddressId?: boolean
+  guestFirstName?: boolean
+  guestLastName?: boolean
+  guestEmail?: boolean
+  guestPhone?: boolean
+  guestAddressLine1?: boolean
+  guestAddressLine2?: boolean
+  guestCity?: boolean
+  guestState?: boolean
+  guestPostalCode?: boolean
+  guestCountry?: boolean
   totalAmount?: boolean
   currency?: boolean
   paymentStatus?: boolean
@@ -1456,44 +2189,57 @@ export type OrderSelectScalar = {
   paymentReference?: boolean
   paymentProvider?: boolean
   notes?: boolean
+  isRecurring?: boolean
+  recurringFrequency?: boolean
+  recurringDate?: boolean
+  nextRunDate?: boolean
+  paymentRetryCount?: boolean
+  isRecurringActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "pharmacyId" | "deliveryAddressId" | "totalAmount" | "currency" | "paymentStatus" | "orderStatus" | "prescriptionStatus" | "paymentReference" | "paymentProvider" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "deliveryAddressId" | "guestFirstName" | "guestLastName" | "guestEmail" | "guestPhone" | "guestAddressLine1" | "guestAddressLine2" | "guestCity" | "guestState" | "guestPostalCode" | "guestCountry" | "totalAmount" | "currency" | "paymentStatus" | "orderStatus" | "prescriptionStatus" | "paymentReference" | "paymentProvider" | "notes" | "isRecurring" | "recurringFrequency" | "recurringDate" | "nextRunDate" | "paymentRetryCount" | "isRecurringActive" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
 export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  pharmacy?: boolean | Prisma.Order$pharmacyArgs<ExtArgs>
+  user?: boolean | Prisma.Order$userArgs<ExtArgs>
   deliveryAddress?: boolean | Prisma.Order$deliveryAddressArgs<ExtArgs>
   items?: boolean | Prisma.Order$itemsArgs<ExtArgs>
   prescriptions?: boolean | Prisma.Order$prescriptionsArgs<ExtArgs>
+  transactions?: boolean | Prisma.Order$transactionsArgs<ExtArgs>
   _count?: boolean | Prisma.OrderCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type OrderIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  pharmacy?: boolean | Prisma.Order$pharmacyArgs<ExtArgs>
+  user?: boolean | Prisma.Order$userArgs<ExtArgs>
   deliveryAddress?: boolean | Prisma.Order$deliveryAddressArgs<ExtArgs>
 }
 export type OrderIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
-  pharmacy?: boolean | Prisma.Order$pharmacyArgs<ExtArgs>
+  user?: boolean | Prisma.Order$userArgs<ExtArgs>
   deliveryAddress?: boolean | Prisma.Order$deliveryAddressArgs<ExtArgs>
 }
 
 export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Order"
   objects: {
-    user: Prisma.$UserPayload<ExtArgs>
-    pharmacy: Prisma.$PharmacyPayload<ExtArgs> | null
+    user: Prisma.$UserPayload<ExtArgs> | null
     deliveryAddress: Prisma.$AddressPayload<ExtArgs> | null
     items: Prisma.$OrderItemPayload<ExtArgs>[]
     prescriptions: Prisma.$PrescriptionPayload<ExtArgs>[]
+    transactions: Prisma.$TransactionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    userId: string
-    pharmacyId: string | null
+    userId: string | null
     deliveryAddressId: string | null
+    guestFirstName: string | null
+    guestLastName: string | null
+    guestEmail: string | null
+    guestPhone: string | null
+    guestAddressLine1: string | null
+    guestAddressLine2: string | null
+    guestCity: string | null
+    guestState: string | null
+    guestPostalCode: string | null
+    guestCountry: string | null
     totalAmount: number
     currency: string
     paymentStatus: $Enums.PaymentStatus
@@ -1502,6 +2248,12 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     paymentReference: string | null
     paymentProvider: string | null
     notes: string | null
+    isRecurring: boolean
+    recurringFrequency: $Enums.OrderRecurringFrequency | null
+    recurringDate: Date | null
+    nextRunDate: Date | null
+    paymentRetryCount: number
+    isRecurringActive: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["order"]>
@@ -1898,11 +2650,11 @@ readonly fields: OrderFieldRefs;
  */
 export interface Prisma__OrderClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  pharmacy<T extends Prisma.Order$pharmacyArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$pharmacyArgs<ExtArgs>>): Prisma.Prisma__PharmacyClient<runtime.Types.Result.GetResult<Prisma.$PharmacyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  user<T extends Prisma.Order$userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$userArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   deliveryAddress<T extends Prisma.Order$deliveryAddressArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$deliveryAddressArgs<ExtArgs>>): Prisma.Prisma__AddressClient<runtime.Types.Result.GetResult<Prisma.$AddressPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   items<T extends Prisma.Order$itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   prescriptions<T extends Prisma.Order$prescriptionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$prescriptionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PrescriptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  transactions<T extends Prisma.Order$transactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Order$transactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1934,8 +2686,17 @@ export interface Prisma__OrderClient<T, Null = never, ExtArgs extends runtime.Ty
 export interface OrderFieldRefs {
   readonly id: Prisma.FieldRef<"Order", 'String'>
   readonly userId: Prisma.FieldRef<"Order", 'String'>
-  readonly pharmacyId: Prisma.FieldRef<"Order", 'String'>
   readonly deliveryAddressId: Prisma.FieldRef<"Order", 'String'>
+  readonly guestFirstName: Prisma.FieldRef<"Order", 'String'>
+  readonly guestLastName: Prisma.FieldRef<"Order", 'String'>
+  readonly guestEmail: Prisma.FieldRef<"Order", 'String'>
+  readonly guestPhone: Prisma.FieldRef<"Order", 'String'>
+  readonly guestAddressLine1: Prisma.FieldRef<"Order", 'String'>
+  readonly guestAddressLine2: Prisma.FieldRef<"Order", 'String'>
+  readonly guestCity: Prisma.FieldRef<"Order", 'String'>
+  readonly guestState: Prisma.FieldRef<"Order", 'String'>
+  readonly guestPostalCode: Prisma.FieldRef<"Order", 'String'>
+  readonly guestCountry: Prisma.FieldRef<"Order", 'String'>
   readonly totalAmount: Prisma.FieldRef<"Order", 'Int'>
   readonly currency: Prisma.FieldRef<"Order", 'String'>
   readonly paymentStatus: Prisma.FieldRef<"Order", 'PaymentStatus'>
@@ -1944,6 +2705,12 @@ export interface OrderFieldRefs {
   readonly paymentReference: Prisma.FieldRef<"Order", 'String'>
   readonly paymentProvider: Prisma.FieldRef<"Order", 'String'>
   readonly notes: Prisma.FieldRef<"Order", 'String'>
+  readonly isRecurring: Prisma.FieldRef<"Order", 'Boolean'>
+  readonly recurringFrequency: Prisma.FieldRef<"Order", 'OrderRecurringFrequency'>
+  readonly recurringDate: Prisma.FieldRef<"Order", 'DateTime'>
+  readonly nextRunDate: Prisma.FieldRef<"Order", 'DateTime'>
+  readonly paymentRetryCount: Prisma.FieldRef<"Order", 'Int'>
+  readonly isRecurringActive: Prisma.FieldRef<"Order", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Order", 'DateTime'>
 }
@@ -2342,22 +3109,22 @@ export type OrderDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
 }
 
 /**
- * Order.pharmacy
+ * Order.user
  */
-export type Order$pharmacyArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type Order$userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the Pharmacy
+   * Select specific fields to fetch from the User
    */
-  select?: Prisma.PharmacySelect<ExtArgs> | null
+  select?: Prisma.UserSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the Pharmacy
+   * Omit specific fields from the User
    */
-  omit?: Prisma.PharmacyOmit<ExtArgs> | null
+  omit?: Prisma.UserOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.PharmacyInclude<ExtArgs> | null
-  where?: Prisma.PharmacyWhereInput
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**
@@ -2425,6 +3192,30 @@ export type Order$prescriptionsArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.PrescriptionScalarFieldEnum | Prisma.PrescriptionScalarFieldEnum[]
+}
+
+/**
+ * Order.transactions
+ */
+export type Order$transactionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Transaction
+   */
+  select?: Prisma.TransactionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Transaction
+   */
+  omit?: Prisma.TransactionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TransactionInclude<ExtArgs> | null
+  where?: Prisma.TransactionWhereInput
+  orderBy?: Prisma.TransactionOrderByWithRelationInput | Prisma.TransactionOrderByWithRelationInput[]
+  cursor?: Prisma.TransactionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TransactionScalarFieldEnum | Prisma.TransactionScalarFieldEnum[]
 }
 
 /**
