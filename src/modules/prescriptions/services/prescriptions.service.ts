@@ -8,7 +8,7 @@ import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.serv
 import { CreatePrescriptionDto } from '../dtos/create-prescription.dto';
 import { VerifyPrescriptionDto } from '../dtos/verify-prescription.dto';
 import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
-import type { Prescription } from 'generated/prisma/client';
+import { PrescriptionStatus, type Prescription } from 'generated/prisma/client';
 import { randomUUID } from 'crypto';
 import { UploadsService } from 'src/uploads/uploads.service';
 
@@ -22,9 +22,9 @@ export class PrescriptionsService {
   ) {}
 
   async create(
-    userId: string,
     dto: CreatePrescriptionDto,
     file?: Express.Multer.File,
+    userId?: string,
   ) {
     // If orderId is provided, verify it belongs to user
     if (dto.orderId) {
@@ -55,9 +55,9 @@ export class PrescriptionsService {
       data: {
         ...dto,
         fileUrl,
-        userId,
+        ...(userId ? { userId } : {}),
         uploadedBy: userId,
-        status: 'PENDING',
+        status: PrescriptionStatus.PENDING,
       },
       include: {
         order: true,

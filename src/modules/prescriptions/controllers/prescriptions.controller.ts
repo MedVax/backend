@@ -29,6 +29,7 @@ import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { QueryFilter } from 'params/query-filter';
 import { QueryOptions } from 'params/query-options';
 import { UserType } from 'generated/prisma/enums';
+import { AuthAllow } from 'metadatas/auth-allow.metadata';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = [
@@ -101,6 +102,7 @@ export class PrescriptionsController {
     status: HttpStatus.CREATED,
     message: 'Prescription created successfully',
   })
+  @AuthAllow()
   @ApiOperation({ summary: 'Create/upload a prescription with file' })
   create(
     @Body() dto: CreatePrescriptionDto,
@@ -113,9 +115,9 @@ export class PrescriptionsController {
       }),
     )
     file: Express.Multer.File,
-    @AuthUser() user: User,
+    @AuthUser() user?: User,
   ) {
-    return this.prescriptionsService.create(user.id, dto, file);
+    return this.prescriptionsService.create(dto, file, user?.id);
   }
 
   @Get()
