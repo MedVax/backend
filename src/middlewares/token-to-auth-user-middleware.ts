@@ -1,14 +1,21 @@
 import { ForbiddenException, Injectable, NestMiddleware } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response, NextFunction } from 'express';
+import { SessionCookieService } from 'services/session-cookie.service';
 
 @Injectable()
 export class TokenToAuthUserMiddleware implements NestMiddleware {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private sessionCookieService: SessionCookieService,
+  ) {}
   use(req: Request<any>, res: Response, next: NextFunction) {
     try {
       if (!req?.authUser) {
-        const accessToken = this.extractTokenFromHeader(req);
+        const accessToken =
+          this.sessionCookieService.getSessionId(req, 'accessToken') ||
+          this.extractTokenFromHeader(req);
+
         if (accessToken) {
           const { user, activeProfile } = this.jwtService.decode(accessToken);
           if (user) {

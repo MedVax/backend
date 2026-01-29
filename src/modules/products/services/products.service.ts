@@ -8,7 +8,9 @@ import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.serv
 import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
 import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
-import type { Product } from 'generated/prisma/client';
+import type { Product, Prisma } from 'generated/prisma/client';
+import { PaginationQuery } from 'src/dtos/paginated-query.dto';
+import { GetProductsFilterQuery } from '../dtos/get-products-filter-query.dto';
 import { UploadsService } from 'src/uploads/uploads.service';
 import { generateProductImageFileName } from 'utils/image-upload.util';
 import { CategoriesService } from 'modules/categories/services/categories.service';
@@ -25,6 +27,8 @@ const CACHE_PREFIX = {
   PRODUCT_LIST: 'product:list:',
   PRODUCT_SEARCH: 'product:search:',
   PRODUCT_COUNT: 'product:count:',
+  PRODUCT_BEST_SELLING: 'product:best-selling:',
+  PRODUCT_RELATED: 'product:related:',
 };
 
 @Injectable()
@@ -59,6 +63,15 @@ export class ProductsService {
       }
     }
 
+    if (dto.brandId) {
+      const brand = await this.prismaService.tenancy.brand.findUnique({
+        where: { id: dto.brandId },
+      });
+      if (!brand) {
+        throw new NotFoundException(`Brand with ID ${dto.brandId} not found`);
+      }
+    }
+
     try {
       const product = await this.prismaService.corePrismaService.$transaction(
         async (trx) => {
@@ -72,6 +85,7 @@ export class ProductsService {
               requiresPrescription: dto.requiresPrescription,
               productType: dto.productType,
               categoryId: dto.categoryId,
+              brandId: dto.brandId,
               dosages: dto.dosages,
               packageSizes: dto.packageSizes,
               howToUse: dto.howToUse,
@@ -152,6 +166,7 @@ export class ProductsService {
         ...(dto?.categoryId
           ? { category: { connect: { id: dto.categoryId } } }
           : {}),
+        ...(dto?.brandId ? { brand: { connect: { id: dto.brandId } } } : {}),
         ...(dto?.dosages !== undefined ? { dosages: dto.dosages } : {}),
         ...(dto?.packageSizes !== undefined
           ? { packageSizes: dto.packageSizes }
@@ -220,11 +235,55 @@ export class ProductsService {
   }
 
   async findAll(
-    filter?: QueryFilter<Product>,
-    options?: QueryOptions<Product>,
+    paginationQueryParams: PaginationQuery,
+    filterQueryParams: GetProductsFilterQuery,
   ) {
-    // Generate cache key from filter and options
-    const cacheKey = this.generateListCacheKey(filter, options);
+    const {
+      search,
+      brandId,
+      categoryId,
+      productType,
+      requiresPrescription,
+      isActive,
+      availability,
+    } = filterQueryParams;
+
+    const categoryIds = categoryId?.split(',');
+    const brandIds = brandId?.split(',');
+
+    // Handle category with subcategories
+    let categoryFilter: Prisma.ProductWhereInput | undefined;
+    if (categoryIds) {
+      categoryFilter = { categoryId: { in: categoryIds } };
+    }
+
+    // Build where clause
+    const where: Prisma.ProductWhereInput = {
+      AND: [
+        search
+          ? {
+              OR: [
+                { name: { contains: search, mode: 'insensitive' } },
+                { sku: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+              ],
+            }
+          : {},
+        brandIds?.length > 0 ? { brandId: { in: brandIds } } : {},
+        categoryIds?.length > 0 ? categoryFilter : {},
+        productType ? { productType } : {},
+        requiresPrescription !== undefined ? { requiresPrescription } : {},
+        isActive !== undefined ? { isActive } : { isActive: true }, // Default to active products
+        availability === 'in stock' ? { stockQuantity: { gt: 0 } } : {},
+        availability === 'out of stock' ? { stockQuantity: { equals: 0 } } : {},
+      ],
+    };
+
+    // Generate cache key from pagination and filter params
+    const cacheKey = this.generateListCacheKeyFromParams(
+      paginationQueryParams,
+      filterQueryParams,
+    );
 
     // Check Redis cache first
     const cached = await this.redisService.get<any>(cacheKey);
@@ -235,41 +294,20 @@ export class ProductsService {
 
     // Cache miss - fetch from database
     this.logger.debug(`Cache miss for product list: ${cacheKey}`);
-    const result =
-      await this.prismaService.tenancy.product.findManyWithUrlQuery(
-        filter,
-        options,
-      );
-
-    let finalResult;
-
-    // If result is an array (not paginated), fetch with includes
-    if (Array.isArray(result) && result.length > 0) {
-      const ids = result.map((p) => p.id);
-      finalResult = await this.prismaService.tenancy.product.findMany({
-        where: { id: { in: ids } },
-        include: {
-          category: true,
-        },
-      });
-    } else if (!Array.isArray(result) && result.data) {
-      // If paginated, we need to fetch with includes separately
-      const ids = result.data.map((p: any) => p.id);
-      const data = await this.prismaService.tenancy.product.findMany({
-        where: { id: { in: ids } },
-        include: {
-          category: true,
-        },
-      });
-      finalResult = { ...result, data };
-    } else {
-      finalResult = result;
-    }
+    const result = await this.prismaService.tenancy.product.paginate({
+      where,
+      include: {
+        category: true,
+        brand: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      ...paginationQueryParams,
+    });
 
     // Cache the result
-    await this.redisService.set(cacheKey, finalResult, CACHE_TTL);
+    await this.redisService.set(cacheKey, result, CACHE_TTL);
 
-    return finalResult;
+    return result;
   }
 
   async count(filter?: QueryFilter<Product>, options?: QueryOptions<Product>) {
@@ -312,6 +350,7 @@ export class ProductsService {
       where: { id },
       include: {
         category: true,
+        brand: true,
       },
     });
 
@@ -349,6 +388,7 @@ export class ProductsService {
       where: { sku },
       include: {
         category: true,
+        brand: true,
       },
     });
 
@@ -405,6 +445,7 @@ export class ProductsService {
       where,
       include: {
         category: true,
+        brand: true,
       },
     });
 
@@ -412,6 +453,86 @@ export class ProductsService {
     await this.redisService.set(cacheKey, products, CACHE_TTL);
 
     return products;
+  }
+
+  async getBestSelling(limit: number = 10) {
+    const cacheKey = `${CACHE_PREFIX.PRODUCT_BEST_SELLING}limit:${limit}`;
+
+    // Check Redis cache first
+    const cached = await this.redisService.get<any>(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for best selling products: ${cacheKey}`);
+      return cached;
+    }
+
+    // Cache miss - fetch from database
+    this.logger.debug(`Cache miss for best selling products: ${cacheKey}`);
+
+    // Get best selling products based on order items quantity
+    // Only count items from completed/paid orders
+    const bestSellingProducts = await this.prismaService.tenancy.$queryRaw<
+      Array<{
+        productId: string;
+        totalQuantity: bigint;
+      }>
+    >`
+      SELECT 
+        oi."productId",
+        SUM(oi.quantity) as "totalQuantity"
+      FROM "OrderItem" oi
+      INNER JOIN "Order" o ON oi."orderId" = o.id
+      WHERE o."paymentStatus" = 'PAID'
+        AND o."orderStatus" IN ('DELIVERED', 'COMPLETED')
+        AND oi."productId" IS NOT NULL
+      GROUP BY oi."productId"
+      ORDER BY "totalQuantity" DESC
+      LIMIT ${limit}
+    `;
+
+    if (!bestSellingProducts || bestSellingProducts.length === 0) {
+      // If no best selling products, return active products ordered by creation date
+      const fallbackProducts =
+        await this.prismaService.tenancy.product.findMany({
+          where: {
+            isActive: true,
+          },
+          include: {
+            category: true,
+            brand: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: limit,
+        });
+
+      await this.redisService.set(cacheKey, fallbackProducts, CACHE_TTL);
+      return fallbackProducts;
+    }
+
+    const productIds = bestSellingProducts.map((p) => p.productId);
+
+    // Fetch full product details
+    const products = await this.prismaService.tenancy.product.findMany({
+      where: {
+        id: { in: productIds },
+        isActive: true,
+      },
+      include: {
+        category: true,
+        brand: true,
+      },
+    });
+
+    // Sort products by the order from bestSellingProducts
+    const sortedProducts = productIds
+      .map((id) => products.find((p) => p.id === id))
+      .filter((p): p is NonNullable<typeof p> => p !== undefined);
+
+    // Cache the result
+    await this.redisService.set(cacheKey, sortedProducts, CACHE_TTL);
+
+    return sortedProducts;
   }
 
   async uploadImages(productId: string, files: Express.Multer.File[]) {
@@ -545,6 +666,18 @@ export class ProductsService {
   /**
    * Cache helper methods
    */
+  private generateListCacheKeyFromParams(
+    paginationQueryParams: PaginationQuery,
+    filterQueryParams: GetProductsFilterQuery,
+  ): string {
+    const hashInput = JSON.stringify({
+      paginationQueryParams,
+      filterQueryParams,
+    });
+    const hash = crypto.createHash('md5').update(hashInput).digest('hex');
+    return `${CACHE_PREFIX.PRODUCT_LIST}${hash}`;
+  }
+
   private generateListCacheKey(
     filter?: QueryFilter<Product>,
     options?: QueryOptions<Product>,
@@ -588,5 +721,68 @@ export class ProductsService {
     } catch (error) {
       this.logger.error('Error invalidating list/search caches:', error);
     }
+  }
+
+  /**
+   * Get related products for a given product
+   * Returns products from the same category or brand, excluding the current product
+   */
+  async getRelatedProducts(productId: string, limit: number = 10) {
+    const cacheKey = `${CACHE_PREFIX.PRODUCT_RELATED}${productId}:limit:${limit}`;
+
+    // Check Redis cache first
+    const cached = await this.redisService.get<Product[]>(cacheKey);
+    if (cached) {
+      this.logger.debug(`Cache hit for related products: ${cacheKey}`);
+      return cached;
+    }
+
+    // Get the current product to find related ones
+    const product = await this.findOne(productId);
+
+    // Build where clause to find related products
+    const whereConditions: Prisma.ProductWhereInput[] = [
+      { id: { not: productId } }, // Exclude current product
+      { isActive: true }, // Only active products
+    ];
+
+    // Add category filter if product has a category
+    if (product.categoryId) {
+      whereConditions.push({ categoryId: product.categoryId });
+    }
+
+    // Add brand filter if product has a brand
+    if (product.brandId) {
+      whereConditions.push({ brandId: product.brandId });
+    }
+
+    // If no category or brand, fallback to any active products
+    const where: Prisma.ProductWhereInput = {
+      AND:
+        whereConditions.length > 2
+          ? whereConditions
+          : [{ id: { not: productId } }, { isActive: true }],
+    };
+
+    // Fetch related products
+    const relatedProducts = await this.prismaService.tenancy.product.findMany({
+      where,
+      include: {
+        category: true,
+        brand: true,
+      },
+      orderBy: [
+        // Prioritize same category and brand
+        { categoryId: product.categoryId ? 'asc' : 'desc' },
+        { brandId: product.brandId ? 'asc' : 'desc' },
+        { createdAt: 'desc' }, // Then by newest
+      ],
+      take: limit,
+    });
+
+    // Cache the result
+    await this.redisService.set(cacheKey, relatedProducts, CACHE_TTL);
+
+    return relatedProducts;
   }
 }

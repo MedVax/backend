@@ -32,7 +32,9 @@ import { UserModule } from './modules/user/user.module';
 import { PrismaTenancyModule } from 'modules/prisma-tenancy/prisma-tenancy.module';
 import { ProductsModule } from './modules/products/products.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { BrandsModule } from './modules/brands/brands.module';
 import { CartModule } from './modules/cart/cart.module';
+import { FavoritesModule } from './modules/favorites/favorites.module';
 import { AddressesModule } from './modules/addresses/addresses.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PrescriptionsModule } from './modules/prescriptions/prescriptions.module';
@@ -178,8 +180,10 @@ import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middle
     PrismaTenancyModule,
     // Ecommerce modules
     CategoriesModule,
+    BrandsModule,
     ProductsModule,
     CartModule,
+    FavoritesModule,
     AddressesModule,
     OrdersModule,
     PrescriptionsModule,

@@ -60,3 +60,5 @@ export const SESSION_COOKIE_MAX_AGE =
 export const GOOGLE_CLIENT_ID = config.get('GOOGLE_CLIENT_ID');
 export const GOOGLE_CLIENT_SECRET = config.get('GOOGLE_CLIENT_SECRET');
 export const GOOGLE_REDIRECT_URI = config.get('GOOGLE_REDIRECT_URI');
+
+export const CORS_ORIGIN = config.getOrThrow('CORS_ORIGIN');

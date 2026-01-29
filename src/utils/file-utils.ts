@@ -1,4 +1,4 @@
-import { Product, Category } from 'generated/prisma/client';
+import { Product, Category, Brand } from 'generated/prisma/client';
 import { generateRadomKeys } from './string-util';
 
 export function generateProductUploadPrefix(
@@ -19,4 +19,16 @@ export function generateCategoryImageFileName(
     .toLowerCase();
   const uniqueFilename = `${generateRadomKeys(5)}-${sanitizedName}`;
   return `categories/${category.id}/${timestamp}-${uniqueFilename}`;
+}
+
+export function generateBrandLogoFileName(
+  brand: Brand,
+  file: Express.Multer.File,
+): string {
+  const timestamp = Date.now();
+  const sanitizedName = file.originalname
+    .replace(/[^a-zA-Z0-9.-]/g, '_')
+    .toLowerCase();
+  const uniqueFilename = `${generateRadomKeys(5)}-${sanitizedName}`;
+  return `brands/${brand.id}/${timestamp}-${uniqueFilename}`;
 }

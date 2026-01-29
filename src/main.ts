@@ -33,7 +33,10 @@ async function bootstrap() {
   // logger
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  app.enableCors();
+  app.enableCors({
+    origin: ['http://localhost:3000'],
+    credentials: true,
+  });
   app.setGlobalPrefix('api/v1');
 
   app.useGlobalGuards(new AuthGuard(app.get(Reflector)));

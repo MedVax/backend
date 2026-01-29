@@ -84,6 +84,7 @@ model User {
   userProfiles         UserProfile[]
   transactions         Transaction[]
   calendarIntegrations CalendarIntegration[]
+  favorites            Favorite[]
 
   @@index([email])
 }
@@ -316,6 +317,21 @@ model Category {
   @@index([parentId])
 }
 
+model Brand {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  logo        String?
+  website     String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@index([name])
+  @@index([isActive])
+}
+
 model Product {
   id                   String          @id @default(uuid())
   name                 String
@@ -327,6 +343,8 @@ model Product {
   productType          ProductType     @default(OTC)
   categoryId           String?
   category             Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brandId              String?
+  brand                Brand?          @relation(fields: [brandId], references: [id], onDelete: SetNull)
   images               String[]        @default([])
   dosages              String[]        @default([])
   packageSizes         String[]        @default([])
@@ -344,9 +362,11 @@ model Product {
   orderItems           OrderItem[]
   subscriptions        Subscription[]
   stockMovements       StockMovement[]
+  favorites            Favorite[]
 
   @@index([sku])
   @@index([categoryId])
+  @@index([brandId])
   @@index([isActive])
 }
 
@@ -411,6 +431,20 @@ model CartItem {
 
   @@unique([cartId, productId])
   @@index([cartId])
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
 }
 
 model Order {

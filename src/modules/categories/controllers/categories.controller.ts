@@ -35,6 +35,7 @@ import { ImageValidationPipe } from 'pipes/image-validation.pipe';
 import { MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES } from 'utils/image-upload.util';
 import { CreateCategoryBodySchema } from '../doc/create-category-body.schema';
 import { UpdateCategoryBodySchema } from '../doc/update-category-body.schema';
+import { AuthAllow } from 'metadatas/auth-allow.metadata';
 
 @Controller('categories')
 @ApiTags('Categories')
@@ -127,6 +128,7 @@ export class CategoriesController {
     type: Boolean,
     description: 'Get full category hierarchy',
   })
+  @AuthAllow()
   findAll(
     @Query('includeSubcategories') includeSubcategories?: string,
     @Query('hierarchy') hierarchy?: string,

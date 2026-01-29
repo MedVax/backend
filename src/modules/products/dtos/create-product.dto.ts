@@ -24,10 +24,10 @@ export class CreateProductDto {
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({ example: 'Pfizer' })
+  @ApiPropertyOptional({ example: 'brand-uuid' })
   @IsString()
   @IsOptional()
-  brand?: string;
+  brandId?: string;
 
   @ApiProperty({ example: 4500 })
   @IsNumber()

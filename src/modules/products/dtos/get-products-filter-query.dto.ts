@@ -1,5 +1,10 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsBoolean, IsOptional, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsBoolean,
+  IsOptional,
+  IsEnum
+} from 'class-validator';
 import { ProductType } from 'generated/prisma/enums';
 
 export class GetProductsFilterQuery {
@@ -13,18 +18,18 @@ export class GetProductsFilterQuery {
 
   @ApiPropertyOptional({
     required: false,
-    description: 'Filter by brand name',
+    description: 'Filter by brand ID',
   })
   @IsOptional()
   @IsString()
-  brand?: string;
+  brandId?: string;
 
   @ApiPropertyOptional({
     required: false,
     description: 'Filter by category ID',
   })
   @IsOptional()
-  @IsString()
+  @IsString({ each: true })
   categoryId?: string;
 
   @ApiPropertyOptional({
@@ -51,4 +56,12 @@ export class GetProductsFilterQuery {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({
+    required: false,
+    description: 'Filter by availability',
+  })
+  @IsOptional()
+  @IsString()
+  availability?: string;
 }

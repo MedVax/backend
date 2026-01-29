@@ -29,9 +29,9 @@ import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { QueryFilter } from 'params/query-filter';
 import { QueryOptions } from 'params/query-options';
 import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
+import { AuthAllow } from 'metadatas/auth-allow.metadata';
 import { UserType } from 'generated/prisma/enums';
 import { PermissionsGuard } from 'src/guards/permission.guard';
-import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.service';
 import { ImageValidationPipe } from 'pipes/image-validation.pipe';
 import { MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES } from 'utils/image-upload.util';
 import { CreateProductBodySchema } from '../doc/create-product-body.schema';
@@ -44,10 +44,7 @@ import { UploadSingleImageBodySchema } from '../doc/upload-single-image-body.sch
 @ApiTags('Products')
 @UseGuards(PermissionsGuard)
 export class ProductsController {
-  constructor(
-    private readonly productsService: ProductsService,
-    private readonly prismaService: PrismaTenancyService,
-  ) {}
+  constructor(private readonly productsService: ProductsService) {}
 
   @Post()
   @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
@@ -193,66 +190,12 @@ export class ProductsController {
   @Get()
   @Response({ status: HttpStatus.OK, message: 'Products fetched successfully' })
   @ApiOperation({ summary: 'Get all products' })
+  @AuthAllow()
   async findAll(
-    @QueryFilter() filter: Record<string, any>,
-    @QueryOptions() options: Record<string, any>,
-    @Query() query: PaginationQuery & GetProductsFilterQuery,
+    @Query() paginationQueryParams: PaginationQuery,
+    @Query() filterQuery: GetProductsFilterQuery,
   ) {
-    // Build filter from query params
-    const whereFilter: any = {};
-
-    if (query.search) {
-      whereFilter.OR = [
-        { name: { contains: query.search, mode: 'insensitive' } },
-        { sku: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } },
-        { brand: { contains: query.search, mode: 'insensitive' } },
-      ];
-    }
-
-    if (query.brand) {
-      whereFilter.brand = { contains: query.brand, mode: 'insensitive' };
-    }
-
-    if (query.categoryId) {
-      // Check if category has subcategories and include them
-      const category = await this.prismaService.tenancy.category.findUnique({
-        where: { id: query.categoryId },
-        include: {
-          children: {
-            select: { id: true },
-          },
-        },
-      });
-
-      if (category && category.children.length > 0) {
-        // Include products from parent category and all subcategories
-        const categoryIds = [
-          query.categoryId,
-          ...category.children.map((c) => c.id),
-        ];
-        whereFilter.categoryId = { in: categoryIds };
-      } else {
-        whereFilter.categoryId = query.categoryId;
-      }
-    }
-
-    if (query.productType) {
-      whereFilter.productType = query.productType;
-    }
-
-    if (query.requiresPrescription !== undefined) {
-      whereFilter.requiresPrescription = query.requiresPrescription === true;
-    }
-
-    if (query.isActive !== undefined) {
-      whereFilter.isActive = query.isActive === true;
-    } else {
-      // Default to active products for non-admin users
-      whereFilter.isActive = true;
-    }
-
-    return this.productsService.findAll({ ...filter, ...whereFilter }, options);
+    return this.productsService.findAll(paginationQueryParams, filterQuery);
   }
 
   @Get('count')
@@ -278,7 +221,40 @@ export class ProductsController {
     return this.productsService.searchProducts(searchTerm, filters);
   }
 
+  @Get('best-selling')
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Best selling products fetched successfully',
+  })
+  @ApiOperation({
+    summary: 'Get best selling products',
+    description:
+      'Returns products ordered by total quantity sold from completed/paid orders',
+  })
+  @AuthAllow()
+  async getBestSelling(@Query('limit') limit?: string) {
+    const limitNumber = limit ? parseInt(limit, 10) : 10;
+    return this.productsService.getBestSelling(limitNumber);
+  }
+
+  @Get(':id/related')
+  @AuthAllow()
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Related products fetched successfully',
+  })
+  @ApiOperation({
+    summary: 'Get related products',
+    description:
+      'Returns products related to the given product (same category or brand)',
+  })
+  getRelatedProducts(@Param('id') id: string, @Query('limit') limit?: string) {
+    const limitNumber = limit ? parseInt(limit, 10) : 10;
+    return this.productsService.getRelatedProducts(id, limitNumber);
+  }
+
   @Get(':id')
+  @AuthAllow()
   @Response({ status: HttpStatus.OK, message: 'Product fetched successfully' })
   @ApiOperation({ summary: 'Get a product by ID' })
   findOne(@Param('id') id: string) {

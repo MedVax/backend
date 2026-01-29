@@ -14,7 +14,6 @@ import type { Request, Response as ExpressResponse } from 'express';
 import { AuthAllow } from 'metadatas/auth-allow.metadata';
 import { Response } from 'metadatas/response.metadata';
 import { UserSigninDto } from '../dtos/user-signin.dto';
-import { UserRefreshTokenDto } from '../dtos/user-refresh-token.dto';
 import { AuthService } from '../services/auth.service';
 import { VerifyOtpDTO } from '../dtos/verify-otp.dto';
 import { UserSignupDto } from '../dtos/user-signup';
@@ -49,7 +48,21 @@ export class AuthController {
     if (sessionId) {
       this.sessionCookieService.clearSessionCookie(res);
     }
-
+    this.sessionCookieService.setSessionCookie(
+      res,
+      result?.accessToken,
+      'accessToken',
+    );
+    this.sessionCookieService.setSessionCookie(
+      res,
+      result?.refreshToken,
+      'refreshToken',
+    );
+    this.sessionCookieService.setSessionCookie(
+      res,
+      result?.activeProfile?.type,
+      'activeProfileType',
+    );
     return result;
   }
 
@@ -84,21 +97,67 @@ export class AuthController {
       this.sessionCookieService.clearSessionCookie(res);
     }
 
+    this.sessionCookieService.setSessionCookie(
+      res,
+      result?.accessToken,
+      'accessToken',
+    );
+    this.sessionCookieService.setSessionCookie(
+      res,
+      result?.refreshToken,
+      'refreshToken',
+    );
+    this.sessionCookieService.setSessionCookie(
+      res,
+      result?.activeProfile?.type,
+      'activeProfileType',
+    );
     return result;
   }
 
   @Post('refresh-token')
   @AuthAllow()
   @Response({ status: HttpStatus.OK, message: 'Refreshed successful' })
-  refreshToken(@Body() dto: UserRefreshTokenDto) {
-    const { refreshToken } = dto;
-    return this.authService.refreshAccessToken(refreshToken);
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ) {
+    const refreshToken = this.sessionCookieService.getSessionId(
+      req,
+      'refreshToken',
+    );
+
+    const result = await this.authService.refreshAccessToken(refreshToken);
+    this.sessionCookieService.setSessionCookie(
+      res,
+      result?.accessToken,
+      'accessToken',
+    );
+    this.sessionCookieService.setSessionCookie(
+      res,
+      result?.refreshToken,
+      'refreshToken',
+    );
+    //TODO: set active profile type in cookie
+    // this.sessionCookieService.setSessionCookie(
+    //   res,
+    //   result?.activeProfile?.type,
+    //   'activeProfileType',
+    // );
+    return result;
   }
 
   @Post('logout')
   @AuthAllow()
   @Response({ status: HttpStatus.OK, message: 'Logged out successful' })
-  logout(@AuthUser() user: User) {
+  logout(
+    @AuthUser() user: User,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ) {
+    this.sessionCookieService.clearSessionCookie(res);
+    this.sessionCookieService.clearSessionCookie(res, 'accessToken');
+    this.sessionCookieService.clearSessionCookie(res, 'refreshToken');
+    this.sessionCookieService.clearSessionCookie(res, 'activeProfileType');
     return this.authService.logout(user);
   }
 }

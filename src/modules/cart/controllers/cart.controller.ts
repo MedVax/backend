@@ -87,7 +87,7 @@ export class CartController {
     @Param('id') itemId: string,
     @Body() dto: UpdateCartItemDto,
     @Req() req: Request,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @AuthUser() user?: User,
   ) {
     const userId = user?.id;
@@ -110,7 +110,7 @@ export class CartController {
   removeItem(
     @Param('id') itemId: string,
     @Req() req: Request,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @AuthUser() user?: User,
   ) {
     const userId = user?.id;
@@ -128,9 +128,9 @@ export class CartController {
     message: 'Cart cleared successfully',
   })
   @ApiOperation({ summary: 'Clear cart (authenticated or anonymous)' })
-  clearCart(
+  async clearCart(
     @Req() req: Request,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @AuthUser() user?: User,
   ) {
     const userId = user?.id;
