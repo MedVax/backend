@@ -300,6 +300,11 @@ enum OrganizationSponsor {
   ORG_CLIENT
 }
 
+enum PrescriptionType {
+  DOCTOR
+  PATIENT
+}
+
 model Category {
   id          String     @id @default(uuid())
   name        String
@@ -514,8 +519,8 @@ model Prescription {
   id         String             @id @default(uuid())
   orderId    String?
   order      Order?             @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  userId     String
-  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
   uploadedBy String // user id who uploaded
   fileUrl    String
   status     PrescriptionStatus @default(PENDING)
@@ -538,6 +543,8 @@ model Prescription {
   hospitalName       String?
   drugName           String?
   dosage             String?
+
+  prescriberType PrescriptionType?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

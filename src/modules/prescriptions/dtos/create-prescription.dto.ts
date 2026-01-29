@@ -1,5 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional } from 'class-validator';
+import { PrescriptionType } from 'generated/prisma/enums';
 
 export class CreatePrescriptionDto {
   @ApiPropertyOptional({ example: 'order-uuid' })
@@ -7,9 +8,10 @@ export class CreatePrescriptionDto {
   @IsOptional()
   orderId?: string;
 
-  @ApiProperty({ example: 'https://example.com/prescription.jpg' })
+  @ApiPropertyOptional({ example: 'https://example.com/prescription.jpg' })
   @IsString()
-  fileUrl: string;
+  @IsOptional()
+  fileUrl?: string;
 
   // Patient info fields (for patient-submitted)
   @ApiPropertyOptional({ example: 'John Doe' })
@@ -77,4 +79,9 @@ export class CreatePrescriptionDto {
   @IsString()
   @IsOptional()
   dosage?: string;
+
+  @ApiPropertyOptional({ example: 'DOCTOR' })
+  @IsString()
+  @IsOptional()
+  prescriberType?: PrescriptionType;
 }

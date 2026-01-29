@@ -1,10 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsBoolean,
-  IsOptional,
-  IsEnum
-} from 'class-validator';
+import { IsString, IsBoolean, IsOptional, IsEnum } from 'class-validator';
 import { ProductType } from 'generated/prisma/enums';
 
 export class GetProductsFilterQuery {

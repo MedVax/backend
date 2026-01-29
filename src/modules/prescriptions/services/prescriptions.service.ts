@@ -9,14 +9,23 @@ import { CreatePrescriptionDto } from '../dtos/create-prescription.dto';
 import { VerifyPrescriptionDto } from '../dtos/verify-prescription.dto';
 import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
 import type { Prescription } from 'generated/prisma/client';
+import { randomUUID } from 'crypto';
+import { UploadsService } from 'src/uploads/uploads.service';
 
 @Injectable()
 export class PrescriptionsService {
   private logger = new Logger(PrescriptionsService.name);
 
-  constructor(private prismaService: PrismaTenancyService) {}
+  constructor(
+    private prismaService: PrismaTenancyService,
+    private uploadsService: UploadsService,
+  ) {}
 
-  async create(userId: string, dto: CreatePrescriptionDto) {
+  async create(
+    userId: string,
+    dto: CreatePrescriptionDto,
+    file?: Express.Multer.File,
+  ) {
     // If orderId is provided, verify it belongs to user
     if (dto.orderId) {
       const order = await this.prismaService.tenancy.order.findFirst({
@@ -28,9 +37,24 @@ export class PrescriptionsService {
       }
     }
 
+    // Upload file if provided
+    let fileUrl = dto.fileUrl;
+    if (file) {
+      const fileName = `prescriptions/${userId}/${randomUUID()}-${file.originalname}`;
+      fileUrl = await this.uploadsService.initialize(file.buffer, fileName, {
+        ContentType: file.mimetype,
+        CacheControl: 'max-age=31536000', // 1 year cache
+      });
+    }
+
+    if (!fileUrl) {
+      throw new BadRequestException('File URL or file upload is required');
+    }
+
     return this.prismaService.tenancy.prescription.create({
       data: {
         ...dto,
+        fileUrl,
         userId,
         uploadedBy: userId,
         status: 'PENDING',
