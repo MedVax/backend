@@ -13,7 +13,7 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from 'filters/http-exception-fliter';
 import { AuthGuard } from './guards/auth.guard';
-import { IS_DEVELOPMENT } from 'constants/env.constant';
+import { CORS_ORIGIN, IS_DEVELOPMENT } from 'constants/env.constant';
 import compression from 'compression';
 
 async function bootstrap() {
@@ -34,7 +34,7 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   app.enableCors({
-    origin: ['http://localhost:3000'],
+    origin: CORS_ORIGIN?.split(','),
     credentials: true,
   });
   app.setGlobalPrefix('api/v1');

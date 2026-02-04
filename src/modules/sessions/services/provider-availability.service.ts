@@ -9,6 +9,7 @@ import {
   AvailabilityType,
   DateLabel,
   AvailabilityPeriod,
+  SessionStatus,
 } from 'generated/prisma/enums';
 import {
   format,
@@ -18,7 +19,6 @@ import {
   getDay,
   addHours,
   isAfter,
-  setHours,
 } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { SESSION_BUFFER_HOURS } from '../constants/sessions.constant';
@@ -332,36 +332,39 @@ export class ProviderAvailabilityService {
       },
     });
 
+    // Normalize booked slot strings to ensure consistent format for comparison
+    // scheduledDateString might be stored in various formats, normalize to UTC ISO
     const bookedSlotsSet = new Set(
-      bookedSessions.map((s) => s.scheduledDateString),
+      bookedSessions.map((s) => {
+        // If already ISO format, use as-is; otherwise parse and convert
+        try {
+          const parsed = parseISO(s.scheduledDateString);
+          return parsed.toISOString();
+        } catch {
+          // If parsing fails, try to use as-is (shouldn't happen but be safe)
+          return s.scheduledDateString;
+        }
+      }),
     );
 
     // Generate available slots for next 30 days
     const availableDays: DayAvailability[] = [];
+    // getDay() returns: 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
     const dayLabels: DateLabel[] = [
-      DateLabel.MONDAY,
-      DateLabel.TUESDAY,
-      DateLabel.TUESDAY,
-      DateLabel.WEDNESDAY,
-      DateLabel.WEDNESDAY,
-      DateLabel.WEDNESDAY,
-      DateLabel.THURSDAY,
-      DateLabel.THURSDAY,
-      DateLabel.THURSDAY,
-      DateLabel.FRIDAY,
-      DateLabel.FRIDAY,
-      DateLabel.FRIDAY,
-      DateLabel.SATURDAY,
-      DateLabel.SATURDAY,
-      DateLabel.SUNDAY,
-      DateLabel.SUNDAY,
+      DateLabel.SUNDAY, // 0
+      DateLabel.MONDAY, // 1
+      DateLabel.TUESDAY, // 2
+      DateLabel.WEDNESDAY, // 3
+      DateLabel.THURSDAY, // 4
+      DateLabel.FRIDAY, // 5
+      DateLabel.SATURDAY, // 6
     ];
 
     for (let i = 0; i < 30; i++) {
       const currentDate = addDays(startDate, i);
       const dateString = format(currentDate, 'yyyy-MM-dd');
       const dayOfWeek = getDay(currentDate);
-      const dayLabel = dayLabels[dayOfWeek] || DateLabel.MONDAY;
+      const dayLabel = dayLabels[dayOfWeek];
 
       // Check if there's custom availability for this date
       const customAvail =
@@ -400,25 +403,34 @@ export class ProviderAvailabilityService {
 
       for (const interval of intervals) {
         for (let hour = interval.start; hour < interval.end; hour++) {
-          const slotDate = setHours(startOfDay(currentDate), hour);
-          const slotDateString = formatInTimeZone(
-            slotDate,
+          // Create date string: "2024-02-27T15:00:00"
+          const dateStr = format(currentDate, 'yyyy-MM-dd');
+          const timeStr = `${hour.toString().padStart(2, '0')}:00:00`;
+          const dateTimeStr = `${dateStr}T${timeStr}`;
+
+          // Create a date object for this date/time
+          // Then format it in the consultant's timezone with timezone offset
+          // This ensures "15:00" is interpreted as 3pm in consultant's timezone
+          const localDate = new Date(dateTimeStr);
+          const formattedWithTz = formatInTimeZone(
+            localDate,
             timezone,
-            "yyyy-MM-dd'T'HH:mm:ss",
-          );
-          const slotISO = formatInTimeZone(
-            slotDate,
-            timezone,
-            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ssXXX",
           );
 
-          // Check buffer time
-          if (!isAfter(slotDate, bufferDate)) {
+          // Parse the formatted string (which includes timezone offset) to get UTC equivalent
+          // Then convert to ISO string format to match scheduledDateString
+          const slotISO = parseISO(formattedWithTz).toISOString();
+
+          // Check buffer time (compare UTC dates)
+          const slotDateForBuffer = parseISO(slotISO);
+          if (!isAfter(slotDateForBuffer, bufferDate)) {
             continue; // Slot too soon
           }
 
-          // Check if slot is booked
-          const isBooked = bookedSlotsSet.has(slotDateString);
+          // Check if slot is booked - compare using ISO string format
+          // scheduledDateString is stored exactly as received from frontend (ISO string)
+          const isBooked = bookedSlotsSet.has(slotISO);
 
           slots.push({
             time: slotISO,
@@ -454,6 +466,7 @@ export class ProviderAvailabilityService {
     const slotDate = parseISO(timeslotAsIsoString);
     const dateString = format(slotDate, 'yyyy-MM-dd');
     const hour = slotDate.getHours();
+    console.log({ timeslotAsIsoString, dateString, hour });
 
     // Check buffer time
     const now = new Date();
@@ -530,9 +543,9 @@ export class ProviderAvailabilityService {
     const existingSession = await this.prismaService.tenancy.session.findFirst({
       where: {
         consultantId,
-        scheduledDateString: dateString,
+        scheduledDateString: timeslotAsIsoString,
         status: {
-          notIn: ['CANCELED', 'DECLINED'],
+          notIn: [SessionStatus.CANCELED, SessionStatus.DECLINED],
         },
         deleted: false,
       },

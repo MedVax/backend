@@ -71,10 +71,15 @@ export class CategoriesService {
         );
 
         const fileName = generateCategoryImageFileName(categoryResult, file);
-        imageUrl = await this.uploadsService.initialize(file.buffer, fileName, {
-          ContentType: file.mimetype,
-          CacheControl: 'max-age=31536000', // 1 year cache
-        });
+        imageUrl = await this.uploadsService.initialize(
+          file.buffer,
+          fileName,
+          {
+            ContentType: file.mimetype,
+            CacheControl: 'max-age=31536000', // 1 year cache
+          },
+          true, // Optimize image
+        );
 
         // Update category with image URL
         const category = await this.prismaService.tenancy.category.update({
@@ -598,10 +603,15 @@ export class CategoriesService {
       // Upload image if provided
       if (file) {
         const fileName = generateCategoryImageFileName(existing, file);
-        imageUrl = await this.uploadsService.initialize(file.buffer, fileName, {
-          ContentType: file.mimetype,
-          CacheControl: 'max-age=31536000', // 1 year cache
-        });
+        imageUrl = await this.uploadsService.initialize(
+          file.buffer,
+          fileName,
+          {
+            ContentType: file.mimetype,
+            CacheControl: 'max-age=31536000', // 1 year cache
+          },
+          true, // Optimize image
+        );
       }
 
       const categoryData: any = {

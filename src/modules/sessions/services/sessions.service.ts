@@ -28,9 +28,10 @@ import {
   OrganizationSponsor,
   TransactionType,
 } from 'generated/prisma/enums';
-import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
+import { QueryFilter } from 'libs/url-to-db-query';
+import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { randomUUID } from 'crypto';
-import type { User } from 'generated/prisma/client';
+import type { Prisma, User } from 'generated/prisma/client';
 import {
   SessionCreationEvent,
   SessionCancellationEvent,
@@ -38,6 +39,7 @@ import {
 import { TransactionsService } from 'modules/transactions/services/transactions.service';
 import { TransactionStatus } from 'generated/prisma/enums';
 import { format, parseISO } from 'date-fns';
+import { MailService } from 'src/mail/services/mail.service';
 
 @Injectable()
 export class SessionsService {
@@ -54,7 +56,8 @@ export class SessionsService {
     private rescheduleRequestsService: RescheduleRequestsSessionsService,
     @Inject(forwardRef(() => TransactionsService))
     private transactionsService: TransactionsService,
-  ) {}
+    private mailService: MailService,
+  ) { }
 
   /**
    * Initialize session schedule - Entry point for booking flow
@@ -90,9 +93,7 @@ export class SessionsService {
       });
 
     if (!consultantAssignment) {
-      throw new NotFoundException(
-        `Consultant with ID ${dto.consultantId} not assigned to client with ID ${dto.clientId}`,
-      );
+      throw new NotFoundException(`Consultant is not assigned to client`);
     }
 
     // Get consultant and use their pricing
@@ -114,7 +115,6 @@ export class SessionsService {
     // Use consultant's rate, fallback to default pricing if rate is not set
     const sessionPrice =
       consultant.rate || this.getSessionPrice(dto.sessionType);
-
     // Check if all requested slots are available
     const unavailableSlots: string[] = [];
     for (const dateString of dto.dates) {
@@ -129,6 +129,8 @@ export class SessionsService {
         unavailableSlots.push(dateString);
       }
     }
+
+    console.log({ unavailableSlots });
 
     if (unavailableSlots.length > 0) {
       throw new BadRequestException(
@@ -286,9 +288,68 @@ export class SessionsService {
             throw new BadRequestException(ERROR_MESSAGES.TIME_SLOT_UNAVAILABLE);
           }
 
-          // Create meeting
+          // Prepare participants for the meeting
+          const meetingParticipants = [];
+
+          // Add client as participant
+          if (client.userProfile?.user) {
+            meetingParticipants.push({
+              userId: client.userProfile.user.id,
+              userName:
+                `${client.userProfile.user.firstName || ''} ${client.userProfile.user.lastName || ''}`.trim() ||
+                'Client',
+              userEmail: client.userProfile.user.email,
+              presetName: 'default',
+            });
+          }
+
+          // Add consultant as participant
+          if (consultant.userProfile?.user) {
+            meetingParticipants.push({
+              userId: consultant.userProfile.user.id,
+              userName:
+                `${consultant.userProfile.user.firstName || ''} ${consultant.userProfile.user.lastName || ''}`.trim() ||
+                'Consultant',
+              userEmail: consultant.userProfile.user.email,
+              presetName: 'default', // Consultant is the host
+            });
+          }
+
+          // Add additional participants if it's a couple session
+          if (dto.sessionType === SessionType.COUPLE && dto.participants) {
+            for (const participant of dto.participants) {
+              // Check if participant is existing user
+              const participantUser = await tx.user.findUnique({
+                where: { email: participant.email },
+                select: { id: true },
+              });
+
+              if (participantUser) {
+                meetingParticipants.push({
+                  userId: participantUser.id,
+                  userName: participant.name,
+                  userEmail: participant.email,
+                  presetName: 'default',
+                  picture: participant.picture || undefined,
+                });
+              } else {
+                // For non-users, we'll add them to the meeting later via invite
+                // For now, add them with email as identifier
+                meetingParticipants.push({
+                  userId: participant.email, // Use email as identifier for non-users
+                  userName: participant.name,
+                  userEmail: participant.email,
+                  presetName: 'default',
+                  picture: participant.picture || undefined,
+                });
+              }
+            }
+          }
+
+          // Create meeting with participants
           const meeting = await this.meetingService.createMeeting(
             `Session with ${consultant.userProfile?.user?.firstName || 'Consultant'}`,
+            meetingParticipants,
           );
 
           // Determine session status
@@ -326,9 +387,7 @@ export class SessionsService {
               scheduledDate,
               scheduledDateString: dateString,
               meetingId: meeting?.id || null,
-              meetingUrl: meeting?.authToken
-                ? `https://app.dyte.io/${meeting?.id}`
-                : null,
+              meetingUrl: meeting?.meetingUrl || null,
               clientTimezone: dto.clientTimezone,
               note: dto?.note || '',
               paidBy: dto.paidBy,
@@ -395,6 +454,45 @@ export class SessionsService {
             },
           });
 
+          // Create session participants with meeting tokens
+          const participantTokens = meeting?.participantTokens || new Map();
+
+          // Add client as participant
+          if (client.userProfile?.user) {
+            const clientToken =
+              participantTokens.get(client.userProfile.user.id) || null;
+            await tx.sessionParticipant.create({
+              data: {
+                id: `participant-${Date.now()}-${randomUUID().split('-')[0]}`,
+                sessionId: session.id,
+                userId: client.userProfile.user.id,
+                email: client.userProfile.user.email,
+                name:
+                  `${client.userProfile.user.firstName || ''} ${client.userProfile.user.lastName || ''}`.trim() ||
+                  'Client',
+                meetingToken: clientToken,
+              },
+            });
+          }
+
+          // Add consultant as participant
+          if (consultant.userProfile?.user) {
+            const consultantToken =
+              participantTokens.get(consultant.userProfile.user.id) || null;
+            await tx.sessionParticipant.create({
+              data: {
+                id: `participant-${Date.now()}-${randomUUID().split('-')[0]}`,
+                sessionId: session.id,
+                userId: consultant.userProfile.user.id,
+                email: consultant.userProfile.user.email,
+                name:
+                  `${consultant.userProfile.user.firstName || ''} ${consultant.userProfile.user.lastName || ''}`.trim() ||
+                  'Consultant',
+                meetingToken: consultantToken,
+              },
+            });
+          }
+
           // Handle couple session participants
           if (dto.sessionType === SessionType.COUPLE && dto.participants) {
             for (const participant of dto.participants) {
@@ -403,6 +501,10 @@ export class SessionsService {
                 where: { email: participant.email },
                 select: { id: true },
               });
+
+              const participantToken = participantUser
+                ? participantTokens.get(participantUser.id) || null
+                : participantTokens.get(participant.email) || null;
 
               if (participantUser) {
                 // Create session participant
@@ -413,7 +515,7 @@ export class SessionsService {
                     userId: participantUser.id,
                     email: participant.email,
                     name: participant.name,
-                    joined: false,
+                    meetingToken: participantToken,
                   },
                 });
               } else {
@@ -441,6 +543,8 @@ export class SessionsService {
         return createdSessions;
       },
     );
+
+    console.log({ sessions });
 
     // Emit SESSION_CREATED event
     this.eventEmitter.emit(
@@ -591,10 +695,8 @@ export class SessionsService {
       },
     });
 
-    // Cancel meeting if exists
-    if (session.meetingId) {
-      await this.meetingService.endMeeting(session.meetingId);
-    }
+    // Note: Cloudflare Realtime Kit doesn't have an explicit "end meeting" endpoint
+    // Meetings are automatically managed by the platform
 
     // Emit cancellation event
     this.eventEmitter.emit(
@@ -661,15 +763,563 @@ export class SessionsService {
   }
 
   /**
+   * Update session note
+   */
+  async updateSessionNote(sessionId: string, note: string, userId?: string) {
+    const session = await this.prismaService.tenancy.session.findUnique({
+      where: { id: sessionId },
+      include: {
+        client: {
+          include: {
+            userProfile: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException(ERROR_MESSAGES.SESSION_UNAVAILABLE);
+    }
+
+    // Verify user is the client who owns this session
+    if (userId && session.client.userProfile.userId !== userId) {
+      throw new BadRequestException(
+        'You can only update notes for your own sessions',
+      );
+    }
+
+    const updatedSession = await this.prismaService.tenancy.session.update({
+      where: { id: sessionId },
+      data: {
+        note,
+      },
+      include: {
+        client: true,
+        consultant: true,
+      },
+    });
+
+    this.logger.log(`Session ${sessionId} note updated by user ${userId}`);
+
+    return updatedSession;
+  }
+
+  /**
+   * Update session note
+   */
+  // async updateSessionNote(
+  //   sessionId: string,
+  //   note: string,
+  //   userId?: string,
+  // ) {
+  //   const session = await this.prismaService.tenancy.session.findUnique({
+  //     where: { id: sessionId },
+  //     include: {
+  //       client: {
+  //         include: {
+  //           userProfile: {
+  //             include: {
+  //               user: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   if (!session) {
+  //     throw new NotFoundException('Session not found');
+  //   }
+
+  //   // Verify user is the client who owns this session
+  //   if (userId && session.client.userProfile.userId !== userId) {
+  //     throw new BadRequestException('You can only update notes for your own sessions');
+  //   }
+
+  //   const updatedSession = await this.prismaService.tenancy.session.update({
+  //     where: { id: sessionId },
+  //     data: {
+  //       note,
+  //     },
+  //     include: {
+  //       client: {
+  //         include: {
+  //           userProfile: {
+  //             include: {
+  //               user: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //       consultant: {
+  //         include: {
+  //           userProfile: {
+  //             include: {
+  //               user: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   this.logger.log(`Session ${sessionId} note updated by user ${userId}`);
+
+  //   return updatedSession;
+  // }
+
+  /**
+   * Update prescription note (consultant only)
+   */
+  async updatePrescriptionNote(
+    sessionId: string,
+    prescriptionNote: string,
+    userId?: string,
+  ) {
+    const session = await this.prismaService.tenancy.session.findUnique({
+      where: { id: sessionId },
+      include: {
+        client: {
+          include: {
+            userProfile: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        consultant: {
+          include: {
+            userProfile: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException(ERROR_MESSAGES.SESSION_UNAVAILABLE);
+    }
+
+    // Verify user is the consultant for this session
+    if (userId && session.consultant.userProfile.userId !== userId) {
+      // Check if user is admin
+      const user = await this.prismaService.tenancy.user.findUnique({
+        where: { id: userId },
+        select: { type: true },
+      });
+
+      if (!user || (user.type !== 'ADMIN' && user.type !== 'SUPER_ADMIN')) {
+        throw new BadRequestException(
+          'Only the consultant assigned to this session can update prescription notes',
+        );
+      }
+    }
+
+    const wasFirstTime = !session.prescriptionNote;
+    const updatedSession = await this.prismaService.tenancy.session.update({
+      where: { id: sessionId },
+      data: {
+        prescriptionNote,
+      },
+      include: {
+        client: {
+          include: {
+            userProfile: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        consultant: {
+          include: {
+            userProfile: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    this.logger.log(
+      `Session ${sessionId} prescription note updated by user ${userId}`,
+    );
+
+    // Send email notification to client
+    if (updatedSession.client?.userProfile?.user) {
+      const clientUser = updatedSession.client.userProfile.user;
+      const consultantName = updatedSession.consultant?.userProfile?.user
+        ? `${updatedSession.consultant.userProfile.user.firstName || ''} ${updatedSession.consultant.userProfile.user.lastName || ''}`.trim()
+        : 'Your consultant';
+
+      try {
+        await this.mailService.prescriptionNoteAdded({
+          to: clientUser.email,
+          context: {
+            firstName: clientUser.firstName,
+            lastName: clientUser.lastName,
+            consultantName,
+            sessionDate: format(
+              new Date(session.scheduledDate),
+              'MMMM dd, yyyy h:mm a',
+            ),
+            sessionId: session.id,
+            prescriptionNote,
+            isFirstTime: wasFirstTime,
+          },
+        });
+      } catch (error) {
+        this.logger.error(
+          `Failed to send prescription note email: ${error.message}`,
+        );
+      }
+    }
+
+    return updatedSession;
+  }
+
+  /**
+   * Update session note/report (consultant only)
+   */
+  async updateSessionNoteReport(
+    sessionId: string,
+    sessionNote: string,
+    userId?: string,
+  ) {
+    const session = await this.prismaService.tenancy.session.findUnique({
+      where: { id: sessionId },
+      include: {
+        consultant: {
+          include: {
+            userProfile: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException(ERROR_MESSAGES.SESSION_UNAVAILABLE);
+    }
+
+    // Verify user is the consultant for this session
+    if (userId && session.consultant.userProfile.userId !== userId) {
+      // Check if user is admin
+      const user = await this.prismaService.tenancy.user.findUnique({
+        where: { id: userId },
+        select: { type: true },
+      });
+
+      if (!user || (user.type !== 'ADMIN' && user.type !== 'SUPER_ADMIN')) {
+        throw new BadRequestException(
+          'Only the consultant assigned to this session can update session notes',
+        );
+      }
+    }
+
+    const updatedSession = await this.prismaService.tenancy.session.update({
+      where: { id: sessionId },
+      data: {
+        sessionNote,
+      },
+      include: {
+        client: true,
+        consultant: true,
+      },
+    });
+
+    this.logger.log(
+      `Session ${sessionId} session note updated by user ${userId}`,
+    );
+
+    return updatedSession;
+  }
+
+  /**
+   * Get a single session by ID
+   */
+  async getSession(id: string, userId?: string) {
+    const session = await this.prismaService.tenancy.session.findFirst({
+      where: {
+        id,
+        deleted: false,
+        ...(userId
+          ? {
+            OR: [
+              {
+                client: {
+                  userProfile: {
+                    userId,
+                  },
+                },
+              },
+              {
+                consultant: {
+                  userProfile: {
+                    userId,
+                  },
+                },
+              },
+            ],
+          }
+          : {}),
+      },
+      include: {
+        client: {
+          include: {
+            userProfile: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    avatar: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        consultant: {
+          include: {
+            userProfile: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    avatar: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        participants: true,
+        invitees: true,
+        review: true,
+        rescheduleRequests: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Session with ID ${id} not found`);
+    }
+
+    return session;
+  }
+
+  /**
+   * Get meeting token for a session for the logged-in user
+   */
+  async getSessionMeetingToken(
+    sessionId: string,
+    userId: string,
+  ): Promise<string | null> {
+    // First verify the user has access to this session
+    const session = await this.prismaService.tenancy.session.findFirst({
+      where: {
+        meetingId: sessionId,
+        deleted: false,
+        OR: [
+          {
+            client: {
+              userProfile: {
+                userId,
+              },
+            },
+          },
+          {
+            consultant: {
+              userProfile: {
+                userId,
+              },
+            },
+          },
+          {
+            participants: {
+              some: {
+                userId,
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        participants: {
+          where: {
+            userId,
+          },
+          select: {
+            id: true,
+            userId: true,
+            email: true,
+            name: true,
+            meetingToken: true,
+            joined: true,
+            joinedAt: true,
+          },
+        },
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException(
+        `Session with ID ${sessionId} not found or access denied`,
+      );
+    }
+
+    // Get the participant token
+    const participant = session.participants.find((p) => p.userId === userId);
+
+    if (participant?.meetingToken) {
+      return participant.meetingToken;
+    }
+
+    // If token doesn't exist, generate a new one
+    if (session.meetingId) {
+      const user = await this.prismaService.tenancy.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+        },
+      });
+
+      if (user) {
+        const token = await this.meetingService.getParticipantAuthToken(
+          session.meetingId,
+          user.id,
+          `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
+          user.email,
+          'default',
+        );
+
+        // Update the participant with the new token
+        if (token && participant) {
+          await this.prismaService.tenancy.sessionParticipant.update({
+            where: { id: participant.id },
+            data: { meetingToken: token },
+          });
+        }
+
+        return token;
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Get sessions with filters
    */
   async getSessions(
     userId?: string,
     filter?: QueryFilter<any>,
-    options?: QueryOptions<any>,
+    paginationQuery?: PaginationQuery,
   ) {
-    const whereFilter: any = { ...filter, deleted: false };
+    console.log({ filter });
+    const whereFilter: Prisma.SessionWhereInput = {
+      ...(filter?.ids
+        ? {
+          id: {
+            in: Array.isArray(filter?.ids) ? filter?.ids : [filter?.ids],
+          },
+        }
+        : {}),
+      OR: [
+        ...(filter?.state === SessionStatus.PENDING
+          ? [
+            {
+              status: {
+                in: [SessionStatus.PENDING, SessionStatus.PENDING_APPROVAL],
+              },
+              scheduledDate: {
+                gte: new Date(),
+              },
+            },
+          ]
+          : []),
 
+        ...(filter?.state === SessionStatus.COMPLETED
+          ? [
+            {
+              status: {
+                in: [SessionStatus.COMPLETED, SessionStatus.PENDING],
+              },
+              scheduledDate: {
+                lte: new Date(),
+              },
+            },
+          ]
+          : []),
+
+        ...(filter?.state === SessionStatus.UPCOMING
+          ? [
+            {
+              status: {
+                in: [SessionStatus.UPCOMING, SessionStatus.PENDING],
+              },
+              scheduledDate: {
+                gte: new Date(),
+              },
+            },
+          ]
+          : []),
+      ],
+      deleted: false,
+    };
     if (userId) {
       // Get user's client or consultant profile
       const clientProfile =
@@ -699,102 +1349,51 @@ export class SessionsService {
       }
     }
 
-    const result =
-      await this.prismaService.tenancy.session.findFirstWithUrlQuery(
-        whereFilter,
-        options,
-      );
-
-    if (result) {
-      return this.prismaService.tenancy.session.findUnique({
-        where: { id: result.id },
-        include: {
-          client: {
-            include: {
-              userProfile: {
-                include: {
-                  user: {
-                    select: {
-                      id: true,
-                      email: true,
-                      firstName: true,
-                      lastName: true,
-                    },
+    return this.prismaService.tenancy.session.paginate({
+      where: whereFilter,
+      include: {
+        client: {
+          include: {
+            userProfile: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    avatar: true,
                   },
                 },
               },
             },
           },
-          consultant: {
-            include: {
-              userProfile: {
-                include: {
-                  user: {
-                    select: {
-                      id: true,
-                      email: true,
-                      firstName: true,
-                      lastName: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-          participants: true,
-          invitees: true,
         },
-      });
-    }
-
-    if (!Array.isArray(result) && result.data) {
-      const ids = result.data.map((s: any) => s.id);
-      const data = await this.prismaService.tenancy.session.findMany({
-        where: { id: { in: ids } },
-        include: {
-          client: {
-            include: {
-              userProfile: {
-                include: {
-                  user: {
-                    select: {
-                      id: true,
-                      email: true,
-                      firstName: true,
-                      lastName: true,
-                    },
+        consultant: {
+          include: {
+            userProfile: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                    avatar: true,
                   },
                 },
               },
             },
           },
-          consultant: {
-            include: {
-              userProfile: {
-                include: {
-                  user: {
-                    select: {
-                      id: true,
-                      email: true,
-                      firstName: true,
-                      lastName: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-          participants: true,
-          invitees: true,
         },
-        orderBy: {
-          scheduledDate: 'asc',
-        },
-      });
-      return { ...result, data };
-    }
-
-    return result;
+        participants: true,
+        invitees: true,
+      },
+      orderBy: {
+        scheduledDate: 'asc',
+      },
+      ...paginationQuery,
+    });
   }
 
   /**
@@ -986,7 +1585,7 @@ export class SessionsService {
             firstName: user.firstName,
             lastName: user.lastName,
           },
-          amount: totalAmount / 100, // Convert from kobo to naira
+          amount: totalAmount, // Convert from kobo to naira
           currencyCode: 'NGN',
           metadata: {
             type: 'session_booking',
@@ -1167,5 +1766,43 @@ export class SessionsService {
     );
 
     return sessions;
+  }
+
+  async getConsultantStats(consultantId: string) {
+    const totalSessions = await this.prismaService.tenancy.session.count({
+      where: { consultantId, deleted: false },
+    });
+
+    const completedSessions = await this.prismaService.tenancy.session.count({
+      where: {
+        consultantId,
+        status: {
+          in: [SessionStatus.COMPLETED, SessionStatus.PENDING],
+        },
+        deleted: false,
+        scheduledDate: {
+          lte: new Date(),
+        },
+      },
+    });
+
+    const pendingSessions = await this.prismaService.tenancy.session.count({
+      where: {
+        consultantId,
+        status: {
+          in: [SessionStatus.PENDING, SessionStatus.PENDING_APPROVAL],
+        },
+        scheduledDate: {
+          gte: new Date(),
+        },
+        deleted: false,
+      },
+    });
+
+    return {
+      totalSessions,
+      completedSessions,
+      pendingSessions,
+    };
   }
 }

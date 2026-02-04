@@ -8,6 +8,8 @@ import {
   HttpStatus,
   Query,
   UseGuards,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { SessionsService } from '../services/sessions.service';
@@ -24,7 +26,6 @@ import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
 import { PermissionsGuard } from 'src/guards/permission.guard';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { QueryFilter } from 'params/query-filter';
-import { QueryOptions } from 'params/query-options';
 import { UserProfileType, UserType } from 'generated/prisma/enums';
 import { SessionStatus } from 'generated/prisma/enums';
 
@@ -53,9 +54,8 @@ export class SessionsController {
   @Response({ status: HttpStatus.OK, message: 'Sessions fetched successfully' })
   @ApiOperation({ summary: 'Get all sessions' })
   async findAll(
-    @QueryFilter() filter: Record<string, any>,
-    @QueryOptions() options: Record<string, any>,
-    @Query() query: PaginationQuery,
+    @Query() paginationQuery: PaginationQuery,
+    @Query() filter: Record<string, any>,
     @AuthUser() user?: User,
   ) {
     const userId =
@@ -63,7 +63,7 @@ export class SessionsController {
         ? user.id
         : undefined;
 
-    return this.sessionsService.getSessions(userId, filter, options);
+    return this.sessionsService.getSessions(userId, filter, paginationQuery);
   }
 
   @Get('quota')
@@ -116,10 +116,12 @@ export class SessionsController {
       throw new Error('Client profile not found');
     }
 
-    const sessions = await this.sessionsService.getSessions(clientProfile.id);
-    const count = Array.isArray(sessions)
-      ? sessions.length
-      : sessions.data?.length || 0;
+    const sessions = await this.sessionsService.getSessions(
+      user.id,
+      {},
+      { skip: 0, take: 0 },
+    );
+    const count = sessions?.totalRecords || 0;
 
     return { count };
   }
@@ -174,6 +176,67 @@ export class SessionsController {
     return this.sessionsService.updateSessionStatus(id, status, user?.id);
   }
 
+  @Patch(':id/note')
+  @AuthUserGuard([UserProfileType.CLIENT, UserType.ADMIN, UserType.SUPER_ADMIN])
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Session note updated successfully',
+  })
+  @ApiOperation({ summary: 'Update session note (Client only)' })
+  async updateNote(
+    @Param('id') id: string,
+    @Body('note') note: string,
+    @AuthUser() user?: User,
+  ) {
+    return this.sessionsService.updateSessionNote(id, note, user?.id);
+  }
+
+  @Patch(':id/prescription-note')
+  @AuthUserGuard([
+    UserProfileType.CONSULTANT,
+    UserType.ADMIN,
+    UserType.SUPER_ADMIN,
+  ])
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Prescription note updated successfully',
+  })
+  @ApiOperation({ summary: 'Update prescription note (Consultant only)' })
+  async updatePrescriptionNote(
+    @Param('id') id: string,
+    @Body('prescriptionNote') prescriptionNote: string,
+    @AuthUser() user?: User,
+  ) {
+    return this.sessionsService.updatePrescriptionNote(
+      id,
+      prescriptionNote,
+      user?.id,
+    );
+  }
+
+  @Patch(':id/session-note')
+  @AuthUserGuard([
+    UserProfileType.CONSULTANT,
+    UserType.ADMIN,
+    UserType.SUPER_ADMIN,
+  ])
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Session note/report updated successfully',
+  })
+  @ApiOperation({ summary: 'Update session note/report (Consultant only)' })
+  async updateSessionNoteReport(
+    @Param('id') id: string,
+    @Body('sessionNote') sessionNote: string,
+    @AuthUser() user?: User,
+  ) {
+    return this.sessionsService.updateSessionNoteReport(
+      id,
+      sessionNote,
+      user?.id,
+    );
+  }
+
   @Get('consultant')
   @Response({
     status: HttpStatus.OK,
@@ -182,7 +245,7 @@ export class SessionsController {
   @ApiOperation({ summary: 'Get consultant sessions' })
   async getConsultantSessions(
     @QueryFilter() filter: Record<string, any>,
-    @QueryOptions() options: Record<string, any>,
+    @Query() paginationQuery: PaginationQuery,
     @Query('clientId') clientId?: string,
     @AuthUser() user?: User,
   ) {
@@ -210,7 +273,11 @@ export class SessionsController {
       whereFilter.clientId = clientId;
     }
 
-    return this.sessionsService.getSessions(undefined, whereFilter, options);
+    return this.sessionsService.getSessions(
+      undefined,
+      whereFilter,
+      paginationQuery,
+    );
   }
 
   @Get('consultant/:consultantId/stats')
@@ -220,37 +287,44 @@ export class SessionsController {
   })
   @ApiOperation({ summary: 'Get consultant statistics' })
   async getConsultantStats(@Param('consultantId') consultantId: string) {
-    const total = await this.sessionsService[
-      'prismaService'
-    ].tenancy.session.count({
-      where: { consultantId, deleted: false },
-    });
+    return this.sessionsService.getConsultantStats(consultantId);
+  }
 
-    const completed = await this.sessionsService[
+  @Get('consultants/availability')
+  @AuthUserGuard()
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Consultant availability fetched successfully',
+  })
+  @ApiOperation({ summary: 'Get consultant availability (for consultants)' })
+  async getOwnAvailability(
+    @AuthUser() user: User,
+    @Query('date') date?: string,
+  ) {
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Get consultant profile for the authenticated user
+    const consultantProfile = await this.sessionsService[
       'prismaService'
-    ].tenancy.session.count({
+    ].tenancy.userProfileConsultant.findFirst({
       where: {
-        consultantId,
-        status: SessionStatus.COMPLETED,
-        deleted: false,
+        userProfile: {
+          userId: user.id,
+        },
       },
+      select: { id: true },
     });
 
-    const upcoming = await this.sessionsService[
-      'prismaService'
-    ].tenancy.session.count({
-      where: {
-        consultantId,
-        status: SessionStatus.PENDING,
-        deleted: false,
-      },
-    });
+    if (!consultantProfile) {
+      throw new NotFoundException('Consultant profile not found for user');
+    }
 
-    return {
-      total,
-      completed,
-      upcoming,
-    };
+    return this.providerAvailabilityService.getAvailability(
+      consultantProfile.id,
+      date,
+    );
   }
 
   @Get('consultants/:consultantId/availability')
@@ -394,5 +468,49 @@ export class SessionsController {
   })
   async verifyPayment(@Param('reference') reference: string) {
     return this.sessionsService.verifySessionPayment(reference);
+  }
+
+  @Get(':id/meeting-token')
+  @AuthUserGuard([
+    UserProfileType.CLIENT,
+    UserProfileType.CONSULTANT,
+    UserType.ADMIN,
+    UserType.SUPER_ADMIN,
+  ])
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Meeting token fetched successfully',
+  })
+  @ApiOperation({ summary: 'Get meeting token for a session' })
+  async getMeetingToken(
+    @Param('id') sessionId: string,
+    @AuthUser() user?: User,
+  ) {
+    if (!user) {
+      throw new BadRequestException('User must be authenticated');
+    }
+
+    const token = await this.sessionsService.getSessionMeetingToken(
+      sessionId,
+      user.id,
+    );
+
+    if (!token) {
+      throw new NotFoundException('Meeting token not found for this session');
+    }
+
+    return { token };
+  }
+
+  @Get(':id')
+  @Response({ status: HttpStatus.OK, message: 'Session fetched successfully' })
+  @ApiOperation({ summary: 'Get a single session by ID' })
+  async findOne(@Param('id') id: string, @AuthUser() user?: User) {
+    const userId =
+      user && user.type !== UserType.ADMIN && user.type !== UserType.SUPER_ADMIN
+        ? user.id
+        : undefined;
+
+    return this.sessionsService.getSession(id, userId);
   }
 }

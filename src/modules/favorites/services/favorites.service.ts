@@ -8,6 +8,7 @@ import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.serv
 import { AddFavoriteDto } from '../dtos/add-favorite.dto';
 import type { Favorite, Prisma } from 'generated/prisma/client';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
+import { GetFavoritesFilterQuery } from '../dtos/get-favorites-filter-query.dto';
 
 @Injectable()
 export class FavoritesService {
@@ -96,40 +97,66 @@ export class FavoritesService {
   /**
    * Get all favorites for a user with pagination
    */
-  async getFavorites(userId: string, paginationQuery: PaginationQuery) {
-    const { skip, take } = paginationQuery;
+  async getFavorites(
+    userId: string,
+    paginationQueryParams: PaginationQuery,
+    filterQueryParams: GetFavoritesFilterQuery,
+  ) {
+    const { search } = filterQueryParams;
 
     const where: Prisma.FavoriteWhereInput = {
-      userId,
+      AND: [
+        { userId },
+        search
+          ? {
+              OR: [
+                {
+                  product: {
+                    OR: [
+                      {
+                        name: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                      {
+                        category: {
+                          name: {
+                            contains: search,
+                            mode: 'insensitive',
+                          },
+                        },
+                      },
+                      {
+                        brand: {
+                          name: {
+                            contains: search,
+                            mode: 'insensitive',
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            }
+          : {},
+      ],
     };
 
-    const [favorites, total] = await Promise.all([
-      this.prismaService.tenancy.favorite.findMany({
-        where,
-        include: {
-          product: {
-            include: {
-              category: true,
-              brand: true,
-            },
+    return this.prismaService.tenancy.favorite.paginate({
+      where,
+      include: {
+        product: {
+          include: {
+            category: true,
+            brand: true,
           },
         },
-        skip,
-        take,
-        // orderBy: orderBy ? { [orderBy]: 'desc' } : { createdAt: 'desc' },
-      }),
-      this.prismaService.tenancy.favorite.count({ where }),
-    ]);
-
-    return {
-      data: favorites,
-      meta: {
-        total,
-        page: Math.floor(skip / take) + 1,
-        limit: take,
-        totalPages: Math.ceil(total / take),
       },
-    };
+      orderBy: { createdAt: 'desc' },
+      ...paginationQueryParams,
+    });
   }
 
   /**

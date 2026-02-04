@@ -27,6 +27,7 @@ import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
 import { UserExpanded } from '../types/user';
 import { populateRole } from 'modules/roles/helpers/roles.helper';
 import { excludeKeys } from 'utils/object-util';
+import { UploadsService } from 'src/uploads/uploads.service';
 
 @Injectable()
 export class UserService {
@@ -36,6 +37,7 @@ export class UserService {
     private mailService: MailService,
     private avatarService: AvatarService,
     private bcryptService: BcryptService,
+    private uploadsService: UploadsService,
   ) {}
 
   private logger = new Logger(this.constructor.name);
@@ -285,6 +287,47 @@ export class UserService {
     return users;
   }
 
+  /**
+   * Update user profile photo
+   */
+  async updatePhoto(userId: string, file: Express.Multer.File) {
+    // Verify user exists
+    await this.findOneOrThrow(userId);
+
+    // Upload file to DigitalOcean Spaces
+    const fileName = `users/${userId}/photos/${randomUUID()}-${file.originalname}`;
+    const photoUrl = await this.uploadsService.initialize(
+      file.buffer,
+      fileName,
+      {
+        ContentType: file.mimetype,
+        CacheControl: 'max-age=31536000', // 1 year cache
+      },
+      true, // Optimize image
+    );
+
+    // Update user's avatar - using corePrismaService to match findOneOrThrow
+    const updatedUser = await this.prismaService.corePrismaService.user.update({
+      where: { id: userId },
+      data: {
+        avatar: photoUrl,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        avatar: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    this.logger.log(`User ${userId} photo updated successfully`);
+
+    return updatedUser;
+  }
+
   // NOTE
   async getUser(id: string) {
     const user = await this.findOneOrThrow(id, {
@@ -305,7 +348,7 @@ export class UserService {
     try {
       const user = await this.prismaService.corePrismaService.user.findFirst({
         where: {
-          OR: [{ email: identifier }, identifier ? { id: identifier } : {}],
+          id: identifier,
         },
         ...extraArgs,
       });

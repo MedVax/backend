@@ -11,8 +11,7 @@ import { CreateOrderDto } from '../dtos/create-order.dto';
 import { UpdateOrderStatusDto } from '../dtos/update-order-status.dto';
 import { PaystackService } from 'modules/services/paystack-service';
 import { StockService } from 'modules/stock/services/stock.service';
-import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
-import type { Order, PaymentStatus } from 'generated/prisma/client';
+import type { PaymentStatus, Prisma } from 'generated/prisma/client';
 import { OrderRecurringFrequency } from 'generated/prisma/enums';
 import { randomUUID } from 'crypto';
 import { addWeeks, addMonths } from 'date-fns';
@@ -20,6 +19,9 @@ import { MailService } from 'src/mail/services/mail.service';
 import { format } from 'date-fns';
 import { TransactionsService } from 'modules/transactions/services/transactions.service';
 import { TransactionType, TransactionStatus } from 'generated/prisma/enums';
+import { PaginationQuery } from 'src/dtos/paginated-query.dto';
+import { GetOrdersFilterQuery } from '../dtos/get-orders-filter-query.dto';
+import { isArray } from 'class-validator';
 
 @Injectable()
 export class OrdersService {
@@ -133,6 +135,7 @@ export class OrdersService {
               prescriptionStatus: null,
               notes: dto.notes,
               isRecurring: false, // Original order is always one-time
+              isRecurringActive: false,
               items: {
                 create: orderItems,
               },
@@ -252,6 +255,8 @@ export class OrdersService {
       const order = orderResult.order;
       const recurringOrderResult = orderResult.recurringOrder;
 
+      console.log({ order, recurringOrderResult });
+
       // Send email notification if recurring order was created
       if (recurringOrderResult) {
         try {
@@ -329,13 +334,13 @@ export class OrdersService {
               firstName: user.firstName,
               lastName: user.lastName,
             },
-            amount: totalAmount / 100, // Convert from kobo to naira
+            amount: totalAmount, // Convert from kobo to naira
             currencyCode: 'NGN',
             metadata: {
               orderId: order.id,
               userId,
             },
-            returnUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/orders/${order.id}`,
+            returnUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/checkout/success?orderId=${order.id}`,
           });
 
         const providerReference = transaction.reference || orderReference;
@@ -425,103 +430,179 @@ export class OrdersService {
   }
 
   async findAll(
+    paginationQueryParams: PaginationQuery,
+    filterQueryParams: GetOrdersFilterQuery,
     userId?: string,
-    filter?: QueryFilter<Order>,
-    options?: QueryOptions<Order>,
   ) {
-    const whereFilter: any = { ...filter };
+    const {
+      search,
+      orderStatus,
+      paymentStatus,
+      prescriptionStatus,
+      isRecurring,
+      isRecurringActive,
+    } = filterQueryParams;
 
-    if (userId) {
-      whereFilter.userId = userId;
-    }
+    const where: Prisma.OrderWhereInput = {
+      AND: [
+        userId ? { userId } : {},
+        ...(isRecurring ? [{ isRecurring: true }] : [{ isRecurring: false }]),
+        ...(isRecurringActive
+          ? [{ isRecurringActive: true }]
+          : [{ isRecurringActive: false }]),
+        search
+          ? {
+              OR: [
+                { id: { contains: search, mode: 'insensitive' } },
+                {
+                  user: {
+                    OR: [
+                      {
+                        email: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                      {
+                        firstName: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                      {
+                        lastName: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            }
+          : {},
+        orderStatus
+          ? {
+              ...(isArray(orderStatus)
+                ? { orderStatus: { in: orderStatus } }
+                : { orderStatus }),
+            }
+          : {},
+        paymentStatus
+          ? {
+              ...(isArray(paymentStatus)
+                ? { paymentStatus: { in: paymentStatus } }
+                : { paymentStatus }),
+            }
+          : {},
+        prescriptionStatus
+          ? {
+              ...(isArray(prescriptionStatus)
+                ? { prescriptionStatus: { in: prescriptionStatus } }
+                : { prescriptionStatus }),
+            }
+          : {},
+      ],
+    };
 
-    const result = await this.prismaService.tenancy.order.findManyWithUrlQuery(
-      whereFilter,
-      options,
-    );
-
-    // Fetch with includes separately
-    if (Array.isArray(result) && result.length > 0) {
-      const ids = result.map((o) => o.id);
-      return this.prismaService.tenancy.order.findMany({
-        where: { id: { in: ids } },
-        include: {
-          items: {
-            include: {
-              product: true,
-            },
+    return this.prismaService.tenancy.order.paginate({
+      where,
+      include: {
+        items: {
+          include: {
+            product: true,
           },
-          deliveryAddress: true,
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
+        },
+        deliveryAddress: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
           },
-          prescriptions: true,
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-    }
-
-    if (!Array.isArray(result) && result.data) {
-      const ids = result.data.map((o: any) => o.id);
-      const data = await this.prismaService.tenancy.order.findMany({
-        where: { id: { in: ids } },
-        include: {
-          items: {
-            include: {
-              product: true,
-            },
-          },
-          deliveryAddress: true,
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
-          },
-          prescriptions: true,
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-      return { ...result, data };
-    }
-
-    return result;
+        prescriptions: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      ...paginationQueryParams,
+    });
   }
 
-  async count(
-    userId?: string,
-    filter?: QueryFilter<Order>,
-    options?: QueryOptions<Order>,
-  ) {
-    const whereFilter: any = { ...filter };
+  async count(filterQueryParams: GetOrdersFilterQuery, userId?: string) {
+    const { search, orderStatus, paymentStatus, prescriptionStatus } =
+      filterQueryParams;
 
-    if (userId) {
-      whereFilter.userId = userId;
-    }
+    const where: Prisma.OrderWhereInput = {
+      AND: [
+        userId ? { userId } : {},
+        search
+          ? {
+              OR: [
+                { id: { contains: search, mode: 'insensitive' } },
+                {
+                  user: {
+                    OR: [
+                      {
+                        email: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                      {
+                        firstName: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                      {
+                        lastName: {
+                          contains: search,
+                          mode: 'insensitive',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            }
+          : {},
+        orderStatus
+          ? {
+              ...(isArray(orderStatus)
+                ? { orderStatus: { in: orderStatus } }
+                : { orderStatus }),
+            }
+          : {},
+        paymentStatus
+          ? {
+              ...(isArray(paymentStatus)
+                ? { paymentStatus: { in: paymentStatus } }
+                : { paymentStatus }),
+            }
+          : {},
+        prescriptionStatus
+          ? {
+              ...(isArray(prescriptionStatus)
+                ? { prescriptionStatus: { in: prescriptionStatus } }
+                : { prescriptionStatus }),
+            }
+          : {},
+      ],
+    };
 
-    return this.prismaService.tenancy.order.countWithUrlQuery(
-      whereFilter,
-      options,
-    );
+    return this.prismaService.tenancy.order.count({
+      where,
+    });
   }
 
   async findOne(id: string, userId?: string) {
     const where: any = { id };
+    console.log({ userId });
 
-    if (userId) {
-      where.userId = userId;
-    }
+    // if (userId) {
+    //   where.userId = userId;
+    // }
 
     const order = await this.prismaService.tenancy.order.findFirst({
       where,

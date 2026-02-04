@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { UserType } from 'generated/prisma/enums';
+import { UserProfileType, UserType } from 'generated/prisma/enums';
 
 import { Response } from 'metadatas/response.metadata';
 import { ConsultantsService } from '../services/consultants.service';
@@ -22,6 +22,9 @@ import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { ApiPaginatedResponse } from 'src/decorators/api-paginated-response.decorator';
 import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
 import { PermissionsGuard } from 'src/guards/permission.guard';
+import { AuthUser } from 'params/auth-user.param';
+import type { AuthUserType } from 'types/user.types';
+import { AuthAllow } from 'metadatas/auth-allow.metadata';
 
 @Controller('consultants')
 @ApiTags('Consultants')
@@ -54,7 +57,7 @@ export class ConsultantsController {
     status: HttpStatus.OK,
     message: 'Consultant profile fetched successfully',
   })
-  @AuthUserGuard()
+  @AuthAllow()
   findOne(@Param() params: GetConsultantDto) {
     return this.consultantsService.findOneOrThrow(params.id);
   }
@@ -64,9 +67,13 @@ export class ConsultantsController {
     status: HttpStatus.OK,
     message: 'Consultant profile updated successfully',
   })
-  @AuthUserGuard([UserType.SUPER_ADMIN, UserType.ADMIN])
-  update(@Body() dto: UpdateConsultantDto) {
-    return this.consultantsService.update(dto.id, dto);
+  @AuthUserGuard([
+    UserType.SUPER_ADMIN,
+    UserType.ADMIN,
+    UserProfileType.CONSULTANT,
+  ])
+  update(@AuthUser() user: AuthUserType, @Body() dto: UpdateConsultantDto) {
+    return this.consultantsService.update(user, dto);
   }
 
   @Delete(':id')

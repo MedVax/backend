@@ -24,6 +24,8 @@ import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { ApiPaginatedResponse } from 'src/decorators/api-paginated-response.decorator';
 import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
 import { PermissionsGuard } from 'src/guards/permission.guard';
+import type { AuthUserType } from 'types/user.types';
+import { AuthUser } from 'params/auth-user.param';
 
 @Controller('clients')
 @ApiTags('Clients')
@@ -67,8 +69,8 @@ export class ClientsController {
     message: 'Client profile updated successfully',
   })
   @AuthUserGuard([UserType.SUPER_ADMIN, UserType.ADMIN, UserProfileType.CLIENT])
-  update(@Body() dto: UpdateClientDto) {
-    return this.clientsService.update(dto.id, dto);
+  update(@AuthUser() user: AuthUserType, @Body() dto: UpdateClientDto) {
+    return this.clientsService.update(user, dto);
   }
 
   @Delete(':id')

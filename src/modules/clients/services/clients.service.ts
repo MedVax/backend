@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -12,6 +13,7 @@ import { UpdateClientDto } from '../dtos/update-client.dto';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { normalizeString } from 'utils/string-util';
 import { BcryptService } from 'services/bcrypt.service';
+import { AuthUserType } from 'types/user.types';
 
 @Injectable()
 export class ClientsService {
@@ -101,8 +103,7 @@ export class ClientsService {
   async findOne(id: string): Promise<UserProfileClient | null> {
     return this.prismaService.tenancy.userProfileClient.findFirst({
       where: {
-        id,
-        deletedAt: null,
+        OR: [{ id }, { userProfileId: id }],
       },
       include: {
         userProfile: {
@@ -170,14 +171,22 @@ export class ClientsService {
     });
   }
 
-  async update(id: string, dto: UpdateClientDto) {
+  async update(user: AuthUserType, dto: UpdateClientDto) {
+    const id = dto.id;
+
+    if (
+      user.activeProfile?.type === UserProfileType.CLIENT &&
+      user.activeProfile?.userProfileClient !== id
+    ) {
+      throw new ForbiddenException(
+        'You are not authorized to update this client profile',
+      );
+    }
+
     const clientProfileExist =
       await this.prismaService.tenancy.userProfileClient.findFirst({
         where: {
-          userProfile: {
-            userId: id,
-            type: UserProfileType.CLIENT,
-          },
+          id,
           deletedAt: null,
         },
         include: {

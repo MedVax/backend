@@ -279,6 +279,13 @@ export class AuthService {
         userProfiles: {
           create: {
             type: UserProfileType.CLIENT,
+            userProfileClients: {
+              create: {
+                coverName: firstName,
+                referral: '',
+                useCoverName: true,
+              },
+            },
           },
         },
       },
@@ -309,6 +316,8 @@ export class AuthService {
       userProfileClient: user.userProfiles[0].userProfileClients[0]?.id,
       userProfileConsultant: user.userProfiles[0].userProfileConsultants[0]?.id,
     };
+
+    console.log({ userProfile: user.userProfiles[0] });
 
     // Merge session cart to user cart if sessionId exists
     if (sessionId) {

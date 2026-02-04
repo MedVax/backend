@@ -62,3 +62,31 @@ export const GOOGLE_CLIENT_SECRET = config.get('GOOGLE_CLIENT_SECRET');
 export const GOOGLE_REDIRECT_URI = config.get('GOOGLE_REDIRECT_URI');
 
 export const CORS_ORIGIN = config.getOrThrow('CORS_ORIGIN');
+
+// Cloudflare Realtime Kit Configuration
+export const CLOUDFLARE_REALTIME_KIT_API_TOKEN = config.get(
+  'CLOUDFLARE_REALTIME_KIT_API_TOKEN',
+);
+export const CLOUDFLARE_REALTIME_KIT_ACCOUNT_ID = config.get(
+  'CLOUDFLARE_REALTIME_KIT_ACCOUNT_ID',
+);
+export const CLOUDFLARE_REALTIME_KIT_APP_ID = config.get(
+  'CLOUDFLARE_REALTIME_KIT_APP_ID',
+);
+export const CLOUDFLARE_REALTIME_KIT_BASE_URL =
+  config.get('CLOUDFLARE_REALTIME_KIT_BASE_URL') ||
+  'https://api.cloudflare.com/client/v4/accounts';
+export const CLOUDFLARE_REALTIME_KIT_MEETING_URL = config.get(
+  'CLOUDFLARE_REALTIME_KIT_MEETING_URL',
+);
+
+// Legacy Dyte Configuration (deprecated - kept for backward compatibility)
+export const DYTE_API_KEY = config.get('DYTE_API_KEY');
+export const DYTE_ORG_ID = config.get('DYTE_ORG_ID');
+export const DYTE_BASE_URL =
+  config.get('DYTE_BASE_URL') || 'https://api.dyte.io/v2';
+export const DYTE_APP_URL = config.get('DYTE_APP_URL') || 'https://app.dyte.io';
+export const DYTE_S3_ACCESS_KEY = config.get('DYTE_S3_ACCESS_KEY');
+export const DYTE_S3_SECRET_KEY = config.get('DYTE_S3_SECRET_KEY');
+export const DYTE_S3_BUCKET = config.get('DYTE_S3_BUCKET');
+export const DYTE_S3_REGION = config.get('DYTE_S3_REGION') || 'us-east-1';

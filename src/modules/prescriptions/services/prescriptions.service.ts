@@ -7,10 +7,15 @@ import {
 import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.service';
 import { CreatePrescriptionDto } from '../dtos/create-prescription.dto';
 import { VerifyPrescriptionDto } from '../dtos/verify-prescription.dto';
-import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
-import { PrescriptionStatus, type Prescription } from 'generated/prisma/client';
+import {
+  PrescriptionStatus,
+  type Prisma,
+} from 'generated/prisma/client';
 import { randomUUID } from 'crypto';
 import { UploadsService } from 'src/uploads/uploads.service';
+import { PaginationQuery } from 'src/dtos/paginated-query.dto';
+import { GetPrescriptionsFilterQuery } from '../dtos/get-prescriptions-filter-query.dto';
+import { isArray } from 'class-validator';
 
 @Injectable()
 export class PrescriptionsService {
@@ -19,7 +24,7 @@ export class PrescriptionsService {
   constructor(
     private prismaService: PrismaTenancyService,
     private uploadsService: UploadsService,
-  ) {}
+  ) { }
 
   async create(
     dto: CreatePrescriptionDto,
@@ -41,10 +46,15 @@ export class PrescriptionsService {
     let fileUrl = dto.fileUrl;
     if (file) {
       const fileName = `prescriptions/${userId}/${randomUUID()}-${file.originalname}`;
-      fileUrl = await this.uploadsService.initialize(file.buffer, fileName, {
-        ContentType: file.mimetype,
-        CacheControl: 'max-age=31536000', // 1 year cache
-      });
+      fileUrl = await this.uploadsService.initialize(
+        file.buffer,
+        fileName,
+        {
+          ContentType: file.mimetype,
+          CacheControl: 'max-age=31536000', // 1 year cache
+        },
+        true, // Optimize image if it's an image
+      );
     }
 
     if (!fileUrl) {
@@ -74,92 +84,98 @@ export class PrescriptionsService {
   }
 
   async findAll(
+    paginationQueryParams: PaginationQuery,
+    filterQueryParams: GetPrescriptionsFilterQuery,
     userId?: string,
-    filter?: QueryFilter<Prescription>,
-    options?: QueryOptions<Prescription>,
   ) {
-    const whereFilter: any = { ...filter };
+    const {
+      search,
+      status,
+      prescriberType,
+      userId: filterUserId,
+    } = filterQueryParams;
 
-    if (userId) {
-      whereFilter.userId = userId;
-    }
+    // Use userId from filter if provided (for consultants/admins), otherwise use authenticated user's id
+    const finalUserId = filterUserId || userId;
 
-    const result =
-      await this.prismaService.tenancy.prescription.findManyWithUrlQuery(
-        whereFilter,
-        options,
-      );
+    const where: Prisma.PrescriptionWhereInput = {
+      AND: [
+        finalUserId ? { userId: finalUserId } : {},
+        search
+          ? {
+            OR: [
+              { patientName: { contains: search, mode: 'insensitive' } },
+              { prescriberName: { contains: search, mode: 'insensitive' } },
+              { drugName: { contains: search, mode: 'insensitive' } },
+              { hospitalName: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+          : {},
+        status
+          ? isArray(status)
+            ? { status: { in: status } }
+            : { status }
+          : {},
+        prescriberType ? { prescriberType } : {},
+      ],
+    };
 
-    // Fetch with includes separately
-    if (Array.isArray(result) && result.length > 0) {
-      const ids = result.map((p) => p.id);
-      return this.prismaService.tenancy.prescription.findMany({
-        where: { id: { in: ids } },
-        include: {
-          order: {
-            include: {
-              items: true,
-            },
-          },
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-    }
-
-    if (!Array.isArray(result) && result.data) {
-      const ids = result.data.map((p: any) => p.id);
-      const data = await this.prismaService.tenancy.prescription.findMany({
-        where: { id: { in: ids } },
-        include: {
-          order: {
-            include: {
-              items: true,
-            },
-          },
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
+    return this.prismaService.tenancy.prescription.paginate({
+      where,
+      include: {
+        order: {
+          include: {
+            items: true,
           },
         },
-        orderBy: {
-          createdAt: 'desc',
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
         },
-      });
-      return { ...result, data };
-    }
-
-    return result;
+      },
+      orderBy: { createdAt: 'desc' },
+      ...paginationQueryParams,
+    });
   }
 
-  async count(
-    userId?: string,
-    filter?: QueryFilter<Prescription>,
-    options?: QueryOptions<Prescription>,
-  ) {
-    const whereFilter: any = { ...filter };
+  async count(filterQueryParams: GetPrescriptionsFilterQuery, userId?: string) {
+    const {
+      search,
+      status,
+      prescriberType,
+      userId: filterUserId,
+    } = filterQueryParams;
 
-    if (userId) {
-      whereFilter.userId = userId;
-    }
+    // Use userId from filter if provided (for consultants/admins), otherwise use authenticated user's id
+    const finalUserId = filterUserId || userId;
 
-    return this.prismaService.tenancy.prescription.countWithUrlQuery(
-      whereFilter,
-      options,
-    );
+    const where: Prisma.PrescriptionWhereInput = {
+      AND: [
+        finalUserId ? { userId: finalUserId } : {},
+        search
+          ? {
+            OR: [
+              { patientName: { contains: search, mode: 'insensitive' } },
+              { prescriberName: { contains: search, mode: 'insensitive' } },
+              { drugName: { contains: search, mode: 'insensitive' } },
+              { hospitalName: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+          : {},
+        status
+          ? isArray(status)
+            ? { status: { in: status } }
+            : { status }
+          : {},
+        prescriberType ? { prescriberType } : {},
+      ],
+    };
+
+    return this.prismaService.tenancy.prescription.count({ where });
   }
 
   async findOne(id: string, userId?: string) {

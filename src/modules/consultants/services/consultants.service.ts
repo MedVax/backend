@@ -13,6 +13,7 @@ import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { normalizeString } from 'utils/string-util';
 import { BcryptService } from 'services/bcrypt.service';
 import { MailService } from 'src/mail/services/mail.service';
+import { AuthUserType } from 'types/user.types';
 
 @Injectable()
 export class ConsultantsService {
@@ -194,9 +195,15 @@ export class ConsultantsService {
   }
 
   async update(
-    id: string,
+    user: AuthUserType,
     dto: UpdateConsultantDto,
   ): Promise<UserProfileConsultant> {
+    const id = dto.id;
+
+    // if (user.activeProfile?.type === UserProfileType.CONSULTANT && user.activeProfile?.userProfileConsultant !== id) {
+    //   throw new ForbiddenException('You are not authorized to update this consultant profile');
+    // }
+
     return this.prismaService.tenancy.userProfileConsultant.update({
       where: { id },
       data: {

@@ -16,6 +16,7 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
@@ -23,6 +24,7 @@ import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { ProductsService } from '../services/products.service';
 import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
+import { BulkCreateProductDto } from '../dtos/bulk-create-product.dto';
 import { GetProductsFilterQuery } from '../dtos/get-products-filter-query.dto';
 import { Response } from 'metadatas/response.metadata';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
@@ -45,6 +47,26 @@ import { UploadSingleImageBodySchema } from '../doc/upload-single-image-body.sch
 @UseGuards(PermissionsGuard)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
+
+  @Post('bulk')
+  @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @Response({
+    status: HttpStatus.CREATED,
+    message: 'Products created successfully',
+  })
+  @ApiOperation({
+    summary: 'Bulk create products (Admin only)',
+    description:
+      'Create multiple products at once. Maximum 100 products per request.',
+  })
+  async bulkCreate(@Body() body: BulkCreateProductDto) {
+    if (body.products.length > 100) {
+      throw new BadRequestException(
+        'Cannot create more than 100 products at once',
+      );
+    }
+    return this.productsService.bulkCreate(body);
+  }
 
   @Post()
   @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])

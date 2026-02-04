@@ -7,6 +7,7 @@ import {
 import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.service';
 import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
+import { BulkCreateProductDto } from '../dtos/bulk-create-product.dto';
 import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
 import type { Product, Prisma } from 'generated/prisma/client';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
@@ -42,6 +43,36 @@ export class ProductsService {
     private categoriesService: CategoriesService,
     private redisService: RedisService,
   ) {}
+
+  async bulkCreate(dto: BulkCreateProductDto) {
+    const results = {
+      successful: [],
+      failed: [],
+    };
+
+    for (const productDto of dto.products) {
+      try {
+        const product = await this.create(productDto);
+        results.successful.push(product);
+      } catch (error) {
+        results.failed.push({
+          product: productDto,
+          error: error.message || 'Unknown error',
+        });
+      }
+    }
+
+    // Invalidate cache after bulk creation
+    await this.invalidateListAndSearchCaches();
+
+    return {
+      total: dto.products.length,
+      successful: results.successful.length,
+      failed: results.failed.length,
+      products: results.successful,
+      errors: results.failed,
+    };
+  }
 
   async create(dto: CreateProductDto, files?: Express.Multer.File[]) {
     const existing = await this.prismaService.tenancy.product.findUnique({
@@ -99,9 +130,12 @@ export class ProductsService {
             const filesData = files?.map((file) => ({
               file: file?.buffer,
               fileName: generateProductUploadPrefix(productResult, file),
+              contentType: file.mimetype,
             }));
-            const attachmentsUrls =
-              await this.uploadsService.initializeMany(filesData);
+            const attachmentsUrls = await this.uploadsService.initializeMany(
+              filesData,
+              true,
+            );
 
             const productUpdateResult = await trx.product.update({
               where: { id: productResult?.id },
@@ -147,9 +181,12 @@ export class ProductsService {
       const filesData = files?.map((file) => ({
         file: file?.buffer,
         fileName: generateProductUploadPrefix(existing, file),
+        contentType: file.mimetype,
       }));
-      const attachmentsUrls =
-        await this.uploadsService.initializeMany(filesData);
+      const attachmentsUrls = await this.uploadsService.initializeMany(
+        filesData,
+        true,
+      );
 
       const productData = {
         ...(dto?.name ? { name: dto.name } : {}),
@@ -563,10 +600,15 @@ export class ProductsService {
           currentImages.length + index,
         );
 
-        return this.uploadsService.initialize(file.buffer, fileName, {
-          ContentType: file.mimetype,
-          CacheControl: 'max-age=31536000', // 1 year cache
-        });
+        return this.uploadsService.initialize(
+          file.buffer,
+          fileName,
+          {
+            ContentType: file.mimetype,
+            CacheControl: 'max-age=31536000', // 1 year cache
+          },
+          true, // Optimize image
+        );
       });
 
       const uploadedUrls = await Promise.all(uploadPromises);

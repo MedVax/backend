@@ -26,10 +26,9 @@ import type { User } from 'generated/prisma/client';
 import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
 import { PermissionsGuard } from 'src/guards/permission.guard';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
-import { QueryFilter } from 'params/query-filter';
-import { QueryOptions } from 'params/query-options';
 import { UserType } from 'generated/prisma/enums';
 import { AuthAllow } from 'metadatas/auth-allow.metadata';
+import { GetPrescriptionsFilterQuery } from '../dtos/get-prescriptions-filter-query.dto';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = [
@@ -127,18 +126,22 @@ export class PrescriptionsController {
   })
   @ApiOperation({ summary: 'Get all prescriptions' })
   findAll(
-    @QueryFilter() filter: Record<string, any>,
-    @QueryOptions() options: Record<string, any>,
-    @Query() query: PaginationQuery,
+    @Query() paginationQueryParams: PaginationQuery,
+    @Query() filterQuery: GetPrescriptionsFilterQuery,
     @AuthUser() user?: User,
   ) {
     // If user is not admin/clinician, only show their prescriptions
+    // But if userId is provided in filter (for consultants/admins), use that instead
     const userId =
       user && user.type !== UserType.ADMIN && user.type !== UserType.SUPER_ADMIN
         ? user.id
         : undefined;
 
-    return this.prescriptionsService.findAll(userId, filter, options);
+    return this.prescriptionsService.findAll(
+      paginationQueryParams,
+      filterQuery,
+      userId,
+    );
   }
 
   @Get('count')
@@ -148,8 +151,7 @@ export class PrescriptionsController {
   })
   @ApiOperation({ summary: 'Get prescriptions count' })
   count(
-    @QueryFilter() filter: Record<string, any>,
-    @QueryOptions() options: Record<string, any>,
+    @Query() filterQuery: GetPrescriptionsFilterQuery,
     @AuthUser() user?: User,
   ) {
     const userId =
@@ -157,7 +159,7 @@ export class PrescriptionsController {
         ? user.id
         : undefined;
 
-    return this.prescriptionsService.count(userId, filter, options);
+    return this.prescriptionsService.count(filterQuery, userId);
   }
 
   @Get(':id')

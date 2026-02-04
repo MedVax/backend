@@ -674,4 +674,27 @@ export class MailService {
       ...params,
     });
   }
+
+  async prescriptionNoteAdded(
+    params: Optional<
+      MailParams<{
+        firstName: string;
+        lastName?: string;
+        consultantName: string;
+        sessionDate: string;
+        sessionId: string;
+        prescriptionNote: string;
+        isFirstTime: boolean;
+      }>,
+      'subject'
+    >,
+  ) {
+    return this.sendMail({
+      subject: params.context.isFirstTime
+        ? 'Prescription Note Added to Your Session'
+        : 'Prescription Note Updated for Your Session',
+      template: 'prescription-note-added',
+      ...params,
+    });
+  }
 }

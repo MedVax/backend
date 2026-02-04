@@ -8,7 +8,6 @@ import {
   IsUUID,
   ValidateNested,
   IsDateString,
-  IsUrl,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { SessionType } from 'generated/prisma/enums';
@@ -22,6 +21,14 @@ export class ParticipantDto {
   @ApiProperty({ example: 'jane@example.com' })
   @IsString()
   email: string;
+
+  @ApiPropertyOptional({
+    example: 'https://example.com/picture.jpg',
+    description: 'Picture URL',
+  })
+  @IsString()
+  @IsOptional()
+  picture?: string;
 }
 
 export class CreateSessionsDto {
@@ -61,7 +68,8 @@ export class CreateSessionsDto {
     example: 'https://app.example.com/success',
     description: 'Redirect URL after payment',
   })
-  @IsUrl()
+  // @IsUrl()
+  @IsString()
   @IsOptional()
   redirectUrl?: string;
 

@@ -20,9 +20,9 @@ import type { User } from 'generated/prisma/client';
 import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
 import { PermissionsGuard } from 'src/guards/permission.guard';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
-import { QueryFilter } from 'params/query-filter';
-import { QueryOptions } from 'params/query-options';
 import { UserType } from 'generated/prisma/enums';
+import { GetOrdersFilterQuery } from '../dtos/get-orders-filter-query.dto';
+import { ApiPaginatedResponse } from 'src/decorators/api-paginated-response.decorator';
 
 @Controller('orders')
 @ApiTags('Orders')
@@ -44,10 +44,10 @@ export class OrdersController {
   @Get()
   @Response({ status: HttpStatus.OK, message: 'Orders fetched successfully' })
   @ApiOperation({ summary: 'Get all orders' })
+  @ApiPaginatedResponse(null) // You can create an OrderDataDto if needed
   findAll(
-    @QueryFilter() filter: Record<string, any>,
-    @QueryOptions() options: Record<string, any>,
-    @Query() query: PaginationQuery,
+    @Query() paginationQueryParams: PaginationQuery,
+    @Query() filterQuery: GetOrdersFilterQuery,
     @AuthUser() user?: User,
   ) {
     // If user is not admin, only show their orders
@@ -56,7 +56,11 @@ export class OrdersController {
         ? user.id
         : undefined;
 
-    return this.ordersService.findAll(userId, filter, options);
+    return this.ordersService.findAll(
+      paginationQueryParams,
+      filterQuery,
+      userId,
+    );
   }
 
   @Get('count')
@@ -65,17 +69,13 @@ export class OrdersController {
     message: 'Orders count fetched successfully',
   })
   @ApiOperation({ summary: 'Get orders count' })
-  count(
-    @QueryFilter() filter: Record<string, any>,
-    @QueryOptions() options: Record<string, any>,
-    @AuthUser() user?: User,
-  ) {
+  count(@Query() filterQuery: GetOrdersFilterQuery, @AuthUser() user?: User) {
     const userId =
       user && user.type !== UserType.ADMIN && user.type !== UserType.SUPER_ADMIN
         ? user.id
         : undefined;
 
-    return this.ordersService.count(userId, filter, options);
+    return this.ordersService.count(filterQuery, userId);
   }
 
   @Get(':id')

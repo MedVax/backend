@@ -47,6 +47,8 @@ import { ConsultantsModule } from './modules/consultants/consultants.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
 import { CalendarIntegrationModule } from './modules/calendar-integration/calendar-integration.module';
+import { MetricsModule } from './modules/metrics/metrics.module';
+import { BlogModule } from './modules/blog/blog.module';
 import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middleware';
 
 @Module({
@@ -194,6 +196,8 @@ import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middle
     SessionsModule,
     TransactionsModule,
     CalendarIntegrationModule,
+    MetricsModule,
+    BlogModule,
   ],
   controllers: [AppController],
   providers: [AppService],

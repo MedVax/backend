@@ -3,7 +3,7 @@ import { IsUUID, IsDateString, IsString, IsOptional } from 'class-validator';
 
 export class RescheduleSessionsDto {
   @ApiProperty({ example: 'uuid', description: 'Session ID' })
-  @IsUUID()
+  @IsString()
   sessionId: string;
 
   @ApiProperty({

@@ -1,4 +1,4 @@
-import { Prisma, UserType } from 'generated/prisma/client';
+import { Prisma } from 'generated/prisma/client';
 import { QueryFilter, QueryOptions } from 'libs/url-to-db-query';
 import { createBuilder } from 'libs/url-to-db-query/prisma';
 import productUrlToPrismaQueryBuilder from 'modules/products/product-url-to-prisma-query-builder';
@@ -14,7 +14,7 @@ import { PrismaService } from 'src/database/prisma.service';
 import { getPageCount } from 'types/index.types';
 import { excludeProperties } from 'utils/object-util';
 
-const useFactory = (prisma: PrismaService, store: ClsService) => {
+const useFactory = (prisma: PrismaService) => {
   return prisma.$extends({
     name: 'Tenancy extension',
     result: {
@@ -127,26 +127,7 @@ const useFactory = (prisma: PrismaService, store: ClsService) => {
     },
     query: {
       user: {},
-      async $allOperations({ args, query, model }: any) {
-        const tenantId = store.get('TENANT_ID');
-        const userType = store.get('USER_TYPE');
-
-        if (
-          !(
-            [UserType.SUPER_ADMIN, UserType.ADMIN].includes(userType) ||
-            [
-              'Currency',
-              'CurrencyExchange',
-              'PaymentProvider',
-              'Organization',
-            ].includes(model)
-          )
-        ) {
-          if (tenantId) {
-            args.where = { ...args.where, organizationId: tenantId };
-          }
-        }
-
+      async $allOperations({ args, query }: any) {
         // const start = performance.now();
         const result = await query(args);
         // const end = performance.now();

@@ -22,7 +22,7 @@ import { StockService } from 'modules/stock/services/stock.service';
 import { OrderRecurringFrequency } from 'generated/prisma/enums';
 import { MailService } from 'src/mail/services/mail.service';
 import { TransactionsService } from 'modules/transactions/services/transactions.service';
-import { TransactionType } from 'generated/prisma/enums';
+import { TransactionType, TransactionStatus } from 'generated/prisma/enums';
 
 @Processor(RECURRING_ORDERS)
 @Injectable()
@@ -224,41 +224,210 @@ export class RecurringOrdersProcessor extends WorkerHost {
         },
       );
 
-      // Try to charge the customer for the new order
-      // For now, we'll initialize payment similar to the create order flow
-      // In production, you'd use saved payment authorization code for auto-charge
+      // Charge the customer for the new recurring order
+      // Production implementation: Use saved authorization code for automatic charging
       if (parentOrder.user) {
         try {
-          const [transaction] = await this.paystackService.initBilling({
-            reference: orderReference,
-            customer: {
-              email: parentOrder.user.email,
-              firstName: parentOrder.user.firstName || '',
-              lastName: parentOrder.user.lastName || '',
-            },
-            amount: totalAmount / 100, // Convert from kobo to naira
-            currencyCode: 'NGN',
-            metadata: {
-              orderId: newOrder.id,
-              userId: parentOrder.userId,
-              isRecurring: true,
-              parentOrderId: orderId,
-            },
-            returnUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/orders/${newOrder.id}`,
-          });
+          // Step 1: Try to find a saved authorization code from previous successful payments
+          const savedAuthorization =
+            await this.prismaService.tenancy.transaction.findFirst({
+              where: {
+                userId: parentOrder.userId,
+                provider: 'paystack',
+                authorizationCode: { not: null },
+                status: TransactionStatus.SUCCESS,
+                // Only use authorization codes from successful orders (not sessions)
+                orderId: { not: null },
+              },
+              orderBy: {
+                completedAt: 'desc', // Use most recent successful authorization
+              },
+              select: {
+                authorizationCode: true,
+                customerEmail: true,
+              },
+            });
 
-          const providerReference = transaction.reference || orderReference;
+          let paymentResult: any;
+          let providerReference = orderReference;
+          const paymentInitialized = false;
 
-          await this.prismaService.tenancy.order.update({
-            where: { id: newOrder.id },
-            data: {
-              paymentReference: providerReference,
-              paymentProvider: 'paystack',
-            },
-          });
+          // Step 2: If authorization code exists, attempt automatic charge
+          if (savedAuthorization?.authorizationCode) {
+            this.logger.log(
+              `Attempting automatic charge for recurring order ${newOrder.id} using saved authorization`,
+            );
 
-          // Create transaction record for recurring order
-          try {
+            try {
+              paymentResult = await this.paystackService.chargeBillingMethod({
+                reference: orderReference,
+                authorizationCode: savedAuthorization.authorizationCode,
+                customer: {
+                  email: parentOrder.user.email,
+                  firstName: parentOrder.user.firstName || '',
+                  lastName: parentOrder.user.lastName || '',
+                },
+                amount: totalAmount,
+                currencyCode: 'NGN',
+                description: `Recurring payment for order ${newOrder.id}`,
+                metadata: {
+                  orderId: newOrder.id,
+                  userId: parentOrder.userId,
+                  isRecurring: true,
+                  parentOrderId: orderId,
+                  autoCharged: true,
+                },
+              });
+
+              providerReference = paymentResult.reference || orderReference;
+
+              // Verify the charge was successful
+              const verifiedTransaction =
+                await this.paystackService.confirmBillingMethodCharge(
+                  providerReference,
+                );
+
+              if (verifiedTransaction.status === 'success') {
+                // Payment successful - update order status
+                await this.prismaService.tenancy.order.update({
+                  where: { id: newOrder.id },
+                  data: {
+                    paymentStatus: 'PAID',
+                    paymentReference: providerReference,
+                    paymentProvider: 'paystack',
+                    orderStatus: 'ACCEPTED',
+                  },
+                });
+
+                // Create successful transaction record
+                const transactionRecord = await this.transactionsService.create(
+                  {
+                    userId: parentOrder.userId,
+                    type: TransactionType.RECURRING_ORDER,
+                    reference: newOrder.id,
+                    providerReference,
+                    provider: 'paystack',
+                    amount: totalAmount,
+                    currency: 'NGN',
+                    description: `Recurring payment for order ${newOrder.id}`,
+                    orderId: newOrder.id,
+                    authorizationCode:
+                      verifiedTransaction.authorization?.authorization_code ||
+                      savedAuthorization.authorizationCode,
+                    metadata: {
+                      isRecurring: true,
+                      parentOrderId: orderId,
+                      autoCharged: true,
+                    },
+                    providerResponse: verifiedTransaction,
+                    customerEmail: parentOrder.user.email,
+                    customerName:
+                      `${parentOrder.user.firstName || ''} ${parentOrder.user.lastName || ''}`.trim(),
+                  },
+                );
+
+                // Update transaction status to SUCCESS
+                await this.transactionsService.update(transactionRecord.id, {
+                  status: TransactionStatus.SUCCESS,
+                  completedAt: new Date(),
+                  authorizationCode:
+                    verifiedTransaction.authorization?.authorization_code ||
+                    savedAuthorization.authorizationCode,
+                });
+
+                this.logger.log(
+                  `Recurring order ${newOrder.id} automatically charged successfully using saved authorization`,
+                );
+
+                // Send success email
+                try {
+                  await this.mailService.recurringOrderCreated({
+                    to: parentOrder.user.email,
+                    context: {
+                      firstName: parentOrder.user.firstName || 'Customer',
+                      lastName: parentOrder.user.lastName || '',
+                      orderId: newOrder.id,
+                      frequency:
+                        parentOrder.recurringFrequency ===
+                        OrderRecurringFrequency.WEEKLY
+                          ? 'weekly'
+                          : 'monthly',
+                      nextDeliveryDate: nextRunDate
+                        ? format(nextRunDate, 'PPP')
+                        : 'N/A',
+                      itemsSummary: newOrder.items
+                        .map(
+                          (item: any) =>
+                            `${item.product.name} (x${item.quantity}) - ₦${(
+                              (item.unitPrice * item.quantity) /
+                              100
+                            ).toFixed(2)}`,
+                        )
+                        .join('\n'),
+                      totalAmount: `₦${(newOrder.totalAmount / 100).toFixed(2)}`,
+                      supportEmail:
+                        process.env.SUPPORT_EMAIL || 'support@medvax.com',
+                    },
+                  });
+                } catch (emailError) {
+                  this.logger.error(
+                    `Failed to send recurring order success email: ${emailError.message}`,
+                  );
+                }
+
+                return; // Success - exit early
+              } else {
+                throw new Error(
+                  `Payment verification failed: ${verifiedTransaction.gateway_response || 'Unknown error'}`,
+                );
+              }
+            } catch (chargeError: any) {
+              this.logger.warn(
+                `Automatic charge failed for recurring order ${newOrder.id}: ${chargeError.message}. Falling back to payment link.`,
+              );
+              // Fall through to initialize payment link
+            }
+          }
+
+          // Step 3: Fallback - Initialize payment link if no authorization or charge failed
+          if (!paymentInitialized) {
+            this.logger.log(
+              `Initializing payment link for recurring order ${newOrder.id} (no saved authorization or charge failed)`,
+            );
+
+            const [transaction, paymentLink] =
+              await this.paystackService.initBilling({
+                reference: orderReference,
+                customer: {
+                  email: parentOrder.user.email,
+                  firstName: parentOrder.user.firstName || '',
+                  lastName: parentOrder.user.lastName || '',
+                },
+                amount: totalAmount,
+                currencyCode: 'NGN',
+                metadata: {
+                  orderId: newOrder.id,
+                  userId: parentOrder.userId,
+                  isRecurring: true,
+                  parentOrderId: orderId,
+                },
+                returnUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/orders/${newOrder.id}`,
+              });
+
+            providerReference = transaction.reference || orderReference;
+
+            await this.prismaService.tenancy.order.update({
+              where: { id: newOrder.id },
+              data: {
+                paymentReference: providerReference,
+                paymentProvider: 'paystack',
+                // Store payment link in metadata for reference
+                notes:
+                  `${newOrder.notes || ''}\nPayment link: ${paymentLink.authorization_url}`.trim(),
+              },
+            });
+
+            // Create pending transaction record
             await this.transactionsService.create({
               userId: parentOrder.userId,
               type: TransactionType.RECURRING_ORDER,
@@ -272,78 +441,71 @@ export class RecurringOrdersProcessor extends WorkerHost {
               metadata: {
                 isRecurring: true,
                 parentOrderId: orderId,
+                paymentLink: paymentLink.authorization_url,
               },
               providerResponse: transaction,
+              providerMetadata: {
+                paymentLink: paymentLink.authorization_url,
+              },
               customerEmail: parentOrder.user.email,
               customerName:
                 `${parentOrder.user.firstName || ''} ${parentOrder.user.lastName || ''}`.trim(),
             });
-          } catch (error) {
-            this.logger.error(
-              `Failed to create transaction record for recurring order: ${error.message}`,
-            );
-            // Don't throw - transaction creation failure shouldn't break recurring order
-          }
 
-          this.logger.log(
-            `Recurring order ${newOrder.id} created and payment initialized`,
-          );
-        } catch (paymentError) {
+            // Send email with payment link
+            try {
+              await this.mailService.recurringOrderCreated({
+                to: parentOrder.user.email,
+                context: {
+                  firstName: parentOrder.user.firstName || 'Customer',
+                  lastName: parentOrder.user.lastName || '',
+                  orderId: newOrder.id,
+                  frequency:
+                    parentOrder.recurringFrequency ===
+                    OrderRecurringFrequency.WEEKLY
+                      ? 'weekly'
+                      : 'monthly',
+                  nextDeliveryDate: nextRunDate
+                    ? format(nextRunDate, 'PPP')
+                    : 'N/A',
+                  itemsSummary: newOrder.items
+                    .map(
+                      (item: any) =>
+                        `${item.product.name} (x${item.quantity}) - ₦${(
+                          (item.unitPrice * item.quantity) /
+                          100
+                        ).toFixed(2)}`,
+                    )
+                    .join('\n'),
+                  totalAmount: `₦${(newOrder.totalAmount / 100).toFixed(2)}`,
+                  paymentLink: paymentLink.authorization_url,
+                  supportEmail:
+                    process.env.SUPPORT_EMAIL || 'support@medvax.com',
+                },
+              });
+            } catch (emailError) {
+              this.logger.error(
+                `Failed to send recurring order payment link email: ${emailError.message}`,
+              );
+            }
+
+            this.logger.log(
+              `Recurring order ${newOrder.id} created and payment link initialized`,
+            );
+          }
+        } catch (paymentError: any) {
           this.logger.error(
-            `Failed to initialize payment for recurring order ${newOrder.id}: ${paymentError.message}`,
+            `Failed to process payment for recurring order ${newOrder.id}: ${paymentError.message}`,
+            paymentError.stack,
           );
-          // Payment initialization failed, will be retried
+          // Payment processing failed, will be retried
           await this.retryPaymentForOrder(newOrder);
         }
       }
 
-      // Send email notification for recurring order creation
-      if (parentOrder.user) {
-        try {
-          const itemsSummary = newOrder.items
-            .map(
-              (item: any) =>
-                `${item.product.name} (x${item.quantity}) - ₦${(
-                  (item.unitPrice * item.quantity) /
-                  100
-                ).toFixed(2)}`,
-            )
-            .join('\n');
-
-          const totalAmount = `₦${(newOrder.totalAmount / 100).toFixed(2)}`;
-          const frequency =
-            parentOrder.recurringFrequency === OrderRecurringFrequency.WEEKLY
-              ? 'weekly'
-              : 'monthly';
-          const nextDeliveryDate = nextRunDate
-            ? format(nextRunDate, 'PPP')
-            : 'N/A';
-
-          await this.mailService.recurringOrderCreated({
-            to: parentOrder.user.email,
-            context: {
-              firstName: parentOrder.user.firstName || 'Customer',
-              lastName: parentOrder.user.lastName || '',
-              orderId: newOrder.id,
-              frequency,
-              nextDeliveryDate,
-              itemsSummary,
-              totalAmount,
-              supportEmail: process.env.SUPPORT_EMAIL || 'support@medvax.com',
-            },
-          });
-
-          this.logger.log(
-            `Recurring order creation email sent to ${parentOrder.user.email} for order ${newOrder.id}`,
-          );
-        } catch (emailError) {
-          this.logger.error(
-            `Failed to send recurring order creation email: ${emailError.message}`,
-          );
-          // Don't throw - we don't want to fail recurring order creation if email fails
-        }
-      }
-
+      // Email notifications are sent within the payment processing block above
+      // - Success email sent when automatic charge succeeds
+      // - Payment link email sent when payment link is initialized
       this.logger.log(`Recurring order processed successfully: ${newOrder.id}`);
     } catch (error) {
       // Release reserved stock on error

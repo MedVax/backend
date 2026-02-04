@@ -8,8 +8,14 @@ import {
   Put,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiConsumes } from '@nestjs/swagger';
 import type { User } from 'generated/prisma/client';
 import { UserType } from 'generated/prisma/enums';
 
@@ -28,6 +34,7 @@ import { UpdateUserDto } from '../dtos/update-user.dto';
 import { PermissionsGuard } from 'src/guards/permission.guard';
 import { populateRole } from 'modules/roles/helpers/roles.helper';
 import type { AuthUserType } from 'types/user.types';
+import { MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES } from 'utils/image-upload.util';
 
 @Controller('users')
 @ApiTags('Users')
@@ -91,6 +98,48 @@ export class UserController {
   })
   updateProfile(@AuthUser() user: User, @Body() dto: UpdateUserProfileDto) {
     return this.userService.updateProfile(user?.id, dto);
+  }
+
+  @Put('/photo')
+  @AuthUserGuard()
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: MAX_IMAGE_SIZE,
+      },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error(
+              `Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @Response({
+    status: HttpStatus.OK,
+    message: 'User photo updated successfully',
+  })
+  @ApiOperation({ summary: 'Update user profile photo' })
+  updatePhoto(
+    @AuthUser() user: User,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
+          new FileTypeValidator({ fileType: /(jpeg|jpg|png|webp|gif)/ }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    return this.userService.updatePhoto(user.id, file);
   }
 
   @Get('/profile')

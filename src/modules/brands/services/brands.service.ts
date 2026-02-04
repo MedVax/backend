@@ -57,10 +57,15 @@ export class BrandsService {
         });
 
         const fileName = generateBrandLogoFileName(brandResult, file);
-        logoUrl = await this.uploadsService.initialize(file.buffer, fileName, {
-          ContentType: file.mimetype,
-          CacheControl: 'max-age=31536000', // 1 year cache
-        });
+        logoUrl = await this.uploadsService.initialize(
+          file.buffer,
+          fileName,
+          {
+            ContentType: file.mimetype,
+            CacheControl: 'max-age=31536000', // 1 year cache
+          },
+          true, // Optimize image
+        );
 
         // Update brand with logo URL
         const brand = await this.prismaService.tenancy.brand.update({
@@ -210,10 +215,15 @@ export class BrandsService {
       // Upload logo if provided
       if (file) {
         const fileName = generateBrandLogoFileName(existing, file);
-        logoUrl = await this.uploadsService.initialize(file.buffer, fileName, {
-          ContentType: file.mimetype,
-          CacheControl: 'max-age=31536000', // 1 year cache
-        });
+        logoUrl = await this.uploadsService.initialize(
+          file.buffer,
+          fileName,
+          {
+            ContentType: file.mimetype,
+            CacheControl: 'max-age=31536000', // 1 year cache
+          },
+          true, // Optimize image
+        );
       }
 
       // Update brand

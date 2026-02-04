@@ -1,0 +1,52 @@
+{{> head }}
+{{> header }}
+
+<table cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                    <td>
+                        <p class="body paragrapy-spacing">Dear {{firstName}}{{#if lastName}} {{lastName}}{{/if}},</p>
+                        <p class="body paragrapy-spacing">
+                            {{#if isFirstTime}}
+                            Your consultant {{consultantName}} has added a prescription note to your session.
+                            {{else}}
+                            Your consultant {{consultantName}} has updated the prescription note for your session.
+                            {{/if}}
+                        </p>
+
+                        <div style="background-color: #d1ecf1; border: 1px solid #0c5460; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="margin-top: 0; color: #0c5460;">Session Information</h3>
+                            <p style="margin-bottom: 10px;"><strong>Date & Time:</strong> {{sessionDate}}</p>
+                            <p style="margin-bottom: 0;"><strong>Consultant:</strong> {{consultantName}}</p>
+                        </div>
+
+                        <div style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <h3 style="margin-top: 0; color: #333;">Prescription Note</h3>
+                            <p style="white-space: pre-wrap; margin: 0; line-height: 1.6;">{{prescriptionNote}}</p>
+                        </div>
+
+                        <div style="background-color: #e7f3ff; border: 1px solid #0066cc; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <p style="margin: 0; color: #004085;">
+                                <strong>💡 Note:</strong> You can view this prescription note and all your session details by logging into your account dashboard.
+                            </p>
+                        </div>
+
+                        <p class="body paragrapy-spacing">
+                            If you have any questions about the prescription note or need clarification, please contact your consultant or our support team.
+                        </p>
+
+                        <p class="body paragrapy-spacing">
+                            Best regards,<br>
+                            The Medvax Team
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+{{> footer }}
+

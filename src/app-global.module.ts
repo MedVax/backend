@@ -2,7 +2,6 @@ import { ClassSerializerInterceptor, Global, Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guard';
 import { MailService } from './mail/services/mail.service';
-import { BullModule } from '@nestjs/bullmq';
 import { MailModule } from './mail/mail.module';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { ResponseInterceptor } from './interceptors/response.interceptor';
@@ -20,6 +19,8 @@ import { UploadsModule } from './uploads/uploads.module';
 import { DigitalOceanService } from 'modules/services/digital-ocean.service';
 import { SessionCookieService } from 'services/session-cookie.service';
 import { GoogleCalendarService } from 'src/services/google-calendar.service';
+import { CloudflareRealtimeKitService } from 'src/services/cloudflare-realtime-kit.service';
+import { ImageOptimizationService } from 'src/services/image-optimization.service';
 
 const providers = [
   OtpService,
@@ -27,14 +28,15 @@ const providers = [
   TokenService,
   AvatarService,
   BcryptService,
-  BullModule,
   RedisService,
   AesEncryptionService,
   UploadsService,
-  DigitalOceanService,
   AvatarService,
+  DigitalOceanService,
   SessionCookieService,
   GoogleCalendarService,
+  CloudflareRealtimeKitService,
+  ImageOptimizationService,
 ];
 
 @Global()

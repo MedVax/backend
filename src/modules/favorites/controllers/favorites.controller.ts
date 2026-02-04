@@ -17,6 +17,8 @@ import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { AuthUser } from 'params/auth-user.param';
 import type { User } from 'generated/prisma/client';
 import { PermissionsGuard } from 'src/guards/permission.guard';
+import { GetFavoritesFilterQuery } from '../dtos/get-favorites-filter-query.dto';
+import { ApiPaginatedResponse } from 'src/decorators/api-paginated-response.decorator';
 
 @Controller('favorites')
 @ApiTags('Favorites')
@@ -53,11 +55,17 @@ export class FavoritesController {
     message: 'Favorites fetched successfully',
   })
   @ApiOperation({ summary: 'Get user favorites with pagination' })
+  @ApiPaginatedResponse(null) // You can create a FavoriteDataDto if needed
   getFavorites(
-    @Query() paginationQuery: PaginationQuery,
+    @Query() paginationQueryParams: PaginationQuery,
+    @Query() filterQuery: GetFavoritesFilterQuery,
     @AuthUser() user: User,
   ) {
-    return this.favoritesService.getFavorites(user.id, paginationQuery);
+    return this.favoritesService.getFavorites(
+      user.id,
+      paginationQueryParams,
+      filterQuery,
+    );
   }
 
   @Get('check/:productId')
