@@ -7,10 +7,7 @@ import {
 import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.service';
 import { CreatePrescriptionDto } from '../dtos/create-prescription.dto';
 import { VerifyPrescriptionDto } from '../dtos/verify-prescription.dto';
-import {
-  PrescriptionStatus,
-  type Prisma,
-} from 'generated/prisma/client';
+import { PrescriptionStatus, type Prisma } from 'generated/prisma/client';
 import { randomUUID } from 'crypto';
 import { UploadsService } from 'src/uploads/uploads.service';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
@@ -24,7 +21,7 @@ export class PrescriptionsService {
   constructor(
     private prismaService: PrismaTenancyService,
     private uploadsService: UploadsService,
-  ) { }
+  ) {}
 
   async create(
     dto: CreatePrescriptionDto,
@@ -103,13 +100,13 @@ export class PrescriptionsService {
         finalUserId ? { userId: finalUserId } : {},
         search
           ? {
-            OR: [
-              { patientName: { contains: search, mode: 'insensitive' } },
-              { prescriberName: { contains: search, mode: 'insensitive' } },
-              { drugName: { contains: search, mode: 'insensitive' } },
-              { hospitalName: { contains: search, mode: 'insensitive' } },
-            ],
-          }
+              OR: [
+                { patientName: { contains: search, mode: 'insensitive' } },
+                { prescriberName: { contains: search, mode: 'insensitive' } },
+                { drugName: { contains: search, mode: 'insensitive' } },
+                { hospitalName: { contains: search, mode: 'insensitive' } },
+              ],
+            }
           : {},
         status
           ? isArray(status)
@@ -158,13 +155,13 @@ export class PrescriptionsService {
         finalUserId ? { userId: finalUserId } : {},
         search
           ? {
-            OR: [
-              { patientName: { contains: search, mode: 'insensitive' } },
-              { prescriberName: { contains: search, mode: 'insensitive' } },
-              { drugName: { contains: search, mode: 'insensitive' } },
-              { hospitalName: { contains: search, mode: 'insensitive' } },
-            ],
-          }
+              OR: [
+                { patientName: { contains: search, mode: 'insensitive' } },
+                { prescriberName: { contains: search, mode: 'insensitive' } },
+                { drugName: { contains: search, mode: 'insensitive' } },
+                { hospitalName: { contains: search, mode: 'insensitive' } },
+              ],
+            }
           : {},
         status
           ? isArray(status)

@@ -24,7 +24,7 @@ import {
 export class MetricsService {
   private logger = new Logger(MetricsService.name);
 
-  constructor(private prismaService: PrismaTenancyService) { }
+  constructor(private prismaService: PrismaTenancyService) {}
 
   async getAdminDashboardMetrics(dto?: GetDashboardMetricsDto) {
     const now = new Date();
@@ -647,7 +647,7 @@ export class MetricsService {
       const dayAverageRating =
         dayReviews.length > 0
           ? dayReviews.reduce((sum, review) => sum + review.rating, 0) /
-          dayReviews.length
+            dayReviews.length
           : 0;
 
       chartData.push({
