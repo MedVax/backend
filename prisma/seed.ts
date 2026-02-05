@@ -1,9 +1,9 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import {
+import type {
   PrismaClient,
   UserStatus,
   UserType,
-} from '../src/generated/prisma/client';
+} from 'generated/prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PermissionEnum } from 'modules/permissions/enums/permissions.enum';
 
