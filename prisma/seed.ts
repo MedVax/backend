@@ -1,5 +1,9 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient, UserStatus, UserType } from 'generated/prisma/client';
+import {
+  PrismaClient,
+  UserStatus,
+  UserType,
+} from '../src/generated/prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { PermissionEnum } from 'modules/permissions/enums/permissions.enum';
 
@@ -14,6 +18,9 @@ import { excludeKeys } from 'utils/object-util';
 const prisma = new PrismaClient({
   adapter: new PrismaPg({
     connectionString: DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false,
+    },
   }),
 });
 
