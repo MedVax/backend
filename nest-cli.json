@@ -3,21 +3,26 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "deleteOutDir": true,
+    "deleteOutDir": false,
+    "webpack": false,
+    "tsConfigPath": "tsconfig.json",
+    "builder": "tsc",
     "plugins": [
       {
         "name": "@nestjs/swagger",
         "options": {
-          "introspectComments": true
+          "introspectComments": false,
+          "dtoFileNameSuffix": [".dto.ts", ".entity.ts"]
         }
       }
     ],    
     "assets": [
       {
         "include": "**/*.hbs",
-        "outDir": "dist/src"
+        "outDir": "dist/src",
+        "watchAssets": false
       }
     ],
-    "watchAssets": true
+    "watchAssets": false
   }
 }

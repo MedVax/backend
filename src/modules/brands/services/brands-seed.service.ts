@@ -142,6 +142,6 @@ export class BrandsSeedService implements OnModuleInit {
   }
 
   async run() {
-    await this.seedBrands();
+    // await this.seedBrands();
   }
 }

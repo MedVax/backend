@@ -1,11 +1,22 @@
 import type { User } from 'generated/prisma/client';
-import { Multer as MulterNamed } from 'multer';
 
 declare global {
   namespace Express {
-    interface Multer extends MulterNamed {}
+    namespace Multer {
+      interface File {
+        fieldname: string;
+        originalname: string;
+        encoding: string;
+        mimetype: string;
+        size: number;
+        destination: string;
+        filename: string;
+        path: string;
+        buffer: Buffer;
+      }
+    }
     interface Request {
-      authUser: User;
+      authUser?: User;
     }
   }
 }

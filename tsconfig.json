@@ -31,6 +31,7 @@
       "generated/*": ["src/generated/*"]
     },
     "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
     "skipLibCheck": true,
     "strictNullChecks": false,
     "noImplicitAny": false,
@@ -38,5 +39,15 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "typeRoots": ["./@types"]
-  }
+  },
+  "include": ["src/**/*", "@types/**/*"],
+  "exclude": [
+    "node_modules",
+    "**/node_modules/**",
+    "dist",
+    "test",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.e2e-spec.ts"
+  ]
 }

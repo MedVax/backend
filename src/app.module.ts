@@ -95,7 +95,13 @@ import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middle
         host: REDIS_HOST,
         port: Number(REDIS_PORT),
         password: REDIS_PASSWORD,
-        connectTimeout: 30000,
+        connectTimeout: IS_PRODUCTION ? 30000 : 5000,
+        retryStrategy: (times: number) => {
+          if (IS_PRODUCTION) {
+            return Math.min(times * 50, 2000);
+          }
+          return null; // Don't retry in development if connection fails quickly
+        },
       },
     }),
     ScheduleModule.forRoot(),
