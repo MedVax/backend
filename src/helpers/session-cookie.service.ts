@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
+import { IS_PRODUCTION } from 'constants/env.constant';
 
 const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days in seconds
 
@@ -52,9 +53,10 @@ export class SessionCookieService {
     res.cookie(cookieName, sessionId, {
       maxAge: maxAgeInMs,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: IS_PRODUCTION || process.env.COOKIE_SECURE === 'true',
+      sameSite: IS_PRODUCTION ? 'none' : 'lax',
       path: '/',
+      ...(process.env.COOKIE_DOMAIN && { domain: process.env.COOKIE_DOMAIN }),
     });
   }
 
@@ -67,6 +69,10 @@ export class SessionCookieService {
   ): void {
     res.clearCookie(cookieName, {
       path: '/',
+      httpOnly: true,
+      secure: IS_PRODUCTION || process.env.COOKIE_SECURE === 'true',
+      sameSite: IS_PRODUCTION ? 'none' : 'lax',
+      ...(process.env.COOKIE_DOMAIN && { domain: process.env.COOKIE_DOMAIN }),
     });
   }
 }

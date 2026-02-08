@@ -17,6 +17,7 @@ import {
   JWT_EXPIRATION,
   JWT_SECRET,
   LOGTAIL_SOURCE_TOKEN,
+  LOGTAIL_INGESTING_HOST,
   REDIS_HOST,
   REDIS_PASSWORD,
   REDIS_PORT,
@@ -128,6 +129,7 @@ import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middle
             target: '@logtail/pino',
             options: {
               sourceToken: LOGTAIL_SOURCE_TOKEN,
+              options: { endpoint: `https://${LOGTAIL_INGESTING_HOST}` },
               singleLine: true,
             },
           };

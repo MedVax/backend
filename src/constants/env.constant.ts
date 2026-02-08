@@ -43,6 +43,7 @@ export const SUPER_ADMIN_EMAIL = config.getOrThrow('SUPER_ADMIN_EMAIL');
 export const SUPER_ADMIN_PASSWORD = config.getOrThrow('SUPER_ADMIN_PASSWORD');
 
 export const LOGTAIL_SOURCE_TOKEN = config.get('LOGTAIL_SOURCE_TOKEN');
+export const LOGTAIL_INGESTING_HOST = config.get('LOGTAIL_INGESTING_HOST');
 export const FRONTEND_URL = config.getOrThrow('FRONTEND_URL');
 
 export const PAYSTACK_SECRET_KEY = config.getOrThrow('PAYSTACK_SECRET_KEY');
