@@ -9,4 +9,4 @@ import { PrismaTenancyModule } from 'modules/prisma-tenancy/prisma-tenancy.modul
   providers: [BrandsService],
   exports: [BrandsService],
 })
-export class BrandsModule { }
+export class BrandsModule {}

@@ -9,12 +9,13 @@ const onError = (error: any) => {
 const redisClient = new Redis({
   host: env.REDIS_HOST,
   port: env.REDIS_PORT,
-  ...(env.IS_PRODUCTION ? { tls: {} } : {}),
+  ...(env.IS_PRODUCTION ? { tls: { servername: env.REDIS_HOST } } : {}),
   username: env.REDIS_USERNAME,
   ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
   reconnectOnError(e) {
     return !e.message.includes('WRONGPASS');
   },
+
   retryStrategy(times) {
     const delay = Math.min(times * 50, 2000);
     return delay;
