@@ -21,7 +21,7 @@ export class SessionCookieService {
 
     if (!sessionId) {
       sessionId = randomUUID();
-      this.setSessionCookie(res, sessionId, cookieName);
+      this.setSessionCookie(res, sessionId, cookieName, req);
     }
 
     return sessionId;
@@ -44,17 +44,29 @@ export class SessionCookieService {
     res: Response,
     sessionId: string,
     cookieName: string = this.DEFAULT_COOKIE_NAME,
+    req?: Request,
   ): void {
     const maxAgeInMs =
       typeof SESSION_COOKIE_MAX_AGE === 'number'
         ? SESSION_COOKIE_MAX_AGE * 1000
         : Number(SESSION_COOKIE_MAX_AGE) * 1000; // Convert to milliseconds
 
+    // Detect if request is secure (HTTPS)
+    // With trust proxy enabled, req.secure and req.protocol are set from X-Forwarded-Proto
+    const isSecure =
+      req?.secure ||
+      req?.protocol === 'https' ||
+      IS_PRODUCTION ||
+      process.env.COOKIE_SECURE === 'true';
+
+    // SameSite: 'none' requires secure=true, use 'lax' for non-secure
+    const sameSite = isSecure ? (IS_PRODUCTION ? 'none' : 'lax') : 'lax';
+
     res.cookie(cookieName, sessionId, {
       maxAge: maxAgeInMs,
       httpOnly: true,
-      secure: IS_PRODUCTION || process.env.COOKIE_SECURE === 'true',
-      sameSite: IS_PRODUCTION ? 'none' : 'lax',
+      secure: isSecure,
+      sameSite: sameSite as 'lax' | 'none' | 'strict',
       path: '/',
       ...(process.env.COOKIE_DOMAIN && { domain: process.env.COOKIE_DOMAIN }),
     });
@@ -66,12 +78,22 @@ export class SessionCookieService {
   clearSessionCookie(
     res: Response,
     cookieName: string = this.DEFAULT_COOKIE_NAME,
+    req?: Request,
   ): void {
+    // Detect if request is secure (HTTPS)
+    const isSecure =
+      req?.secure ||
+      req?.protocol === 'https' ||
+      IS_PRODUCTION ||
+      process.env.COOKIE_SECURE === 'true';
+
+    const sameSite = isSecure ? (IS_PRODUCTION ? 'none' : 'lax') : 'lax';
+
     res.clearCookie(cookieName, {
       path: '/',
       httpOnly: true,
-      secure: IS_PRODUCTION || process.env.COOKIE_SECURE === 'true',
-      sameSite: IS_PRODUCTION ? 'none' : 'lax',
+      secure: isSecure,
+      sameSite: sameSite as 'lax' | 'none' | 'strict',
       ...(process.env.COOKIE_DOMAIN && { domain: process.env.COOKIE_DOMAIN }),
     });
   }

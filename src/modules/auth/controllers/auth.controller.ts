@@ -46,22 +46,25 @@ export class AuthController {
 
     // Clear session cookie after successful signup since user is now authenticated
     if (sessionId) {
-      this.sessionCookieService.clearSessionCookie(res);
+      this.sessionCookieService.clearSessionCookie(res, 'sessionId', req);
     }
     this.sessionCookieService.setSessionCookie(
       res,
       result?.accessToken,
       'accessToken',
+      req,
     );
     this.sessionCookieService.setSessionCookie(
       res,
       result?.refreshToken,
       'refreshToken',
+      req,
     );
     this.sessionCookieService.setSessionCookie(
       res,
       result?.activeProfile?.type,
       'activeProfileType',
+      req,
     );
     return result;
   }
@@ -94,23 +97,26 @@ export class AuthController {
 
     // Clear session cookie after successful signin since user is now authenticated
     if (sessionId) {
-      this.sessionCookieService.clearSessionCookie(res);
+      this.sessionCookieService.clearSessionCookie(res, 'sessionId', req);
     }
 
     this.sessionCookieService.setSessionCookie(
       res,
       result?.accessToken,
       'accessToken',
+      req,
     );
     this.sessionCookieService.setSessionCookie(
       res,
       result?.refreshToken,
       'refreshToken',
+      req,
     );
     this.sessionCookieService.setSessionCookie(
       res,
       result?.activeProfile?.type,
       'activeProfileType',
+      req,
     );
     return result;
   }
@@ -132,11 +138,13 @@ export class AuthController {
       res,
       result?.accessToken,
       'accessToken',
+      req,
     );
     this.sessionCookieService.setSessionCookie(
       res,
       result?.refreshToken,
       'refreshToken',
+      req,
     );
     //TODO: set active profile type in cookie
     // this.sessionCookieService.setSessionCookie(
@@ -152,12 +160,13 @@ export class AuthController {
   @Response({ status: HttpStatus.OK, message: 'Logged out successful' })
   logout(
     @AuthUser() user: User,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: ExpressResponse,
   ) {
-    this.sessionCookieService.clearSessionCookie(res);
-    this.sessionCookieService.clearSessionCookie(res, 'accessToken');
-    this.sessionCookieService.clearSessionCookie(res, 'refreshToken');
-    this.sessionCookieService.clearSessionCookie(res, 'activeProfileType');
+    this.sessionCookieService.clearSessionCookie(res, 'sessionId', req);
+    this.sessionCookieService.clearSessionCookie(res, 'accessToken', req);
+    this.sessionCookieService.clearSessionCookie(res, 'refreshToken', req);
+    this.sessionCookieService.clearSessionCookie(res, 'activeProfileType', req);
     return this.authService.logout(user);
   }
 }

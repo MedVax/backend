@@ -26,7 +26,7 @@ async function bootstrap() {
 
   // Trust proxy for DigitalOcean load balancer/reverse proxy
   // This allows the app to correctly detect HTTPS from X-Forwarded-Proto header
-  // app.set('trust proxy', true);
+  app.set('trust proxy', true);
 
   app.useBodyParser('json', { limit: '10mb' });
   app.use(cookieParser());
