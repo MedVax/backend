@@ -53,14 +53,18 @@ export class SessionCookieService {
 
     // Detect if request is secure (HTTPS)
     // With trust proxy enabled, req.secure and req.protocol are set from X-Forwarded-Proto
+    // Priority: actual request security > environment variable > production mode fallback
     const isSecure =
       req?.secure ||
       req?.protocol === 'https' ||
-      IS_PRODUCTION ||
-      process.env.COOKIE_SECURE === 'true';
+      process.env.COOKIE_SECURE === 'true' ||
+      (IS_PRODUCTION && !req); // Fallback: assume secure in production if req not available
 
-    // SameSite: 'none' requires secure=true, use 'lax' for non-secure
-    const sameSite = isSecure ? (IS_PRODUCTION ? 'none' : 'lax') : 'lax';
+    // SameSite: 'none' requires secure=true and works for cross-origin (production)
+    // Use 'lax' for same-origin (local dev) or when not secure
+    // In local dev: secure=false, sameSite='lax' ✅
+    // In production: secure=true, sameSite='none' ✅
+    const sameSite = isSecure && IS_PRODUCTION ? 'none' : 'lax';
 
     res.cookie(cookieName, sessionId, {
       maxAge: maxAgeInMs,
@@ -81,13 +85,16 @@ export class SessionCookieService {
     req?: Request,
   ): void {
     // Detect if request is secure (HTTPS)
+    // Priority: actual request security > environment variable > production mode
     const isSecure =
       req?.secure ||
       req?.protocol === 'https' ||
-      IS_PRODUCTION ||
-      process.env.COOKIE_SECURE === 'true';
+      process.env.COOKIE_SECURE === 'true' ||
+      (IS_PRODUCTION && !req); // Fallback: assume secure in production if req not available
 
-    const sameSite = isSecure ? (IS_PRODUCTION ? 'none' : 'lax') : 'lax';
+    // SameSite: 'none' requires secure=true and works for cross-origin
+    // Use 'lax' for same-origin (local dev) or when not secure
+    const sameSite = isSecure && IS_PRODUCTION ? 'none' : 'lax';
 
     res.clearCookie(cookieName, {
       path: '/',

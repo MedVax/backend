@@ -1,9 +1,15 @@
 import Redis from 'ioredis';
+import { Logger } from '@nestjs/common';
 import * as env from 'constants/env.constant';
+
+const logger = new Logger('RedisClient');
 
 let count = 0;
 const onError = (error: any) => {
-  console.error(`redis error - ${count++} - ${error}`);
+  logger.error(
+    `Redis connection error (${count++}): ${error.message}`,
+    error.stack,
+  );
 };
 
 const redisClient = new Redis({

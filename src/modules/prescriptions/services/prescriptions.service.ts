@@ -28,6 +28,10 @@ export class PrescriptionsService {
     file?: Express.Multer.File,
     userId?: string,
   ) {
+    this.logger.log(
+      `Prescription upload initiated - User: ${userId}, PrescriberType: ${dto.prescriberType}, OrderID: ${dto.orderId || 'N/A'}`,
+    );
+
     // If orderId is provided, verify it belongs to user
     if (dto.orderId) {
       const order = await this.prismaService.tenancy.order.findFirst({
@@ -55,10 +59,13 @@ export class PrescriptionsService {
     }
 
     if (!fileUrl) {
+      this.logger.warn(
+        `Prescription upload failed: no file URL provided - User: ${userId}`,
+      );
       throw new BadRequestException('File URL or file upload is required');
     }
 
-    return this.prismaService.tenancy.prescription.create({
+    const prescription = await this.prismaService.tenancy.prescription.create({
       data: {
         ...dto,
         fileUrl,
@@ -78,6 +85,12 @@ export class PrescriptionsService {
         },
       },
     });
+
+    this.logger.log(
+      `Prescription uploaded successfully - ID: ${prescription.id}, User: ${userId}, Status: ${prescription.status}`,
+    );
+
+    return prescription;
   }
 
   async findAll(
@@ -214,16 +227,26 @@ export class PrescriptionsService {
   }
 
   async verify(id: string, dto: VerifyPrescriptionDto, reviewerId: string) {
+    this.logger.log(
+      `Prescription verification initiated - ID: ${id}, Reviewer: ${reviewerId}, Status: ${dto.status}`,
+    );
+
     const prescription =
       await this.prismaService.tenancy.prescription.findUnique({
         where: { id },
       });
 
     if (!prescription) {
+      this.logger.warn(
+        `Prescription verification failed: prescription ${id} not found`,
+      );
       throw new NotFoundException(`Prescription with ID ${id} not found`);
     }
 
     if (prescription.status !== 'PENDING') {
+      this.logger.warn(
+        `Prescription verification failed: already reviewed - ID: ${id}, Current status: ${prescription.status}`,
+      );
       throw new BadRequestException('Prescription has already been reviewed');
     }
 
@@ -263,6 +286,10 @@ export class PrescriptionsService {
         },
       });
     }
+
+    this.logger.log(
+      `Prescription verified successfully - ID: ${id}, Status: ${dto.status}, Reviewer: ${reviewerId}`,
+    );
 
     return updated;
   }

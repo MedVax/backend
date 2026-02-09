@@ -1,10 +1,17 @@
-import { ForbiddenException, Injectable, NestMiddleware } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NestMiddleware,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response, NextFunction } from 'express';
 import { SessionCookieService } from 'services/session-cookie.service';
 
 @Injectable()
 export class TokenToAuthUserMiddleware implements NestMiddleware {
+  private readonly logger = new Logger(TokenToAuthUserMiddleware.name);
+
   constructor(
     private jwtService: JwtService,
     private sessionCookieService: SessionCookieService,
@@ -27,7 +34,10 @@ export class TokenToAuthUserMiddleware implements NestMiddleware {
         }
       }
     } catch (error) {
-      console.error('Error in TokenToAuthUserMiddleware', error);
+      this.logger.error(
+        `Token authentication failed: ${error.message}`,
+        error.stack,
+      );
       throw new ForbiddenException({ message: 'Invalid token' });
     }
 

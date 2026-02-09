@@ -466,7 +466,6 @@ export class ProviderAvailabilityService {
     const slotDate = parseISO(timeslotAsIsoString);
     const dateString = format(slotDate, 'yyyy-MM-dd');
     const hour = slotDate.getHours();
-    console.log({ timeslotAsIsoString, dateString, hour });
 
     // Check buffer time
     const now = new Date();

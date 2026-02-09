@@ -66,6 +66,10 @@ export class SessionsService {
     sessions: any[] | null;
     paymentLink: string | null;
   }> {
+    this.logger.log(
+      `Initializing session schedule - Consultant: ${dto.consultantId}, Client: ${dto.clientId}, Sessions: ${dto.dates.length}, Type: ${dto.sessionType}`,
+    );
+
     await this.validateUsersAndSession(dto.consultantId, dto.clientId);
 
     const clientProfile =
@@ -130,9 +134,10 @@ export class SessionsService {
       }
     }
 
-    console.log({ unavailableSlots });
-
     if (unavailableSlots.length > 0) {
+      this.logger.warn(
+        `Session booking failed: ${unavailableSlots.length} unavailable slot(s) for consultant ${dto.consultantId}, client ${dto.clientId}`,
+      );
       throw new BadRequestException(
         `The following time slots are not available: ${unavailableSlots?.map((slot) => format(parseISO(slot), 'Pp')).join(', ')}. Please select different time slots.`,
       );
@@ -155,6 +160,9 @@ export class SessionsService {
 
     // If payment needed, initialize payment
     if (needsPayment) {
+      this.logger.log(
+        `Payment required for session booking - Client: ${dto.clientId}, Amount: ${sessionPrice * sessionsCount}, Sessions: ${sessionsCount}`,
+      );
       const paymentResult = await this.initializeSessionPayment(
         clientProfile.userProfile?.user,
         dto,
@@ -168,7 +176,14 @@ export class SessionsService {
     }
 
     // Create sessions directly
+    this.logger.log(
+      `Creating ${sessionsCount} session(s) directly without payment - Client: ${dto.clientId}, Consultant: ${dto.consultantId}`,
+    );
     const sessions = await this.scheduleSessions(dto, SESSION_BUFFER_HOURS);
+
+    this.logger.log(
+      `Sessions created successfully - Count: ${sessions.length}, Client: ${dto.clientId}`,
+    );
 
     return {
       sessions,
@@ -544,7 +559,9 @@ export class SessionsService {
       },
     );
 
-    console.log({ sessions });
+    this.logger.log(
+      `Sessions scheduled successfully - Count: ${sessions.length}, Client: ${dto.clientId}, Consultant: ${dto.consultantId}`,
+    );
 
     // Emit SESSION_CREATED event
     this.eventEmitter.emit(
@@ -620,6 +637,10 @@ export class SessionsService {
    * Reschedule session
    */
   async rescheduleSession(dto: RescheduleSessionsDto, clientId: string) {
+    this.logger.log(
+      `Reschedule request created - Session: ${dto.sessionId}, Client: ${clientId}, New Date: ${dto.date}`,
+    );
+
     // Create reschedule request
     const request =
       await this.rescheduleRequestsService.createRescheduleRequest({
@@ -637,6 +658,10 @@ export class SessionsService {
    * Cancel session
    */
   async cancelSession(dto: CancelSessionsDto, clientId: string) {
+    this.logger.log(
+      `Cancellation request initiated - Session: ${dto.sessionId}, Client: ${clientId}`,
+    );
+
     const session = await this.prismaService.tenancy.session.findUnique({
       where: { id: dto.sessionId },
       include: {
@@ -646,11 +671,17 @@ export class SessionsService {
     });
 
     if (!session) {
+      this.logger.warn(
+        `Session cancellation failed: session ${dto.sessionId} not found`,
+      );
       throw new NotFoundException(ERROR_MESSAGES.SESSION_UNAVAILABLE);
     }
 
     // Verify user has permission (must be client)
     if (session.clientId !== clientId) {
+      this.logger.warn(
+        `Session cancellation failed: unauthorized attempt - Session: ${dto.sessionId}, Requested by: ${clientId}, Actual client: ${session.clientId}`,
+      );
       throw new BadRequestException(
         'Only the client can cancel their own session',
       );
@@ -1269,7 +1300,7 @@ export class SessionsService {
     filter?: QueryFilter<any>,
     paginationQuery?: PaginationQuery,
   ) {
-    console.log({ filter });
+    // Filter applied for session queries
     const whereFilter: Prisma.SessionWhereInput = {
       ...(filter?.ids
         ? {
@@ -1616,7 +1647,10 @@ export class SessionsService {
         },
       });
     } catch (error) {
-      console.log('error', error);
+      this.logger.error(
+        `Failed to initialize session payment - Client: ${dto.clientId}, Consultant: ${dto.consultantId}, Error: ${error.message}`,
+        error.stack,
+      );
       // If Paystack call fails, update transaction status to FAILED
       this.logger.error(
         `Failed to initialize Paystack payment: ${error.message}`,

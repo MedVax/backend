@@ -35,9 +35,13 @@ export class OrdersService {
     private mailService: MailService,
     @Inject(forwardRef(() => TransactionsService))
     private transactionsService: TransactionsService,
-  ) {}
+  ) { }
 
   async create(userId: string, dto: CreateOrderDto) {
+    this.logger.log(
+      `Order creation initiated - User: ${userId}, DeliveryAddress: ${dto.deliveryAddressId}`,
+    );
+
     // Get user cart
     const cart = await this.prismaService.tenancy.cart.findUnique({
       where: { userId },
@@ -51,6 +55,7 @@ export class OrdersService {
     });
 
     if (!cart || cart.items.length === 0) {
+      this.logger.warn(`Order creation failed: empty cart - User: ${userId}`);
       throw new BadRequestException('Cart is empty');
     }
 
@@ -255,7 +260,9 @@ export class OrdersService {
       const order = orderResult.order;
       const recurringOrderResult = orderResult.recurringOrder;
 
-      console.log({ order, recurringOrderResult });
+      this.logger.log(
+        `Order created successfully - ID: ${order.id}, User: ${userId}, Amount: ${order.totalAmount}, Recurring: ${recurringOrderResult ? 'Yes' : 'No'}`,
+      );
 
       // Send email notification if recurring order was created
       if (recurringOrderResult) {
@@ -389,11 +396,11 @@ export class OrdersService {
           paymentReference: transaction.reference || orderReference,
           recurringOrder: recurringOrderResult
             ? {
-                id: recurringOrderResult.id,
-                recurringDate: recurringOrderResult.recurringDate,
-                nextRunDate: recurringOrderResult.nextRunDate,
-                recurringFrequency: recurringOrderResult.recurringFrequency,
-              }
+              id: recurringOrderResult.id,
+              recurringDate: recurringOrderResult.recurringDate,
+              nextRunDate: recurringOrderResult.nextRunDate,
+              recurringFrequency: recurringOrderResult.recurringFrequency,
+            }
             : null,
         };
       }
@@ -402,11 +409,11 @@ export class OrdersService {
         ...order,
         recurringOrder: recurringOrderResult
           ? {
-              id: recurringOrderResult.id,
-              recurringDate: recurringOrderResult.recurringDate,
-              nextRunDate: recurringOrderResult.nextRunDate,
-              recurringFrequency: recurringOrderResult.recurringFrequency,
-            }
+            id: recurringOrderResult.id,
+            recurringDate: recurringOrderResult.recurringDate,
+            nextRunDate: recurringOrderResult.nextRunDate,
+            recurringFrequency: recurringOrderResult.recurringFrequency,
+          }
           : null,
       };
     } catch (error) {
@@ -425,6 +432,10 @@ export class OrdersService {
           );
         }
       }
+      this.logger.error(
+        `Order creation failed - User: ${userId}, Error: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -452,55 +463,55 @@ export class OrdersService {
           : [{ isRecurringActive: false }]),
         search
           ? {
-              OR: [
-                { id: { contains: search, mode: 'insensitive' } },
-                {
-                  user: {
-                    OR: [
-                      {
-                        email: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
+            OR: [
+              { id: { contains: search, mode: 'insensitive' } },
+              {
+                user: {
+                  OR: [
+                    {
+                      email: {
+                        contains: search,
+                        mode: 'insensitive',
                       },
-                      {
-                        firstName: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
+                    },
+                    {
+                      firstName: {
+                        contains: search,
+                        mode: 'insensitive',
                       },
-                      {
-                        lastName: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
+                    },
+                    {
+                      lastName: {
+                        contains: search,
+                        mode: 'insensitive',
                       },
-                    ],
-                  },
+                    },
+                  ],
                 },
-              ],
-            }
+              },
+            ],
+          }
           : {},
         orderStatus
           ? {
-              ...(isArray(orderStatus)
-                ? { orderStatus: { in: orderStatus } }
-                : { orderStatus }),
-            }
+            ...(isArray(orderStatus)
+              ? { orderStatus: { in: orderStatus } }
+              : { orderStatus }),
+          }
           : {},
         paymentStatus
           ? {
-              ...(isArray(paymentStatus)
-                ? { paymentStatus: { in: paymentStatus } }
-                : { paymentStatus }),
-            }
+            ...(isArray(paymentStatus)
+              ? { paymentStatus: { in: paymentStatus } }
+              : { paymentStatus }),
+          }
           : {},
         prescriptionStatus
           ? {
-              ...(isArray(prescriptionStatus)
-                ? { prescriptionStatus: { in: prescriptionStatus } }
-                : { prescriptionStatus }),
-            }
+            ...(isArray(prescriptionStatus)
+              ? { prescriptionStatus: { in: prescriptionStatus } }
+              : { prescriptionStatus }),
+          }
           : {},
       ],
     };
@@ -538,55 +549,55 @@ export class OrdersService {
         userId ? { userId } : {},
         search
           ? {
-              OR: [
-                { id: { contains: search, mode: 'insensitive' } },
-                {
-                  user: {
-                    OR: [
-                      {
-                        email: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
+            OR: [
+              { id: { contains: search, mode: 'insensitive' } },
+              {
+                user: {
+                  OR: [
+                    {
+                      email: {
+                        contains: search,
+                        mode: 'insensitive',
                       },
-                      {
-                        firstName: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
+                    },
+                    {
+                      firstName: {
+                        contains: search,
+                        mode: 'insensitive',
                       },
-                      {
-                        lastName: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
+                    },
+                    {
+                      lastName: {
+                        contains: search,
+                        mode: 'insensitive',
                       },
-                    ],
-                  },
+                    },
+                  ],
                 },
-              ],
-            }
+              },
+            ],
+          }
           : {},
         orderStatus
           ? {
-              ...(isArray(orderStatus)
-                ? { orderStatus: { in: orderStatus } }
-                : { orderStatus }),
-            }
+            ...(isArray(orderStatus)
+              ? { orderStatus: { in: orderStatus } }
+              : { orderStatus }),
+          }
           : {},
         paymentStatus
           ? {
-              ...(isArray(paymentStatus)
-                ? { paymentStatus: { in: paymentStatus } }
-                : { paymentStatus }),
-            }
+            ...(isArray(paymentStatus)
+              ? { paymentStatus: { in: paymentStatus } }
+              : { paymentStatus }),
+          }
           : {},
         prescriptionStatus
           ? {
-              ...(isArray(prescriptionStatus)
-                ? { prescriptionStatus: { in: prescriptionStatus } }
-                : { prescriptionStatus }),
-            }
+            ...(isArray(prescriptionStatus)
+              ? { prescriptionStatus: { in: prescriptionStatus } }
+              : { prescriptionStatus }),
+          }
           : {},
       ],
     };
@@ -598,7 +609,7 @@ export class OrdersService {
 
   async findOne(id: string, userId?: string) {
     const where: any = { id };
-    console.log({ userId });
+    console.log('userId', userId);
 
     // if (userId) {
     //   where.userId = userId;

@@ -553,7 +553,6 @@ if (result.paymentLink) {
   window.location.href = result.paymentLink;
 } else {
   // Sessions created successfully
-  console.log("Sessions created:", result.sessions);
 }
 ```
 
@@ -587,10 +586,6 @@ const quota = await availableQuotaService.getAvailableSessionsQuota({
   hmoId: "hmo-uuid",  // optional
   hmoNumber: "123456"  // optional
 });
-
-console.log("Available sessions:", quota.availableSessionsCount);
-console.log("Gift sessions:", quota.giftAvailableSessionsCount);
-console.log("Subscription active:", quota.subscription.individual.active);
 ```
 
 ### Reschedule Session

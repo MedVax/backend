@@ -26,11 +26,16 @@ export class ConsultantsService {
   private logger = new Logger(ConsultantsService.name);
 
   async create(dto: CreateConsultantDto): Promise<UserProfileConsultant> {
+    this.logger.log(`Creating consultant account for email: ${dto.email}`);
+
     const existingUser = await this.prismaService.tenancy.user.findFirst({
       where: { email: normalizeString(dto.email) },
     });
 
     if (existingUser) {
+      this.logger.warn(
+        `Consultant creation failed: email ${dto.email} already exists`,
+      );
       throw new ConflictException(
         `User with email "${dto.email}" already exists`,
       );
@@ -75,6 +80,12 @@ export class ConsultantsService {
     const consultantProfile = user?.userProfiles?.find(
       (profile) => profile.type === UserProfileType.CONSULTANT,
     )?.userProfileConsultants[0];
+
+    if (consultantProfile) {
+      this.logger.log(
+        `Consultant account created successfully - ID: ${consultantProfile.id}, Email: ${user.email}, Rate: ${dto.rate || 'N/A'}`,
+      );
+    }
 
     // Send welcome email to consultant
     if (consultantProfile && user.email) {
@@ -199,6 +210,7 @@ export class ConsultantsService {
     dto: UpdateConsultantDto,
   ): Promise<UserProfileConsultant> {
     const id = dto.id;
+    this.logger.log(`Updating consultant profile - ID: ${id}`);
 
     // if (user.activeProfile?.type === UserProfileType.CONSULTANT && user.activeProfile?.userProfileConsultant !== id) {
     //   throw new ForbiddenException('You are not authorized to update this consultant profile');
@@ -265,6 +277,7 @@ export class ConsultantsService {
 
   async remove(id: string): Promise<UserProfileConsultant> {
     await this.findOneOrThrow(id);
+    this.logger.log(`Soft deleting consultant profile - ID: ${id}`);
 
     // Soft delete by setting deletedAt
     return this.prismaService.tenancy.userProfileConsultant.update({

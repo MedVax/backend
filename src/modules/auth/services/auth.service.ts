@@ -148,6 +148,8 @@ export class AuthService {
   }
 
   async signin(dto: UserSigninDto, sessionId?: string) {
+    this.logger.log(`Signin attempt - Email: ${dto.email}`);
+
     const user = await this.prismaService.user.findFirst({
       where: {
         email: dto.email,
@@ -160,10 +162,16 @@ export class AuthService {
     if (
       !(user && this.bcryptService.compareSync(dto.password, user.password))
     ) {
+      this.logger.warn(
+        `Signin failed: invalid credentials - Email: ${dto.email}`,
+      );
       throw new UnauthorizedException('Invalid username or password');
     }
 
     if (user?.status === UserStatus.DEACTIVATED) {
+      this.logger.warn(
+        `Signin failed: account deactivated - Email: ${dto.email}`,
+      );
       throw new ForbiddenException(
         'Account deactivated. Please contact support',
         { description: `User ${user.email} is inactive` },
@@ -252,6 +260,8 @@ export class AuthService {
   }
 
   async signup(dto: UserSignupDto, sessionId?: string) {
+    this.logger.log(`Signup attempt - Email: ${dto.email}`);
+
     const { firstName, lastName, password, email } = dto;
 
     const existingUser = await this.prismaService.user.findFirst({
@@ -261,6 +271,7 @@ export class AuthService {
     });
 
     if (existingUser) {
+      this.logger.warn(`Signup failed: email already exists - Email: ${email}`);
       throw new ConflictException(`User with email ${email} already exists`);
     }
 
@@ -317,7 +328,9 @@ export class AuthService {
       userProfileConsultant: user.userProfiles[0].userProfileConsultants[0]?.id,
     };
 
-    console.log({ userProfile: user.userProfiles[0] });
+    this.logger.log(
+      `User signin successful - UserID: ${user.id}, Email: ${user.email}, ProfileType: ${activeProfile.type}`,
+    );
 
     // Merge session cart to user cart if sessionId exists
     if (sessionId) {
@@ -325,6 +338,10 @@ export class AuthService {
     }
 
     const userToken = await this.createToken(true, user, activeProfile);
+
+    this.logger.log(
+      `Signup successful - UserID: ${user.id}, Email: ${user.email}, ProfileType: ${activeProfile.type}`,
+    );
 
     return { user, activeProfile, ...userToken };
   }

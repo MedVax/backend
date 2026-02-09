@@ -25,17 +25,22 @@ export class ClientsService {
   private logger = new Logger(ClientsService.name);
 
   async create(dto: CreateClientDto): Promise<User> {
+    this.logger.log(`Creating client account for email: ${dto.email}`);
+
     const existingUser = await this.prismaService.tenancy.user.findFirst({
       where: { email: normalizeString(dto.email) },
     });
 
     if (existingUser) {
+      this.logger.warn(
+        `Client creation failed: email ${dto.email} already exists`,
+      );
       throw new ConflictException(
         `User with email "${dto.email}" already exists`,
       );
     }
 
-    return this.prismaService.corePrismaService.user.create({
+    const user = await this.prismaService.corePrismaService.user.create({
       data: {
         email: normalizeString(dto.email),
         password: this.bcryptService.hashSync(dto.password),
@@ -64,6 +69,18 @@ export class ClientsService {
         },
       },
     });
+
+    const clientProfile = user?.userProfiles?.find(
+      (profile) => profile.type === UserProfileType.CLIENT,
+    )?.userProfileClients[0];
+
+    if (clientProfile) {
+      this.logger.log(
+        `Client account created successfully - ID: ${clientProfile.id}, Email: ${user.email}`,
+      );
+    }
+
+    return user;
   }
 
   async findAll(paginationQuery?: PaginationQuery) {
@@ -265,6 +282,10 @@ export class ClientsService {
     await this.findOneOrThrow(clientId);
 
     if (consultantId) {
+      this.logger.log(
+        `Assigning consultant ${consultantId} to client ${clientId}`,
+      );
+
       const consultant =
         await this.prismaService.tenancy.userProfileConsultant.findFirst({
           where: {
@@ -274,10 +295,15 @@ export class ClientsService {
         });
 
       if (!consultant) {
+        this.logger.warn(
+          `Consultant assignment failed: consultant ${consultantId} not found`,
+        );
         throw new NotFoundException(
           `Consultant with ID "${consultantId}" not found`,
         );
       }
+    } else {
+      this.logger.log(`Removing consultant assignment from client ${clientId}`);
     }
 
     // Update client with new consultant assignment
@@ -330,7 +356,7 @@ export class ClientsService {
       });
 
     this.logger.log(
-      `Consultant ${consultantId || 'removed'} ${consultantId ? 'assigned to' : 'from'} client ${clientId}`,
+      `Consultant ${consultantId ? `assigned to` : 'removed from'} client - ClientID: ${clientId}, ConsultantID: ${consultantId || 'N/A'}`,
     );
 
     return updatedClient;

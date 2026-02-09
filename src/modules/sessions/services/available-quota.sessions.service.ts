@@ -43,7 +43,7 @@ export interface AvailableQuotaResult {
 export class AvailableQuotaSessionsService {
   private logger = new Logger(AvailableQuotaSessionsService.name);
 
-  constructor(private prismaService: PrismaTenancyService) {}
+  constructor(private prismaService: PrismaTenancyService) { }
 
   /**
    * Get available sessions quota from all sources
@@ -122,7 +122,7 @@ export class AvailableQuotaSessionsService {
     userId: string,
     sessionType: SessionType,
   ): Promise<SubscriptionQuota> {
-    console.error({ userId, sessionType });
+    console.log('sessionType', sessionType);
     // Get active subscriptions
     const subscriptions =
       await this.prismaService.tenancy.subscription.findMany({

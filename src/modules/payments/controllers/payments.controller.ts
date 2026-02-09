@@ -8,6 +8,7 @@ import {
   Req,
   Inject,
   forwardRef,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PaystackService } from 'modules/services/paystack-service';
@@ -21,6 +22,8 @@ import { TransactionStatus, TransactionType } from 'generated/prisma/enums';
 @Controller('payments')
 @ApiTags('Payments')
 export class PaymentsController {
+  private readonly logger = new Logger(PaymentsController.name);
+
   constructor(
     private paystackService: PaystackService,
     @Inject(forwardRef(() => OrdersService))
@@ -50,6 +53,10 @@ export class PaymentsController {
       // Handle different event types
       const event = body.event;
       const data = body.data;
+
+      this.logger.log(
+        `Paystack webhook received - Event: ${event}, Reference: ${data.reference || 'N/A'}`,
+      );
 
       if (event === 'charge.success' || event === 'charge.failed') {
         if (data.reference) {
@@ -90,9 +97,9 @@ export class PaymentsController {
                   },
                 );
               } catch (updateError) {
-                console.error(
-                  'Failed to update transaction from webhook:',
-                  updateError,
+                this.logger.error(
+                  `Failed to update transaction from webhook - Reference: ${data.reference}, Error: ${updateError.message}`,
+                  updateError.stack,
                 );
                 // Don't throw - continue processing
               }
@@ -105,9 +112,9 @@ export class PaymentsController {
                     data.reference,
                   );
                 } catch (error) {
-                  console.error(
-                    'Failed to complete session booking after payment:',
-                    error,
+                  this.logger.error(
+                    `Failed to complete session booking after payment - Reference: ${data.reference}, Error: ${error.message}`,
+                    error.stack,
                   );
                   // Don't throw - webhook should still succeed
                   // Transaction status is already updated above
@@ -119,7 +126,10 @@ export class PaymentsController {
               try {
                 await this.ordersService.verifyPayment(data.reference);
               } catch (error) {
-                console.error('Failed to verify order payment:', error);
+                this.logger.error(
+                  `Failed to verify order payment - Reference: ${data.reference}, Error: ${error.message}`,
+                  error.stack,
+                );
                 // Don't throw - webhook should still succeed
               }
             }
@@ -152,9 +162,9 @@ export class PaymentsController {
                 },
               );
             } catch (error) {
-              console.error(
-                'Failed to update transaction from webhook:',
-                error,
+              this.logger.error(
+                `Failed to update transaction from webhook - Reference: ${data.reference || 'N/A'}, Error: ${error.message}`,
+                error.stack,
               );
               // Don't throw - webhook should still succeed even if transaction update fails
             }
@@ -162,9 +172,16 @@ export class PaymentsController {
         }
       }
 
+      this.logger.log(
+        `Paystack webhook processed successfully - Event: ${body.event}, Reference: ${body.data?.reference || 'N/A'}`,
+      );
+
       return { message: 'Webhook processed successfully' };
     } catch (error) {
-      console.error('Paystack webhook error:', error);
+      this.logger.error(
+        `Paystack webhook processing failed - Error: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }

@@ -67,9 +67,7 @@ async function assignDefaultRoles() {
         },
       });
 
-      console.log(
-        `Created & assigned default ORG_ADMIN role to user ${user.email}`,
-      );
+
     }
   }
 
@@ -113,7 +111,6 @@ async function assignDefaultRoles() {
           },
         });
 
-        console.log(`Created new global role "${roleName}"`);
       }
 
       globalRolesMap[user.type] = role;
@@ -127,16 +124,12 @@ async function assignDefaultRoles() {
       },
     });
 
-    console.log(
-      `Assigned default GLOBAL role "${roleName}" to user "${user.email}"`,
-    );
+
   }
 
-  console.log('Assigning default roles completed!');
 }
 
 async function seedPermissions() {
-  console.log('Running Permission seeder');
 
   const permissions = Object.values(PermissionEnum).map(formatPermission);
 
@@ -146,7 +139,6 @@ async function seedPermissions() {
       skipDuplicates: true,
     });
 
-    console.log('Seeding completed!');
   } catch (error) {
     console.error(`Permission Seeder Error: ${error?.message}`);
   }
@@ -163,11 +155,9 @@ async function seedSuperAdminRoles() {
   });
 
   if (adminRoleExists) {
-    console.log('Super Admin Roles already exist. Skipping seeding.');
     return;
   }
 
-  console.log('Running Super Amin Role seeder');
 
   const adminRoles = [
     {
@@ -184,7 +174,6 @@ async function seedSuperAdminRoles() {
   });
 
   if (allSuperAminUsers.length === 0) {
-    console.log('No super admin users found. Skipping seeding.');
     return;
   }
 
@@ -208,7 +197,6 @@ async function seedSuperAdminRoles() {
     });
 
     if (!allAccessPermission) {
-      console.error('Permission ALL_ACCESS not found');
       return;
     }
 
@@ -230,7 +218,7 @@ async function seedSuperAdminRoles() {
       });
     }
   } catch (error) {
-    console.error(`Admin Role Seeder Error: ${error?.message}`);
+    this.logger.error(error, `Super Admin Role Seeder Error: ${error?.message}`);
   }
 }
 
@@ -249,7 +237,6 @@ async function seedSuperAdmin() {
 }
 
 async function seedCategories() {
-  console.log('Running Categories seeder');
 
   try {
     for (const category of categories) {
@@ -273,12 +260,11 @@ async function seedCategories() {
       });
     }
   } catch (error) {
-    console.error(`Categories Seeder Error: ${error?.message}`);
+
   }
 }
 
 async function seedBrands() {
-  console.log('Running Brands seeder');
   try {
     for (const brand of brands) {
       await prisma.brand.upsert({
@@ -288,12 +274,11 @@ async function seedBrands() {
       });
     }
   } catch (error) {
-    console.error(`Brands Seeder Error: ${error?.message}`);
+    this.logger.error(error, `Brands Seeder Error: ${error?.message}`);
   }
 }
 
 async function seedProducts() {
-  console.log('Running Products seeder');
   try {
     for (const product of products) {
       await prisma.product.upsert({
