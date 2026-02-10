@@ -37,14 +37,39 @@ export class OrdersService {
     private transactionsService: TransactionsService,
   ) { }
 
-  async create(userId: string, dto: CreateOrderDto) {
+  async create(
+    userId: string | undefined,
+    sessionId: string | undefined,
+    dto: CreateOrderDto,
+  ) {
+    // Validate that either userId or sessionId is provided
+    if (!userId && !sessionId) {
+      throw new BadRequestException(
+        'Either userId or sessionId must be provided',
+      );
+    }
+
+    // For anonymous checkout, guestInfo is required
+    if (!userId && !dto.guestInfo) {
+      throw new BadRequestException(
+        'Guest information is required for anonymous checkout',
+      );
+    }
+
+    // For authenticated checkout, deliveryAddressId is required
+    if (userId && !dto.deliveryAddressId) {
+      throw new BadRequestException(
+        'Delivery address is required for authenticated checkout',
+      );
+    }
+
     this.logger.log(
-      `Order creation initiated - User: ${userId}, DeliveryAddress: ${dto.deliveryAddressId}`,
+      `Order creation initiated - User: ${userId || 'Anonymous'}, SessionId: ${sessionId || 'N/A'}, DeliveryAddress: ${dto.deliveryAddressId || 'Guest Address'}`,
     );
 
-    // Get user cart
+    // Get cart by userId or sessionId
     const cart = await this.prismaService.tenancy.cart.findUnique({
-      where: { userId },
+      where: userId ? { userId } : { sessionId },
       include: {
         items: {
           include: {
@@ -55,17 +80,22 @@ export class OrdersService {
     });
 
     if (!cart || cart.items.length === 0) {
-      this.logger.warn(`Order creation failed: empty cart - User: ${userId}`);
+      this.logger.warn(
+        `Order creation failed: empty cart - User: ${userId || 'Anonymous'}, SessionId: ${sessionId || 'N/A'}`,
+      );
       throw new BadRequestException('Cart is empty');
     }
 
-    // Verify delivery address
-    const address = await this.prismaService.tenancy.address.findFirst({
-      where: { id: dto.deliveryAddressId, userId },
-    });
+    // Verify delivery address for authenticated users
+    let address = null;
+    if (userId && dto.deliveryAddressId) {
+      address = await this.prismaService.tenancy.address.findFirst({
+        where: { id: dto.deliveryAddressId, userId },
+      });
 
-    if (!address) {
-      throw new NotFoundException('Delivery address not found');
+      if (!address) {
+        throw new NotFoundException('Delivery address not found');
+      }
     }
 
     // Check if any products require prescription
@@ -131,8 +161,19 @@ export class OrdersService {
           // Create the original order (one-time order, even if isRecurring is true)
           const created = await tx.order.create({
             data: {
-              userId,
-              deliveryAddressId: dto.deliveryAddressId,
+              userId: userId || null,
+              deliveryAddressId: dto.deliveryAddressId || null,
+              // Guest information for anonymous orders
+              guestFirstName: dto.guestInfo?.firstName,
+              guestLastName: dto.guestInfo?.lastName,
+              guestEmail: dto.guestInfo?.email,
+              guestPhone: dto.guestInfo?.phone,
+              guestAddressLine1: dto.guestInfo?.addressLine1,
+              guestAddressLine2: dto.guestInfo?.addressLine2,
+              guestCity: dto.guestInfo?.city,
+              guestState: dto.guestInfo?.state,
+              guestPostalCode: dto.guestInfo?.postalCode,
+              guestCountry: dto.guestInfo?.country || 'Nigeria',
               totalAmount,
               currency: 'NGN',
               paymentStatus: 'PENDING',
@@ -213,9 +254,9 @@ export class OrdersService {
             // Create the recurring order (separate from the original order)
             recurringOrder = await tx.order.create({
               data: {
-                userId,
-                deliveryAddressId: dto.deliveryAddressId,
-                // Copy guest info if provided (for future anonymous recurring orders)
+                userId: userId || null,
+                deliveryAddressId: dto.deliveryAddressId || null,
+                // Guest info for anonymous recurring orders
                 guestFirstName: dto.guestInfo?.firstName,
                 guestLastName: dto.guestInfo?.lastName,
                 guestEmail: dto.guestInfo?.email,
@@ -267,14 +308,16 @@ export class OrdersService {
       // Send email notification if recurring order was created
       if (recurringOrderResult) {
         try {
-          const user = await this.prismaService.tenancy.user.findUnique({
-            where: { id: userId },
-            select: {
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
-          });
+          const user = userId
+            ? await this.prismaService.tenancy.user.findUnique({
+              where: { id: userId },
+              select: {
+                email: true,
+                firstName: true,
+                lastName: true,
+              },
+            })
+            : null;
 
           const email = user?.email || dto.guestInfo?.email;
           const firstName =
@@ -329,23 +372,36 @@ export class OrdersService {
 
       // Initialize payment for the original order
       if (dto.paymentMethod === 'paystack') {
-        const user = await this.prismaService.tenancy.user.findUnique({
-          where: { id: userId },
-        });
+        const user = userId
+          ? await this.prismaService.tenancy.user.findUnique({
+            where: { id: userId },
+          })
+          : null;
+
+        const customerEmail = user?.email || dto.guestInfo?.email;
+        const customerFirstName =
+          user?.firstName || dto.guestInfo?.firstName || 'Customer';
+        const customerLastName =
+          user?.lastName || dto.guestInfo?.lastName || '';
+
+        if (!customerEmail) {
+          throw new BadRequestException('Email is required for payment');
+        }
 
         const [transaction, paymentLink] =
           await this.paystackService.initBilling({
             reference: orderReference,
             customer: {
-              email: user.email,
-              firstName: user.firstName,
-              lastName: user.lastName,
+              email: customerEmail,
+              firstName: customerFirstName,
+              lastName: customerLastName,
             },
-            amount: totalAmount, // Convert from kobo to naira
+            amount: totalAmount, // Amount in kobo
             currencyCode: 'NGN',
             metadata: {
               orderId: order.id,
-              userId,
+              userId: userId || null,
+              sessionId: sessionId || null,
             },
             returnUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/checkout/success?orderId=${order.id}`,
           });
@@ -608,6 +664,8 @@ export class OrdersService {
   }
 
   async findOne(id: string, userId?: string) {
+    // Allow anonymous users to access orders by ID
+    // This is needed for checkout success page after anonymous checkout
     const where: any = { id };
     console.log('userId', userId);
 

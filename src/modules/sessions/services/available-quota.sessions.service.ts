@@ -43,7 +43,7 @@ export interface AvailableQuotaResult {
 export class AvailableQuotaSessionsService {
   private logger = new Logger(AvailableQuotaSessionsService.name);
 
-  constructor(private prismaService: PrismaTenancyService) { }
+  constructor(private prismaService: PrismaTenancyService) {}
 
   /**
    * Get available sessions quota from all sources

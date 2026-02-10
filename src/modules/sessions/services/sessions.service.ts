@@ -57,7 +57,7 @@ export class SessionsService {
     @Inject(forwardRef(() => TransactionsService))
     private transactionsService: TransactionsService,
     private mailService: MailService,
-  ) {}
+  ) { }
 
   /**
    * Initialize session schedule - Entry point for booking flow
@@ -1117,23 +1117,23 @@ export class SessionsService {
         deleted: false,
         ...(userId
           ? {
-              OR: [
-                {
-                  client: {
-                    userProfile: {
-                      userId,
-                    },
+            OR: [
+              {
+                client: {
+                  userProfile: {
+                    userId,
                   },
                 },
-                {
-                  consultant: {
-                    userProfile: {
-                      userId,
-                    },
+              },
+              {
+                consultant: {
+                  userProfile: {
+                    userId,
                   },
                 },
-              ],
-            }
+              },
+            ],
+          }
           : {}),
       },
       include: {
@@ -1304,49 +1304,49 @@ export class SessionsService {
     const whereFilter: Prisma.SessionWhereInput = {
       ...(filter?.ids
         ? {
-            id: {
-              in: Array.isArray(filter?.ids) ? filter?.ids : [filter?.ids],
-            },
-          }
+          id: {
+            in: Array.isArray(filter?.ids) ? filter?.ids : [filter?.ids],
+          },
+        }
         : {}),
       OR: [
         ...(filter?.state === SessionStatus.PENDING
           ? [
-              {
-                status: {
-                  in: [SessionStatus.PENDING, SessionStatus.PENDING_APPROVAL],
-                },
-                scheduledDate: {
-                  gte: new Date(),
-                },
+            {
+              status: {
+                in: [SessionStatus.PENDING, SessionStatus.PENDING_APPROVAL],
               },
-            ]
+              scheduledDate: {
+                gte: new Date(),
+              },
+            },
+          ]
           : []),
 
         ...(filter?.state === SessionStatus.COMPLETED
           ? [
-              {
-                status: {
-                  in: [SessionStatus.COMPLETED, SessionStatus.PENDING],
-                },
-                scheduledDate: {
-                  lte: new Date(),
-                },
+            {
+              status: {
+                in: [SessionStatus.COMPLETED, SessionStatus.PENDING],
               },
-            ]
+              scheduledDate: {
+                lte: new Date(),
+              },
+            },
+          ]
           : []),
 
         ...(filter?.state === SessionStatus.UPCOMING
           ? [
-              {
-                status: {
-                  in: [SessionStatus.UPCOMING, SessionStatus.PENDING],
-                },
-                scheduledDate: {
-                  gte: new Date(),
-                },
+            {
+              status: {
+                in: [SessionStatus.UPCOMING, SessionStatus.PENDING],
               },
-            ]
+              scheduledDate: {
+                gte: new Date(),
+              },
+            },
+          ]
           : []),
       ],
       deleted: false,

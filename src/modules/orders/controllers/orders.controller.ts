@@ -23,22 +23,40 @@ import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { UserType } from 'generated/prisma/enums';
 import { GetOrdersFilterQuery } from '../dtos/get-orders-filter-query.dto';
 import { ApiPaginatedResponse } from 'src/decorators/api-paginated-response.decorator';
+import { AuthAllow } from 'metadatas/auth-allow.metadata';
+import { Req, Res } from '@nestjs/common';
+import type { Request, Response as ExpressResponse } from 'express';
+import { SessionCookieService } from 'services/session-cookie.service';
 
 @Controller('orders')
 @ApiTags('Orders')
 @UseGuards(PermissionsGuard)
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly sessionCookieService: SessionCookieService,
+  ) { }
 
   @Post()
-  @AuthUserGuard()
+  @AuthAllow()
   @Response({
     status: HttpStatus.CREATED,
     message: 'Order created successfully',
   })
-  @ApiOperation({ summary: 'Create a new order from cart' })
-  create(@Body() dto: CreateOrderDto, @AuthUser() user: User) {
-    return this.ordersService.create(user.id, dto);
+  @ApiOperation({
+    summary: 'Create a new order from cart (authenticated or anonymous)',
+  })
+  create(
+    @Body() dto: CreateOrderDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: ExpressResponse,
+    @AuthUser() user?: User,
+  ) {
+    const userId = user?.id;
+    const sessionId = userId
+      ? undefined
+      : this.sessionCookieService.getOrCreateSessionId(req, res);
+    return this.ordersService.create(userId, sessionId, dto);
   }
 
   @Get()
@@ -79,8 +97,9 @@ export class OrdersController {
   }
 
   @Get(':id')
+  @AuthAllow()
   @Response({ status: HttpStatus.OK, message: 'Order fetched successfully' })
-  @ApiOperation({ summary: 'Get an order by ID' })
+  @ApiOperation({ summary: 'Get an order by ID (authenticated or anonymous)' })
   findOne(@Param('id') id: string, @AuthUser() user?: User) {
     const userId =
       user && user.type !== UserType.ADMIN && user.type !== UserType.SUPER_ADMIN
@@ -122,9 +141,11 @@ export class OrdersController {
   }
 
   @Post('verify-payment/:reference')
-  @AuthUserGuard()
+  @AuthAllow()
   @Response({ status: HttpStatus.OK, message: 'Payment verified successfully' })
-  @ApiOperation({ summary: 'Verify payment for an order' })
+  @ApiOperation({
+    summary: 'Verify payment for an order (authenticated or anonymous)',
+  })
   verifyPayment(@Param('reference') reference: string) {
     return this.ordersService.verifyPayment(reference);
   }
