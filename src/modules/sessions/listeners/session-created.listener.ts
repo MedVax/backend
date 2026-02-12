@@ -362,6 +362,17 @@ export class SessionCreatedListener {
             },
             attendees,
             location: session.meetingUrl || 'Video Conference',
+            conferenceData: session.meetingUrl
+              ? {
+                  entryPoints: [
+                    {
+                      entryPointType: 'video',
+                      uri: session.meetingUrl,
+                      label: 'Join Meeting',
+                    },
+                  ],
+                }
+              : undefined,
             reminders: {
               useDefault: false,
               overrides: [

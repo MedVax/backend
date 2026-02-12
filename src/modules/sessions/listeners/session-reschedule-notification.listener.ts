@@ -211,6 +211,17 @@ export class SessionRescheduleNotificationListener {
                       session.clientTimezone || 'Africa/Lagos',
                       'EEEE, MMMM d, yyyy h:mm a',
                     )}`,
+                    conferenceData: session.meetingUrl
+                      ? {
+                          entryPoints: [
+                            {
+                              entryPointType: 'video',
+                              uri: session.meetingUrl,
+                              label: 'Join Meeting',
+                            },
+                          ],
+                        }
+                      : undefined,
                   },
                   'google',
                 );

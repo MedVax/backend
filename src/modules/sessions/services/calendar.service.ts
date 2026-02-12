@@ -19,6 +19,13 @@ export interface CalendarEvent {
     responseStatus?: 'needsAction' | 'accepted' | 'declined' | 'tentative';
   }>;
   location?: string;
+  conferenceData?: {
+    entryPoints?: Array<{
+      entryPointType: 'video' | 'phone' | 'sip' | 'more';
+      uri: string;
+      label?: string;
+    }>;
+  };
   reminders?: {
     useDefault: boolean;
     overrides?: Array<{

@@ -30,7 +30,7 @@ export class StockService {
     private prismaService: PrismaTenancyService,
     private redisService: RedisService,
     @InjectQueue(STOCK) private stockQueue: Queue,
-  ) {}
+  ) { }
 
   /**
    * Get product stock with Redis cache for high-traffic products

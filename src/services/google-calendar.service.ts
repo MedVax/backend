@@ -93,7 +93,7 @@ export class GoogleCalendarService {
         auth: this.oauth2Client,
       });
 
-      const calendarEvent = {
+      const calendarEvent: any = {
         summary: event.summary,
         description: event.description,
         start: event.start,
@@ -104,6 +104,13 @@ export class GoogleCalendarService {
           useDefault: true,
         },
       };
+
+      // Add conference data if meeting URL is provided
+      if (event.conferenceData?.entryPoints && event.conferenceData.entryPoints.length > 0) {
+        calendarEvent.conferenceData = {
+          entryPoints: event.conferenceData.entryPoints,
+        };
+      }
 
       const response = await calendar.events.insert({
         calendarId: 'primary',
@@ -183,6 +190,11 @@ export class GoogleCalendarService {
       if (event.end) updateData.end = event.end;
       if (event.attendees) updateData.attendees = event.attendees;
       if (event.location) updateData.location = event.location;
+      if (event.conferenceData?.entryPoints && event.conferenceData.entryPoints.length > 0) {
+        updateData.conferenceData = {
+          entryPoints: event.conferenceData.entryPoints,
+        };
+      }
 
       await calendar.events.update({
         calendarId: 'primary',
