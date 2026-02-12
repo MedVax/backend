@@ -39,7 +39,7 @@ export class OrdersController {
     private readonly ordersService: OrdersService,
     private readonly deliveryFeeService: DeliveryFeeService,
     private readonly sessionCookieService: SessionCookieService,
-  ) { }
+  ) {}
 
   @Post()
   @AuthAllow()
