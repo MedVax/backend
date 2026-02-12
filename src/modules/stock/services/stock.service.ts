@@ -24,6 +24,7 @@ const HIGH_TRAFFIC_THRESHOLD = 100; // requests per hour
 export class StockService {
   private logger = new Logger(StockService.name);
   private requestCounts = new Map<string, number>();
+  private timeoutIds = new Map<string, NodeJS.Timeout>();
 
   constructor(
     private prismaService: PrismaTenancyService,
@@ -454,10 +455,16 @@ export class StockService {
     this.requestCounts.set(productId, current + 1);
 
     // Reset counter periodically (every hour)
+    // Store timeout ID to prevent memory leaks
     if (current === 0) {
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         this.requestCounts.delete(productId);
+        // Clean up timeout reference
+        if (this.timeoutIds.has(productId)) {
+          this.timeoutIds.delete(productId);
+        }
       }, 3600000);
+      this.timeoutIds.set(productId, timeoutId);
     }
   }
 

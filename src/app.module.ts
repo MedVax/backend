@@ -145,10 +145,18 @@ import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middle
               const { ip, method, originalUrl } = req as unknown as Request;
               const userAgent = req.get('user-agent') || '';
 
-              const requestClone = { ...req };
-
-              const userData = arrayToObject(requestClone?.rawHeaders);
-              const authUser = requestClone?.authUser as unknown as any;
+              // Only extract minimal data needed for logging to prevent memory leaks
+              // Avoid cloning entire request object which can be large and hold references
+              const userData = req.rawHeaders
+                ? arrayToObject(req.rawHeaders)
+                : {};
+              const authUser = req.authUser
+                ? {
+                  id: (req.authUser as any).id,
+                  email: (req.authUser as any).email,
+                  type: (req.authUser as any).type,
+                }
+                : null;
 
               if (userData && userData['Authorization']) {
                 userData['Authorization'] = '********';
@@ -167,10 +175,12 @@ import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middle
               // }
 
               return {
-                req: requestClone,
+                // Only include minimal request info instead of full clone
+                method,
+                url: originalUrl,
                 status: (res as unknown as Response)?.status,
                 ...(LOGTAIL_SOURCE_TOKEN
-                  ? { userData, authUser, userAgent, ip, method, originalUrl }
+                  ? { userData, authUser, userAgent, ip }
                   : {}),
               };
             },
