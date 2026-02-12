@@ -6,7 +6,8 @@ import { DATABASE_URL, IS_PRODUCTION } from 'constants/env.constant';
 @Injectable()
 export class PrismaService
   extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy {
+  implements OnModuleInit, OnModuleDestroy
+{
   constructor() {
     const adapter = new PrismaPg({
       connectionString: DATABASE_URL,

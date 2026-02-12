@@ -152,10 +152,10 @@ import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middle
                 : {};
               const authUser = req.authUser
                 ? {
-                  id: (req.authUser as any).id,
-                  email: (req.authUser as any).email,
-                  type: (req.authUser as any).type,
-                }
+                    id: (req.authUser as any).id,
+                    email: (req.authUser as any).email,
+                    type: (req.authUser as any).type,
+                  }
                 : null;
 
               if (userData && userData['Authorization']) {
