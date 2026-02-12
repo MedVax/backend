@@ -22,6 +22,7 @@ import { TransactionType, TransactionStatus } from 'generated/prisma/enums';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { GetOrdersFilterQuery } from '../dtos/get-orders-filter-query.dto';
 import { isArray } from 'class-validator';
+import { DeliveryFeeService } from './delivery-fee.service';
 
 @Injectable()
 export class OrdersService {
@@ -31,6 +32,7 @@ export class OrdersService {
     private prismaService: PrismaTenancyService,
     private paystackService: PaystackService,
     private stockService: StockService,
+    private deliveryFeeService: DeliveryFeeService,
     @Inject(forwardRef(() => MailService))
     private mailService: MailService,
     @Inject(forwardRef(() => TransactionsService))
@@ -139,6 +141,29 @@ export class OrdersService {
       });
     }
 
+    // Calculate delivery fee (same-day delivery)
+    let deliveryFee = 0;
+    if (dto.deliveryFee !== undefined) {
+      // Use provided delivery fee from frontend
+      deliveryFee = dto.deliveryFee;
+    } else {
+      // Calculate delivery fee
+      const city = address?.city || dto.guestInfo?.city;
+      const state = address?.state || dto.guestInfo?.state;
+      deliveryFee = this.deliveryFeeService.calculateDeliveryFee(
+        totalAmount,
+        city,
+        state,
+      );
+    }
+
+    // Add delivery fee to total amount
+    const finalTotalAmount = totalAmount + deliveryFee;
+
+    this.logger.log(
+      `Order totals calculated - Subtotal: ${totalAmount}, Delivery Fee: ${deliveryFee}, Final Total: ${finalTotalAmount}`,
+    );
+
     // Reserve stock for all items
     const orderReference = `ORD-${Date.now()}-${randomUUID().split('-')[0]}`;
 
@@ -174,7 +199,8 @@ export class OrdersService {
               guestState: dto.guestInfo?.state,
               guestPostalCode: dto.guestInfo?.postalCode,
               guestCountry: dto.guestInfo?.country || 'Nigeria',
-              totalAmount,
+              totalAmount: finalTotalAmount,
+              deliveryFee,
               currency: 'NGN',
               paymentStatus: 'PENDING',
               orderStatus: 'PENDING',
@@ -267,7 +293,8 @@ export class OrdersService {
                 guestState: dto.guestInfo?.state,
                 guestPostalCode: dto.guestInfo?.postalCode,
                 guestCountry: dto.guestInfo?.country || 'Nigeria',
-                totalAmount,
+                totalAmount: finalTotalAmount,
+                deliveryFee,
                 currency: 'NGN',
                 paymentStatus: 'PENDING', // Won't charge until next run date
                 orderStatus: 'PENDING',
@@ -388,6 +415,10 @@ export class OrdersService {
           throw new BadRequestException('Email is required for payment');
         }
 
+        // PaystackService expects amount in Naira and converts to kobo internally
+        // finalTotalAmount is in kobo, so we need to convert to Naira first
+        const amountInNaira = finalTotalAmount / 100;
+
         const [transaction, paymentLink] =
           await this.paystackService.initBilling({
             reference: orderReference,
@@ -396,7 +427,7 @@ export class OrdersService {
               firstName: customerFirstName,
               lastName: customerLastName,
             },
-            amount: totalAmount, // Amount in kobo
+            amount: amountInNaira, // Amount in Naira (PaystackService will convert to kobo)
             currencyCode: 'NGN',
             metadata: {
               orderId: order.id,
@@ -425,7 +456,7 @@ export class OrdersService {
             reference: order.id,
             providerReference,
             provider: 'paystack',
-            amount: totalAmount,
+            amount: finalTotalAmount,
             currency: 'NGN',
             description: `Payment for order ${order.id}`,
             orderId: order.id,

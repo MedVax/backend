@@ -395,6 +395,10 @@ export class RecurringOrdersProcessor extends WorkerHost {
               `Initializing payment link for recurring order ${newOrder.id} (no saved authorization or charge failed)`,
             );
 
+            // PaystackService expects amount in Naira and converts to kobo internally
+            // totalAmount is in kobo, so we need to convert to Naira first
+            const amountInNaira = totalAmount / 100;
+
             const [transaction, paymentLink] =
               await this.paystackService.initBilling({
                 reference: orderReference,
@@ -403,7 +407,7 @@ export class RecurringOrdersProcessor extends WorkerHost {
                   firstName: parentOrder.user.firstName || '',
                   lastName: parentOrder.user.lastName || '',
                 },
-                amount: totalAmount,
+                amount: amountInNaira, // Amount in Naira (PaystackService will convert to kobo)
                 currencyCode: 'NGN',
                 metadata: {
                   orderId: newOrder.id,

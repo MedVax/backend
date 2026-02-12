@@ -8,12 +8,15 @@ import {
   HttpStatus,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 import { OrdersService } from '../services/orders.service';
+import { DeliveryFeeService } from '../services/delivery-fee.service';
 import { CreateOrderDto } from '../dtos/create-order.dto';
 import { UpdateOrderStatusDto } from '../dtos/update-order-status.dto';
+import { UpdateDeliveryFeeDto } from '../dtos/update-delivery-fee.dto';
 import { Response } from 'metadatas/response.metadata';
 import { AuthUser } from 'params/auth-user.param';
 import type { User } from 'generated/prisma/client';
@@ -34,6 +37,7 @@ import { SessionCookieService } from 'services/session-cookie.service';
 export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
+    private readonly deliveryFeeService: DeliveryFeeService,
     private readonly sessionCookieService: SessionCookieService,
   ) { }
 
@@ -148,5 +152,68 @@ export class OrdersController {
   })
   verifyPayment(@Param('reference') reference: string) {
     return this.ordersService.verifyPayment(reference);
+  }
+
+  @Get('delivery-fee/calculate')
+  @AuthAllow()
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Delivery fee calculated successfully',
+  })
+  @ApiOperation({
+    summary: 'Calculate delivery fee (public endpoint)',
+    description: 'Calculate same-day delivery fee',
+  })
+  calculateDeliveryFee(
+    @Query('orderValue') orderValue: string,
+    @Query('city') city?: string,
+    @Query('state') state?: string,
+  ) {
+    const orderValueNum = parseInt(orderValue, 10);
+    if (isNaN(orderValueNum) || orderValueNum < 0) {
+      throw new BadRequestException('Invalid order value');
+    }
+
+    const fee = this.deliveryFeeService.calculateDeliveryFee(
+      orderValueNum,
+      city,
+      state,
+    );
+
+    return {
+      deliveryFee: fee,
+      orderValue: orderValueNum,
+      city: city || null,
+      state: state || null,
+      currency: 'NGN',
+    };
+  }
+
+  @Get('delivery-fee/config')
+  @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Delivery fee configuration fetched successfully',
+  })
+  @ApiOperation({
+    summary: 'Get delivery fee configuration (Admin only)',
+  })
+  getDeliveryFeeConfig() {
+    const config = this.deliveryFeeService.getConfig();
+    return config;
+  }
+
+  @Patch('delivery-fee/config')
+  @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Delivery fee configuration updated successfully',
+  })
+  @ApiOperation({
+    summary: 'Update delivery fee configuration (Admin only)',
+  })
+  updateDeliveryFeeConfig(@Body() dto: UpdateDeliveryFeeDto) {
+    const config = this.deliveryFeeService.updateConfig(dto);
+    return config;
   }
 }

@@ -472,6 +472,7 @@ model Order {
   guestPostalCode    String?
   guestCountry       String?
   totalAmount        Int // in minor currency units
+  deliveryFee        Int                      @default(0) // in minor currency units
   currency           String                   @default("NGN")
   paymentStatus      PaymentStatus            @default(PENDING)
   orderStatus        OrderStatus              @default(PENDING)
