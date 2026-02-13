@@ -57,7 +57,7 @@ export class SessionsService {
     @Inject(forwardRef(() => TransactionsService))
     private transactionsService: TransactionsService,
     private mailService: MailService,
-  ) {}
+  ) { }
 
   /**
    * Initialize session schedule - Entry point for booking flow
@@ -274,7 +274,99 @@ export class SessionsService {
         },
       });
 
-    // Create sessions in transaction
+    // Prepare participants for meetings (outside transaction to avoid timeout)
+    const meetingParticipants = [];
+
+    // Add client as participant
+    if (client.userProfile?.user) {
+      meetingParticipants.push({
+        userId: client.userProfile.user.id,
+        userName:
+          `${client.userProfile.user.firstName || ''} ${client.userProfile.user.lastName || ''}`.trim() ||
+          'Client',
+        userEmail: client.userProfile.user.email,
+        presetName: 'default',
+      });
+    }
+
+    // Add consultant as participant
+    if (consultant.userProfile?.user) {
+      meetingParticipants.push({
+        userId: consultant.userProfile.user.id,
+        userName:
+          `${consultant.userProfile.user.firstName || ''} ${consultant.userProfile.user.lastName || ''}`.trim() ||
+          'Consultant',
+        userEmail: consultant.userProfile.user.email,
+        presetName: 'default', // Consultant is the host
+      });
+    }
+
+    // Add additional participants if it's a couple session
+    if (dto.sessionType === SessionType.COUPLE && dto.participants) {
+      // Check participant users outside transaction
+      const participantEmails = dto.participants.map((p) => p.email);
+      const participantUsers = await this.prismaService.tenancy.user.findMany({
+        where: { email: { in: participantEmails } },
+        select: { id: true, email: true },
+      });
+
+      const participantUserMap = new Map(
+        participantUsers.map((u) => [u.email, u.id]),
+      );
+
+      for (const participant of dto.participants) {
+        const participantUserId = participantUserMap.get(participant.email);
+        if (participantUserId) {
+          meetingParticipants.push({
+            userId: participantUserId,
+            userName: participant.name,
+            userEmail: participant.email,
+            presetName: 'default',
+            picture: participant.picture || undefined,
+          });
+        } else {
+          // For non-users, we'll add them to the meeting later via invite
+          // For now, add them with email as identifier
+          meetingParticipants.push({
+            userId: participant.email, // Use email as identifier for non-users
+            userName: participant.name,
+            userEmail: participant.email,
+            presetName: 'default',
+            picture: participant.picture || undefined,
+          });
+        }
+      }
+    }
+
+    // Create meeting with participants (outside transaction - this is an external API call)
+    const meeting = await this.meetingService.createMeeting(
+      `Session with ${consultant.userProfile?.user?.firstName || 'Consultant'}`,
+      meetingParticipants,
+    );
+
+    // Determine session status (outside transaction to avoid timeout)
+    let preDeterminedStatus = SessionStatus.PENDING;
+    if (
+      dto.paidBy === OrganizationSponsor.HMO ||
+      dto.paidBy === OrganizationSponsor.ORG
+    ) {
+      // Check quota (outside transaction)
+      const quota = await this.availableQuotaService.getAvailableSessionsQuota({
+        clientUserId: dto.clientId,
+        hmoId: dto.hmoId,
+        hmoNumber: dto.hmoNumber,
+        sessionType: dto.sessionType,
+      });
+
+      if (
+        !quota.isUnlimited &&
+        quota.availableSessionsCount < dto.dates.length
+      ) {
+        preDeterminedStatus = SessionStatus.PENDING;
+      }
+    }
+
+    // Create sessions in transaction with increased timeout (15 seconds)
     const sessions = await this.prismaService.tenancy.$transaction(
       async (tx) => {
         const createdSessions: any[] = [];
@@ -303,92 +395,8 @@ export class SessionsService {
             throw new BadRequestException(ERROR_MESSAGES.TIME_SLOT_UNAVAILABLE);
           }
 
-          // Prepare participants for the meeting
-          const meetingParticipants = [];
-
-          // Add client as participant
-          if (client.userProfile?.user) {
-            meetingParticipants.push({
-              userId: client.userProfile.user.id,
-              userName:
-                `${client.userProfile.user.firstName || ''} ${client.userProfile.user.lastName || ''}`.trim() ||
-                'Client',
-              userEmail: client.userProfile.user.email,
-              presetName: 'default',
-            });
-          }
-
-          // Add consultant as participant
-          if (consultant.userProfile?.user) {
-            meetingParticipants.push({
-              userId: consultant.userProfile.user.id,
-              userName:
-                `${consultant.userProfile.user.firstName || ''} ${consultant.userProfile.user.lastName || ''}`.trim() ||
-                'Consultant',
-              userEmail: consultant.userProfile.user.email,
-              presetName: 'default', // Consultant is the host
-            });
-          }
-
-          // Add additional participants if it's a couple session
-          if (dto.sessionType === SessionType.COUPLE && dto.participants) {
-            for (const participant of dto.participants) {
-              // Check if participant is existing user
-              const participantUser = await tx.user.findUnique({
-                where: { email: participant.email },
-                select: { id: true },
-              });
-
-              if (participantUser) {
-                meetingParticipants.push({
-                  userId: participantUser.id,
-                  userName: participant.name,
-                  userEmail: participant.email,
-                  presetName: 'default',
-                  picture: participant.picture || undefined,
-                });
-              } else {
-                // For non-users, we'll add them to the meeting later via invite
-                // For now, add them with email as identifier
-                meetingParticipants.push({
-                  userId: participant.email, // Use email as identifier for non-users
-                  userName: participant.name,
-                  userEmail: participant.email,
-                  presetName: 'default',
-                  picture: participant.picture || undefined,
-                });
-              }
-            }
-          }
-
-          // Create meeting with participants
-          const meeting = await this.meetingService.createMeeting(
-            `Session with ${consultant.userProfile?.user?.firstName || 'Consultant'}`,
-            meetingParticipants,
-          );
-
-          // Determine session status
-          let status = SessionStatus.PENDING;
-          if (
-            dto.paidBy === OrganizationSponsor.HMO ||
-            dto.paidBy === OrganizationSponsor.ORG
-          ) {
-            // Check quota
-            const quota =
-              await this.availableQuotaService.getAvailableSessionsQuota({
-                clientUserId: dto.clientId,
-                hmoId: dto.hmoId,
-                hmoNumber: dto.hmoNumber,
-                sessionType: dto.sessionType,
-              });
-
-            if (
-              !quota.isUnlimited &&
-              quota.availableSessionsCount < dto.dates.length
-            ) {
-              status = SessionStatus.PENDING;
-            }
-          }
+          // Use pre-determined status (calculated outside transaction)
+          const status = preDeterminedStatus;
 
           // Create session
           const scheduledDate = dateString;
@@ -556,6 +564,10 @@ export class SessionsService {
         }
 
         return createdSessions;
+      },
+      {
+        maxWait: 15000, // Maximum time to wait for a transaction slot (15 seconds)
+        timeout: 15000, // Maximum time the transaction can run (15 seconds)
       },
     );
 
@@ -1117,23 +1129,23 @@ export class SessionsService {
         deleted: false,
         ...(userId
           ? {
-              OR: [
-                {
-                  client: {
-                    userProfile: {
-                      userId,
-                    },
+            OR: [
+              {
+                client: {
+                  userProfile: {
+                    userId,
                   },
                 },
-                {
-                  consultant: {
-                    userProfile: {
-                      userId,
-                    },
+              },
+              {
+                consultant: {
+                  userProfile: {
+                    userId,
                   },
                 },
-              ],
-            }
+              },
+            ],
+          }
           : {}),
       },
       include: {
@@ -1304,49 +1316,49 @@ export class SessionsService {
     const whereFilter: Prisma.SessionWhereInput = {
       ...(filter?.ids
         ? {
-            id: {
-              in: Array.isArray(filter?.ids) ? filter?.ids : [filter?.ids],
-            },
-          }
+          id: {
+            in: Array.isArray(filter?.ids) ? filter?.ids : [filter?.ids],
+          },
+        }
         : {}),
       OR: [
         ...(filter?.state === SessionStatus.PENDING
           ? [
-              {
-                status: {
-                  in: [SessionStatus.PENDING, SessionStatus.PENDING_APPROVAL],
-                },
-                scheduledDate: {
-                  gte: new Date(),
-                },
+            {
+              status: {
+                in: [SessionStatus.PENDING, SessionStatus.PENDING_APPROVAL],
               },
-            ]
+              scheduledDate: {
+                gte: new Date(),
+              },
+            },
+          ]
           : []),
 
         ...(filter?.state === SessionStatus.COMPLETED
           ? [
-              {
-                status: {
-                  in: [SessionStatus.COMPLETED, SessionStatus.PENDING],
-                },
-                scheduledDate: {
-                  lte: new Date(),
-                },
+            {
+              status: {
+                in: [SessionStatus.COMPLETED, SessionStatus.PENDING],
               },
-            ]
+              scheduledDate: {
+                lte: new Date(),
+              },
+            },
+          ]
           : []),
 
         ...(filter?.state === SessionStatus.UPCOMING
           ? [
-              {
-                status: {
-                  in: [SessionStatus.UPCOMING, SessionStatus.PENDING],
-                },
-                scheduledDate: {
-                  gte: new Date(),
-                },
+            {
+              status: {
+                in: [SessionStatus.UPCOMING, SessionStatus.PENDING],
               },
-            ]
+              scheduledDate: {
+                gte: new Date(),
+              },
+            },
+          ]
           : []),
       ],
       deleted: false,

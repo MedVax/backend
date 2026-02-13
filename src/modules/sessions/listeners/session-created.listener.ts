@@ -23,7 +23,7 @@ export class SessionCreatedListener {
     @Inject(forwardRef(() => CalendarIntegrationService))
     private calendarIntegrationService: CalendarIntegrationService,
     private calendarService: CalendarService,
-  ) {}
+  ) { }
 
   @OnEvent(SESSION_EVENTS.SESSION_CREATED)
   async handleSessionCreatedEvent(event: SessionCreationEvent) {
@@ -155,10 +155,10 @@ export class SessionCreatedListener {
       const date = new Date(session.scheduledDate);
       const formattedDate = session.clientTimezone
         ? formatInTimeZone(
-            date,
-            session.clientTimezone,
-            'EEEE, MMMM d, yyyy h:mm a',
-          )
+          date,
+          session.clientTimezone,
+          'EEEE, MMMM d, yyyy h:mm a',
+        )
         : format(date, 'EEEE, MMMM d, yyyy h:mm a');
 
       return {
@@ -282,8 +282,8 @@ export class SessionCreatedListener {
 
         const calendarIntegration = Array.isArray(calendarIntegrations)
           ? calendarIntegrations.find(
-              (ci) => ci.isConnected && ci.provider === 'google',
-            )
+            (ci) => ci.isConnected && ci.provider === 'google',
+          )
           : calendarIntegrations;
 
         if (!calendarIntegration) {
@@ -314,23 +314,23 @@ export class SessionCreatedListener {
           email: string;
           displayName?: string;
           responseStatus?:
-            | 'accepted'
-            | 'needsAction'
-            | 'declined'
-            | 'tentative';
+          | 'accepted'
+          | 'needsAction'
+          | 'declined'
+          | 'tentative';
         }> = [
-          {
-            email: clientEmail || '',
-            displayName: `${clientFirstName} ${clientLastName}`,
-            responseStatus: userType === 'client' ? 'accepted' : 'needsAction',
-          },
-          {
-            email: consultantEmail || '',
-            displayName: `${consultantFirstName} ${consultantLastName}`,
-            responseStatus:
-              userType === 'consultant' ? 'accepted' : 'needsAction',
-          },
-        ];
+            {
+              email: clientEmail || '',
+              displayName: `${clientFirstName} ${clientLastName}`,
+              responseStatus: userType === 'client' ? 'accepted' : 'needsAction',
+            },
+            {
+              email: consultantEmail || '',
+              displayName: `${consultantFirstName} ${consultantLastName}`,
+              responseStatus:
+                userType === 'consultant' ? 'accepted' : 'needsAction',
+            },
+          ];
 
         // Add participants for couple sessions
         if (
@@ -364,14 +364,14 @@ export class SessionCreatedListener {
             location: session.meetingUrl || 'Video Conference',
             conferenceData: session.meetingUrl
               ? {
-                  entryPoints: [
-                    {
-                      entryPointType: 'video',
-                      uri: session.meetingUrl,
-                      label: 'Join Meeting',
-                    },
-                  ],
-                }
+                entryPoints: [
+                  {
+                    entryPointType: 'video',
+                    uri: session.meetingUrl,
+                    label: 'Join Meeting',
+                  },
+                ],
+              }
               : undefined,
             reminders: {
               useDefault: false,
@@ -446,8 +446,8 @@ export class SessionCreatedListener {
           consultantCalendarIntegrations,
         )
           ? consultantCalendarIntegrations.find(
-              (ci) => ci.isConnected && ci.provider === 'google',
-            )
+            (ci) => ci.isConnected && ci.provider === 'google',
+          )
           : consultantCalendarIntegrations;
 
         if (consultantCalendarIntegration) {
