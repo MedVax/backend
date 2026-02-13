@@ -11,6 +11,7 @@ import {
   DATABASE_URL,
   SUPER_ADMIN_EMAIL,
   SUPER_ADMIN_PASSWORD,
+  IS_PRODUCTION,
 } from 'constants/env.constant';
 import { formatPermission } from 'modules/permissions/helpers/permissions.helper';
 import { excludeKeys } from 'utils/object-util';
@@ -323,9 +324,11 @@ async function main() {
   await seedPermissions();
   await seedSuperAdmin();
   await assignDefaultRoles();
-  await seedCategories();
-  await seedBrands();
-  await seedProducts();
+  if (IS_PRODUCTION) {
+    await seedCategories();
+    await seedBrands();
+    await seedProducts();
+  }
 }
 
 main()
