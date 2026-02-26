@@ -107,4 +107,13 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   specification?: string;
+
+  @ApiPropertyOptional({
+    example: false,
+    default: false,
+    description: 'Whether this product is featured (appears in best selling)',
+  })
+  @IsBoolean()
+  @IsOptional()
+  featured?: boolean;
 }

@@ -42,7 +42,7 @@ export class ProductsService {
     private uploadsService: UploadsService,
     private categoriesService: CategoriesService,
     private redisService: RedisService,
-  ) {}
+  ) { }
 
   async bulkCreate(dto: BulkCreateProductDto) {
     const results = {
@@ -104,6 +104,17 @@ export class ProductsService {
     }
 
     try {
+      // Convert string booleans to actual booleans (FormData sends all values as strings)
+      const convertToBoolean = (value: any): boolean => {
+        if (typeof value === 'boolean') return value;
+        if (typeof value === 'string') {
+          const lower = value.toLowerCase();
+          if (lower === 'true') return true;
+          if (lower === 'false') return false;
+        }
+        return false;
+      };
+
       const product = await this.prismaService.corePrismaService.$transaction(
         async (trx) => {
           const productResult = await trx.product.create({
@@ -113,7 +124,10 @@ export class ProductsService {
               description: dto.description,
               price: dto.price,
               currency: dto.currency,
-              requiresPrescription: dto.requiresPrescription,
+              requiresPrescription:
+                typeof dto.requiresPrescription === 'string'
+                  ? convertToBoolean(dto.requiresPrescription)
+                  : (dto.requiresPrescription ?? false),
               productType: dto.productType,
               categoryId: dto.categoryId,
               brandId: dto.brandId,
@@ -123,6 +137,10 @@ export class ProductsService {
               ingredients: dto.ingredients,
               pharmacyAdvise: dto.pharmacyAdvise,
               specification: dto.specification,
+              featured:
+                typeof dto.featured === 'string'
+                  ? convertToBoolean(dto.featured)
+                  : (dto.featured ?? false),
             },
           });
 
@@ -178,17 +196,34 @@ export class ProductsService {
     }
 
     try {
-      const filesData = files?.map((file) => ({
-        file: file?.buffer,
-        fileName: generateProductUploadPrefix(existing, file),
-        contentType: file.mimetype,
-      }));
-      const attachmentsUrls = await this.uploadsService.initializeMany(
-        filesData,
-        true,
-      );
+      let attachmentsUrls: string[] = [];
 
-      const productData = {
+      // Only process files if they are provided
+      if (files && files.length > 0) {
+        const filesData = files.map((file) => ({
+          file: file?.buffer,
+          fileName: generateProductUploadPrefix(existing, file),
+          contentType: file.mimetype,
+        }));
+        attachmentsUrls = await this.uploadsService.initializeMany(
+          filesData,
+          true,
+        );
+      }
+
+      // Convert string booleans to actual booleans (FormData sends all values as strings)
+      const convertToBoolean = (value: any): boolean | undefined => {
+        if (value === undefined || value === null) return undefined;
+        if (typeof value === 'boolean') return value;
+        if (typeof value === 'string') {
+          const lower = value.toLowerCase();
+          if (lower === 'true') return true;
+          if (lower === 'false') return false;
+        }
+        return undefined;
+      };
+
+      const productData: any = {
         ...(dto?.name ? { name: dto.name } : {}),
         ...(dto?.sku ? { sku: dto.sku } : {}),
         ...(dto?.description !== undefined
@@ -196,8 +231,13 @@ export class ProductsService {
           : {}),
         ...(dto?.price ? { price: dto.price } : {}),
         ...(dto?.currency ? { currency: dto.currency } : {}),
-        ...(dto?.requiresPrescription
-          ? { requiresPrescription: dto?.requiresPrescription }
+        ...(dto?.requiresPrescription !== undefined
+          ? {
+            requiresPrescription:
+              typeof dto.requiresPrescription === 'string'
+                ? convertToBoolean(dto.requiresPrescription)
+                : dto.requiresPrescription,
+          }
           : {}),
         ...(dto?.productType ? { productType: dto.productType } : {}),
         ...(dto?.categoryId
@@ -218,8 +258,20 @@ export class ProductsService {
         ...(dto?.specification !== undefined
           ? { specification: dto.specification }
           : {}),
-        images: [...attachmentsUrls],
+        ...(dto?.featured !== undefined
+          ? {
+            featured:
+              typeof dto.featured === 'string'
+                ? convertToBoolean(dto.featured)
+                : dto.featured,
+          }
+          : {}),
       };
+
+      // Only update images if new files are provided
+      if (attachmentsUrls.length > 0) {
+        productData.images = [...(existing.images || []), ...attachmentsUrls];
+      }
 
       const productUpdateResult =
         await this.prismaService.tenancy.product.update({
@@ -230,6 +282,11 @@ export class ProductsService {
       // Invalidate cache for this product and related caches
       await this.invalidateProductCache(dto.id, existing.sku);
       await this.invalidateListAndSearchCaches();
+
+      // If featured status changed, invalidate best selling cache
+      if (dto.featured !== undefined && dto.featured !== existing.featured) {
+        await this.invalidateBestSellingCache();
+      }
 
       return productUpdateResult;
     } catch (error) {
@@ -299,12 +356,12 @@ export class ProductsService {
       AND: [
         search
           ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { sku: { contains: search, mode: 'insensitive' } },
-                { description: { contains: search, mode: 'insensitive' } },
-              ],
-            }
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { sku: { contains: search, mode: 'insensitive' } },
+              { description: { contains: search, mode: 'insensitive' } },
+            ],
+          }
           : {},
         brandIds?.length > 0 ? { brandId: { in: brandIds } } : {},
         categoryIds?.length > 0 ? categoryFilter : {},
@@ -505,33 +562,86 @@ export class ProductsService {
     // Cache miss - fetch from database
     this.logger.debug(`Cache miss for best selling products: ${cacheKey}`);
 
-    // Get best selling products based on order items quantity
-    // Only count items from completed/paid orders
-    const bestSellingProducts = await this.prismaService.tenancy.$queryRaw<
-      Array<{
-        productId: string;
-        totalQuantity: bigint;
-      }>
-    >`
-      SELECT 
-        oi."productId",
-        SUM(oi.quantity) as "totalQuantity"
-      FROM "OrderItem" oi
-      INNER JOIN "Order" o ON oi."orderId" = o.id
-      WHERE o."paymentStatus" = 'PAID'
-        AND o."orderStatus" IN ('DELIVERED', 'COMPLETED')
-        AND oi."productId" IS NOT NULL
-      GROUP BY oi."productId"
-      ORDER BY "totalQuantity" DESC
-      LIMIT ${limit}
-    `;
+    // Step 1: Get featured products first (these always appear in best selling)
+    const featuredProducts = await this.prismaService.tenancy.product.findMany({
+      where: {
+        featured: true,
+        isActive: true,
+      },
+      include: {
+        category: true,
+        brand: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
 
-    if (!bestSellingProducts || bestSellingProducts.length === 0) {
-      // If no best selling products, return active products ordered by creation date
+    const remainingLimit = Math.max(0, limit - featuredProducts.length);
+
+    // Step 2: Get best selling products based on order items quantity (excluding featured)
+    // Only count items from completed/paid orders
+    const bestSellingProducts =
+      remainingLimit > 0
+        ? await this.prismaService.tenancy.$queryRaw<
+          Array<{
+            productId: string;
+            totalQuantity: bigint;
+          }>
+        >`
+          SELECT 
+            oi."productId",
+            SUM(oi.quantity) as "totalQuantity"
+          FROM "OrderItem" oi
+          INNER JOIN "Order" o ON oi."orderId" = o.id
+          INNER JOIN "Product" p ON oi."productId" = p.id
+          WHERE o."paymentStatus" = 'PAID'
+            AND o."orderStatus" IN ('DELIVERED', 'COMPLETED')
+            AND oi."productId" IS NOT NULL
+            AND p."isActive" = true
+            AND (p."featured" = false OR p."featured" IS NULL)
+          GROUP BY oi."productId"
+          ORDER BY "totalQuantity" DESC
+          LIMIT ${remainingLimit}
+        `
+        : [];
+
+    let resultProducts = [...featuredProducts];
+
+    if (bestSellingProducts && bestSellingProducts.length > 0) {
+      const bestSellingProductIds = bestSellingProducts.map((p) => p.productId);
+
+      // Fetch full product details for best selling products
+      const bestSellingProductsFull =
+        await this.prismaService.tenancy.product.findMany({
+          where: {
+            id: { in: bestSellingProductIds },
+            isActive: true,
+          },
+          include: {
+            category: true,
+            brand: true,
+          },
+        });
+
+      // Sort best selling products by the order from query
+      const sortedBestSelling = bestSellingProductIds
+        .map((id) => bestSellingProductsFull.find((p) => p.id === id))
+        .filter((p): p is NonNullable<typeof p> => p !== undefined);
+
+      resultProducts = [...resultProducts, ...sortedBestSelling];
+    }
+
+    // If we still don't have enough products and no sales data, fill with active products
+    if (resultProducts.length < limit) {
+      const additionalNeeded = limit - resultProducts.length;
+      const existingIds = new Set(resultProducts.map((p) => p.id));
+
       const fallbackProducts =
         await this.prismaService.tenancy.product.findMany({
           where: {
             isActive: true,
+            id: { notIn: Array.from(existingIds) },
           },
           include: {
             category: true,
@@ -540,36 +650,19 @@ export class ProductsService {
           orderBy: {
             createdAt: 'desc',
           },
-          take: limit,
+          take: additionalNeeded,
         });
 
-      await this.redisService.set(cacheKey, fallbackProducts, CACHE_TTL);
-      return fallbackProducts;
+      resultProducts = [...resultProducts, ...fallbackProducts];
     }
 
-    const productIds = bestSellingProducts.map((p) => p.productId);
-
-    // Fetch full product details
-    const products = await this.prismaService.tenancy.product.findMany({
-      where: {
-        id: { in: productIds },
-        isActive: true,
-      },
-      include: {
-        category: true,
-        brand: true,
-      },
-    });
-
-    // Sort products by the order from bestSellingProducts
-    const sortedProducts = productIds
-      .map((id) => products.find((p) => p.id === id))
-      .filter((p): p is NonNullable<typeof p> => p !== undefined);
+    // Limit to requested amount
+    const finalProducts = resultProducts.slice(0, limit);
 
     // Cache the result
-    await this.redisService.set(cacheKey, sortedProducts, CACHE_TTL);
+    await this.redisService.set(cacheKey, finalProducts, CACHE_TTL);
 
-    return sortedProducts;
+    return finalProducts;
   }
 
   async uploadImages(productId: string, files: Express.Multer.File[]) {
@@ -762,6 +855,17 @@ export class ProductsService {
       this.logger.debug('Invalidated list and search caches');
     } catch (error) {
       this.logger.error('Error invalidating list/search caches:', error);
+    }
+  }
+
+  private async invalidateBestSellingCache() {
+    try {
+      await this.redisService.deleteByPattern(
+        `${CACHE_PREFIX.PRODUCT_BEST_SELLING}*`,
+      );
+      this.logger.debug('Invalidated best selling products cache');
+    } catch (error) {
+      this.logger.error('Error invalidating best selling cache:', error);
     }
   }
 

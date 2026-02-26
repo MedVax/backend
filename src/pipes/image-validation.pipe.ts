@@ -14,7 +14,14 @@ import {
 
 @Injectable()
 export class ImageValidationPipe implements PipeTransform {
-  transform(value: ImageFile | ImageFile[]): ImageFile | ImageFile[] {
+  transform(
+    value: ImageFile | ImageFile[] | undefined,
+  ): ImageFile | ImageFile[] | undefined {
+    // Skip validation if no files are provided (optional files)
+    if (!value || (Array.isArray(value) && value.length === 0)) {
+      return value;
+    }
+
     if (Array.isArray(value)) {
       validateImageFiles(value);
     } else {

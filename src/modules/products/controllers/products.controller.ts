@@ -46,7 +46,7 @@ import { UploadSingleImageBodySchema } from '../doc/upload-single-image-body.sch
 @ApiTags('Products')
 @UseGuards(PermissionsGuard)
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(private readonly productsService: ProductsService) { }
 
   @Post('bulk')
   @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
@@ -144,7 +144,7 @@ export class ProductsController {
   @ApiOperation({
     summary: 'Update a product with optional images (Admin only)',
     description:
-      'Update a product. Can upload new images (which will be added to existing images), or update other product fields. Supports both multipart/form-data and application/json.',
+      'Update a product. Can upload new images (which will be added to existing images), or update other product fields. Supports both multipart/form-data and application/json. Requires product ID in body.',
   })
   async update(
     @Body() body: UpdateProductDto,
@@ -161,6 +161,53 @@ export class ProductsController {
     files?: Express.Multer.File[],
   ) {
     return this.productsService.update(body, files);
+  }
+
+  @Patch(':id')
+  @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      limits: {
+        fileSize: MAX_IMAGE_SIZE,
+      },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error(
+              `Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody(UpdateProductBodySchema)
+  @Response({ status: HttpStatus.OK, message: 'Product updated successfully' })
+  @ApiOperation({
+    summary: 'Update a product by ID with optional images (Admin only)',
+    description:
+      'Update a product by ID. Can upload new images (which will be added to existing images), or update other product fields. Supports both multipart/form-data and application/json.',
+  })
+  async updateById(
+    @Param('id') id: string,
+    @Body() body: Omit<UpdateProductDto, 'id'>,
+    @UploadedFiles(
+      new ParseFilePipe({
+        fileIsRequired: false,
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
+          new FileTypeValidator({ fileType: /(jpeg|jpg|png|webp|gif)/ }),
+        ],
+      }),
+      new ImageValidationPipe(),
+    )
+    files?: Express.Multer.File[],
+  ) {
+    return this.productsService.update({ ...body, id }, files);
   }
 
   @Put()
@@ -190,7 +237,7 @@ export class ProductsController {
   @ApiOperation({
     summary: 'Replace/Update a product with optional images (Admin only)',
     description:
-      'Update a product (PUT semantics). Can upload new images to replace or add to existing ones based on replaceImages flag. Supports both multipart/form-data and application/json.',
+      'Update a product (PUT semantics). Can upload new images to replace or add to existing ones based on replaceImages flag. Supports both multipart/form-data and application/json. Requires product ID in body.',
   })
   async replace(
     @Body() body: UpdateProductDto,
@@ -273,6 +320,53 @@ export class ProductsController {
   getRelatedProducts(@Param('id') id: string, @Query('limit') limit?: string) {
     const limitNumber = limit ? parseInt(limit, 10) : 10;
     return this.productsService.getRelatedProducts(id, limitNumber);
+  }
+
+  @Put(':id')
+  @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      limits: {
+        fileSize: MAX_IMAGE_SIZE,
+      },
+      fileFilter: (req, file, cb) => {
+        if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error(
+              `Invalid file type. Allowed types: ${ALLOWED_IMAGE_TYPES.join(', ')}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody(ReplaceProductBodySchema)
+  @Response({ status: HttpStatus.OK, message: 'Product updated successfully' })
+  @ApiOperation({
+    summary: 'Replace/Update a product by ID with optional images (Admin only)',
+    description:
+      'Replace/Update a product by ID (PUT semantics). Can upload new images or update product fields. Supports both multipart/form-data and application/json.',
+  })
+  async replaceById(
+    @Param('id') id: string,
+    @Body() body: Omit<UpdateProductDto, 'id'>,
+    @UploadedFiles(
+      new ParseFilePipe({
+        fileIsRequired: false,
+        validators: [
+          new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
+          new FileTypeValidator({ fileType: /(jpeg|jpg|png|webp|gif)/ }),
+        ],
+      }),
+      new ImageValidationPipe(),
+    )
+    files?: Express.Multer.File[],
+  ) {
+    return this.productsService.update({ ...body, id }, files);
   }
 
   @Get(':id')

@@ -359,6 +359,7 @@ model Product {
   pharmacyAdvise       String?
   specification        String?
   isActive             Boolean         @default(true)
+  featured             Boolean         @default(false)
   stockQuantity        Int             @default(0)
   stockReserved        Int             @default(0)
   version              Int             @default(0)
@@ -374,6 +375,7 @@ model Product {
   @@index([categoryId])
   @@index([brandId])
   @@index([isActive])
+  @@index([featured])
 }
 
 model Pharmacy {
