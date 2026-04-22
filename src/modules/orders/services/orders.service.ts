@@ -1035,7 +1035,10 @@ export class OrdersService {
         status: transactionStatus,
         metadata: paystackTransaction,
         providerResponse: paystackTransaction,
-        webhookEvent: 'charge.success',
+        webhookEvent:
+          transactionStatus === TransactionStatus.SUCCESS
+            ? 'charge.success'
+            : 'charge.failed',
         webhookPayload: paystackTransaction,
         completedAt:
           transactionStatus === TransactionStatus.SUCCESS
@@ -1107,6 +1110,40 @@ export class OrdersService {
     return {
       order: updatedOrder,
     };
+  }
+
+  async handleFailedPayment(
+    reference: string,
+    webhookEvent: string,
+    webhookPayload: any,
+    providerResponse: any,
+  ) {
+    const order = await this.prismaService.tenancy.order.findFirst({
+      where: { paymentReference: reference },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found for payment reference');
+    }
+
+    await this.prismaService.tenancy.order.update({
+      where: { id: order.id },
+      data: { paymentStatus: 'FAILED' },
+    });
+
+    try {
+      await this.transactionsService.updateByProviderReference(reference, {
+        status: TransactionStatus.FAILED,
+        webhookEvent,
+        webhookPayload,
+        providerResponse,
+        failedAt: new Date(),
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to update transaction record for failed payment: ${error.message}`,
+      );
+    }
   }
 
   async resendInvoice(id: string, userId: string) {

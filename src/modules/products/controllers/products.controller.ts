@@ -46,7 +46,7 @@ import { UploadSingleImageBodySchema } from '../doc/upload-single-image-body.sch
 @ApiTags('Products')
 @UseGuards(PermissionsGuard)
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) { }
+  constructor(private readonly productsService: ProductsService) {}
 
   @Post('bulk')
   @AuthUserGuard([UserType.ADMIN, UserType.SUPER_ADMIN])

@@ -42,7 +42,7 @@ export class ProductsService {
     private uploadsService: UploadsService,
     private categoriesService: CategoriesService,
     private redisService: RedisService,
-  ) { }
+  ) {}
 
   async bulkCreate(dto: BulkCreateProductDto) {
     const results = {
@@ -233,11 +233,11 @@ export class ProductsService {
         ...(dto?.currency ? { currency: dto.currency } : {}),
         ...(dto?.requiresPrescription !== undefined
           ? {
-            requiresPrescription:
-              typeof dto.requiresPrescription === 'string'
-                ? convertToBoolean(dto.requiresPrescription)
-                : dto.requiresPrescription,
-          }
+              requiresPrescription:
+                typeof dto.requiresPrescription === 'string'
+                  ? convertToBoolean(dto.requiresPrescription)
+                  : dto.requiresPrescription,
+            }
           : {}),
         ...(dto?.productType ? { productType: dto.productType } : {}),
         ...(dto?.categoryId
@@ -260,11 +260,11 @@ export class ProductsService {
           : {}),
         ...(dto?.featured !== undefined
           ? {
-            featured:
-              typeof dto.featured === 'string'
-                ? convertToBoolean(dto.featured)
-                : dto.featured,
-          }
+              featured:
+                typeof dto.featured === 'string'
+                  ? convertToBoolean(dto.featured)
+                  : dto.featured,
+            }
           : {}),
       };
 
@@ -356,12 +356,12 @@ export class ProductsService {
       AND: [
         search
           ? {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { sku: { contains: search, mode: 'insensitive' } },
-              { description: { contains: search, mode: 'insensitive' } },
-            ],
-          }
+              OR: [
+                { name: { contains: search, mode: 'insensitive' } },
+                { sku: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+              ],
+            }
           : {},
         brandIds?.length > 0 ? { brandId: { in: brandIds } } : {},
         categoryIds?.length > 0 ? categoryFilter : {},
@@ -584,11 +584,11 @@ export class ProductsService {
     const bestSellingProducts =
       remainingLimit > 0
         ? await this.prismaService.tenancy.$queryRaw<
-          Array<{
-            productId: string;
-            totalQuantity: bigint;
-          }>
-        >`
+            Array<{
+              productId: string;
+              totalQuantity: bigint;
+            }>
+          >`
           SELECT 
             oi."productId",
             SUM(oi.quantity) as "totalQuantity"

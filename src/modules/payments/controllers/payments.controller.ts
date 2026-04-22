@@ -44,13 +44,11 @@ export class PaymentsController {
     @Headers('x-paystack-signature') signature: string,
   ) {
     try {
-      // Verify webhook signature
       const body = this.paystackService.verifyWebhookSignature(
         signature,
         req.rawBody,
       );
 
-      // Handle different event types
       const event = body.event;
       const data = body.data;
 
@@ -60,21 +58,18 @@ export class PaymentsController {
 
       if (event === 'charge.success' || event === 'charge.failed') {
         if (data.reference) {
-          // Find transaction to determine type
           const transaction =
             await this.transactionsService.findByProviderReference(
               data.reference,
             );
 
           if (transaction) {
-            // Handle session payments
-            if (transaction.type === TransactionType.SESSION) {
-              const transactionStatus =
-                event === 'charge.success'
-                  ? TransactionStatus.SUCCESS
-                  : TransactionStatus.FAILED;
+            const transactionStatus =
+              event === 'charge.success'
+                ? TransactionStatus.SUCCESS
+                : TransactionStatus.FAILED;
 
-              // Update transaction status first
+            if (transaction.type === TransactionType.SESSION) {
               try {
                 await this.transactionsService.updateByProviderReference(
                   data.reference,
@@ -101,13 +96,10 @@ export class PaymentsController {
                   `Failed to update transaction from webhook - Reference: ${data.reference}, Error: ${updateError.message}`,
                   updateError.stack,
                 );
-                // Don't throw - continue processing
               }
 
-              // If payment successful, verify and create sessions
               if (event === 'charge.success') {
                 try {
-                  // Verify payment and create sessions
                   await this.sessionsService.verifySessionPayment(
                     data.reference,
                   );
@@ -116,57 +108,26 @@ export class PaymentsController {
                     `Failed to complete session booking after payment - Reference: ${data.reference}, Error: ${error.message}`,
                     error.stack,
                   );
-                  // Don't throw - webhook should still succeed
-                  // Transaction status is already updated above
                 }
               }
-              // If payment failed, transaction status is already updated above
             } else if (transaction.type === TransactionType.ORDER) {
-              // Handle order payments
               try {
-                await this.ordersService.verifyPayment(data.reference);
+                if (event === 'charge.success') {
+                  await this.ordersService.verifyPayment(data.reference);
+                } else {
+                  await this.ordersService.handleFailedPayment(
+                    data.reference,
+                    event,
+                    body,
+                    data,
+                  );
+                }
               } catch (error) {
                 this.logger.error(
-                  `Failed to verify order payment - Reference: ${data.reference}, Error: ${error.message}`,
+                  `Failed to handle order payment webhook - Reference: ${data.reference}, Error: ${error.message}`,
                   error.stack,
                 );
-                // Don't throw - webhook should still succeed
               }
-            }
-
-            // Update transaction record from webhook
-            try {
-              const transactionStatus =
-                event === 'charge.success'
-                  ? TransactionStatus.SUCCESS
-                  : TransactionStatus.FAILED;
-
-              await this.transactionsService.updateByProviderReference(
-                data.reference,
-                {
-                  status: transactionStatus,
-                  webhookEvent: event,
-                  webhookPayload: body,
-                  providerResponse: data,
-                  completedAt:
-                    transactionStatus === TransactionStatus.SUCCESS
-                      ? new Date()
-                      : undefined,
-                  failedAt:
-                    transactionStatus === TransactionStatus.FAILED
-                      ? new Date()
-                      : undefined,
-                  ...(data.authorization && {
-                    authorizationCode: data.authorization.authorization_code,
-                  }),
-                },
-              );
-            } catch (error) {
-              this.logger.error(
-                `Failed to update transaction from webhook - Reference: ${data.reference || 'N/A'}, Error: ${error.message}`,
-                error.stack,
-              );
-              // Don't throw - webhook should still succeed even if transaction update fails
             }
           }
         }
