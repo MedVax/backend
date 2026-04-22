@@ -356,13 +356,12 @@ export class OrdersService {
               .map(
                 (item: any) =>
                   `${item.product.name} (x${item.quantity}) - ₦${(
-                    (item.unitPrice * item.quantity) /
-                    100
+                    item.unitPrice * item.quantity
                   ).toFixed(2)}`,
               )
               .join('\n');
 
-            const totalAmount = `₦${(recurringOrderResult.totalAmount / 100).toFixed(2)}`;
+            const totalAmount = `₦${recurringOrderResult.totalAmount.toFixed(2)}`;
             const frequency =
               dto.recurringFrequency === OrderRecurringFrequency.WEEKLY
                 ? 'weekly'
@@ -416,8 +415,8 @@ export class OrdersService {
         }
 
         // PaystackService expects amount in Naira and converts to kobo internally
-        // finalTotalAmount is in kobo, so we need to convert to Naira first
-        const amountInNaira = finalTotalAmount / 100;
+        // finalTotalAmount is in Naira (product prices and delivery fee are stored in Naira)
+        const amountInNaira = finalTotalAmount;
 
         const [transaction, paymentLink] =
           await this.paystackService.initBilling({
@@ -830,13 +829,12 @@ export class OrdersService {
             .map(
               (item: any) =>
                 `${item.product.name} (x${item.quantity}) - ₦${(
-                  (item.unitPrice * item.quantity) /
-                  100
+                  item.unitPrice * item.quantity
                 ).toFixed(2)}`,
             )
             .join('\n');
 
-          const totalAmount = `₦${(updatedOrder.totalAmount / 100).toFixed(2)}`;
+          const totalAmount = `₦${updatedOrder.totalAmount.toFixed(2)}`;
 
           await this.mailService.orderStatusUpdated({
             to: email,
@@ -916,13 +914,12 @@ export class OrdersService {
           .map(
             (item: any) =>
               `${item.product.name} (x${item.quantity}) - ₦${(
-                (item.unitPrice * item.quantity) /
-                100
+                item.unitPrice * item.quantity
               ).toFixed(2)}`,
           )
           .join('\n');
 
-        const totalAmount = `₦${(updatedOrder.totalAmount / 100).toFixed(2)}`;
+        const totalAmount = `₦${updatedOrder.totalAmount.toFixed(2)}`;
 
         // Generate cancellation message
         const statusMessage =
@@ -1072,13 +1069,12 @@ export class OrdersService {
           .map(
             (item) =>
               `${item.product.name} (x${item.quantity}) - ₦${(
-                (item.product.price * item.quantity) /
-                100
+                item.product.price * item.quantity
               ).toFixed(2)}`,
           )
           .join('\n');
 
-        const totalAmount = `₦${(order.totalAmount / 100).toFixed(2)}`;
+        const totalAmount = `₦${order.totalAmount.toFixed(2)}`;
 
         try {
           await this.mailService.orderPaymentConfirmed({

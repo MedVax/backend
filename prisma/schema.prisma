@@ -343,7 +343,7 @@ model Product {
   name                 String
   sku                  String          @unique
   description          String?
-  price                Int // in minor currency units (kobo/cents)
+  price                Int // in Naira
   currency             String          @default("NGN")
   requiresPrescription Boolean         @default(false)
   productType          ProductType     @default(OTC)
@@ -473,8 +473,8 @@ model Order {
   guestState         String?
   guestPostalCode    String?
   guestCountry       String?
-  totalAmount        Int // in minor currency units
-  deliveryFee        Int                      @default(0) // in minor currency units
+  totalAmount        Int // in Naira
+  deliveryFee        Int                      @default(0) // in Naira
   currency           String                   @default("NGN")
   paymentStatus      PaymentStatus            @default(PENDING)
   orderStatus        OrderStatus              @default(PENDING)
@@ -797,7 +797,7 @@ model Transaction {
   providerReference String            @unique // Payment provider reference (e.g., Paystack reference)
   provider          String // paystack, flutterwave, stripe, etc.
   status            TransactionStatus @default(PENDING)
-  amount            Int // Amount in minor currency units (kobo for NGN)
+  amount            Int // Amount in Naira
   currency          String            @default("NGN")
   description       String?
 

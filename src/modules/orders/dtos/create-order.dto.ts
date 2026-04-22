@@ -88,9 +88,9 @@ export class CreateOrderDto {
   recurringFrequency?: OrderRecurringFrequency;
 
   @ApiPropertyOptional({
-    example: 100000,
+    example: 1000,
     description:
-      'Delivery fee in minor currency units (kobo). If not provided, will be calculated automatically (same-day delivery).',
+      'Delivery fee in Naira. If not provided, will be calculated automatically (same-day delivery).',
   })
   @IsOptional()
   deliveryFee?: number;

@@ -77,8 +77,7 @@ export class RecurringOrdersScheduler {
             .map(
               (item) =>
                 `${item.product.name} (x${item.quantity}) - ₦${(
-                  (item.unitPrice * item.quantity) /
-                  100
+                  item.unitPrice * item.quantity
                 ).toFixed(2)}`,
             )
             .join('\n');
@@ -96,7 +95,7 @@ export class RecurringOrdersScheduler {
               orderId: order.id,
               nextDeliveryDate: format(order.nextRunDate, 'PPP'),
               itemsSummary,
-              totalAmount: `₦${(totalAmount / 100).toFixed(2)}`,
+              totalAmount: `₦${totalAmount.toFixed(2)}`,
               frequency:
                 order.recurringFrequency === 'WEEKLY' ? 'weekly' : 'monthly',
               supportEmail: process.env.SUPPORT_EMAIL || 'support@medvax.com',

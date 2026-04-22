@@ -110,7 +110,7 @@ export class UserService {
     } = dto;
 
     // Check if user already exists
-    const existingUser = await this.findOne(email);
+    const existingUser = await this.get(email);
     if (existingUser) {
       throw new ConflictException('User already exists');
     }

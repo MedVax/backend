@@ -359,12 +359,11 @@ export class RecurringOrdersProcessor extends WorkerHost {
                         .map(
                           (item: any) =>
                             `${item.product.name} (x${item.quantity}) - ₦${(
-                              (item.unitPrice * item.quantity) /
-                              100
+                              item.unitPrice * item.quantity
                             ).toFixed(2)}`,
                         )
                         .join('\n'),
-                      totalAmount: `₦${(newOrder.totalAmount / 100).toFixed(2)}`,
+                      totalAmount: `₦${newOrder.totalAmount.toFixed(2)}`,
                       supportEmail:
                         process.env.SUPPORT_EMAIL || 'support@medvax.com',
                     },
@@ -396,8 +395,8 @@ export class RecurringOrdersProcessor extends WorkerHost {
             );
 
             // PaystackService expects amount in Naira and converts to kobo internally
-            // totalAmount is in kobo, so we need to convert to Naira first
-            const amountInNaira = totalAmount / 100;
+            // totalAmount is already in Naira
+            const amountInNaira = totalAmount;
 
             const [transaction, paymentLink] =
               await this.paystackService.initBilling({
@@ -476,12 +475,11 @@ export class RecurringOrdersProcessor extends WorkerHost {
                     .map(
                       (item: any) =>
                         `${item.product.name} (x${item.quantity}) - ₦${(
-                          (item.unitPrice * item.quantity) /
-                          100
+                          item.unitPrice * item.quantity
                         ).toFixed(2)}`,
                     )
                     .join('\n'),
-                  totalAmount: `₦${(newOrder.totalAmount / 100).toFixed(2)}`,
+                  totalAmount: `₦${newOrder.totalAmount.toFixed(2)}`,
                   paymentLink: paymentLink.authorization_url,
                   supportEmail:
                     process.env.SUPPORT_EMAIL || 'support@medvax.com',
