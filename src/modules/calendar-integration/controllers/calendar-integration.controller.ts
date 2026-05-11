@@ -35,17 +35,13 @@ export class CalendarIntegrationController {
   @ApiOperation({ summary: 'Get calendar OAuth authorization URL' })
   getAuthUrl(
     @Query('provider') provider: 'google' = 'google',
-    @Query('redirectUri') redirectUri: string,
+    @Query('state') state: string,
     @AuthUser() user: User,
   ) {
-    if (!redirectUri) {
-      throw new Error('redirectUri is required');
-    }
-
     return this.calendarIntegrationService.getAuthUrl(
       user.id,
       provider,
-      redirectUri,
+      state,
     );
   }
 

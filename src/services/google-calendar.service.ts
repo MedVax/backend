@@ -39,12 +39,12 @@ export class GoogleCalendarService {
     'https://www.googleapis.com/auth/calendar.events',
   ];
 
-  getAuthUrl(redirectUri?: string): string {
+  getAuthUrl(state?: string): string {
     return this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: this.scopes,
       prompt: 'consent',
-      ...(redirectUri && { redirect_uri: redirectUri }),
+      ...(state && { state }),
     });
   }
 

@@ -348,7 +348,7 @@ export class UserService {
     try {
       const user = await this.prismaService.corePrismaService.user.findFirst({
         where: {
-          id: identifier,
+          OR: [{ id: identifier }, { email: normalizeString(identifier) }],
         },
         ...extraArgs,
       });

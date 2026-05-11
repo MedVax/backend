@@ -29,10 +29,10 @@ export class CalendarIntegrationService {
   getAuthUrl(
     userId: string,
     provider: 'google',
-    redirectUri: string,
+    state?: string,
   ): { authUrl: string } {
     if (provider === 'google') {
-      const authUrl = this.googleCalendarService.getAuthUrl(redirectUri);
+      const authUrl = this.googleCalendarService.getAuthUrl(state);
       return { authUrl };
     }
 
