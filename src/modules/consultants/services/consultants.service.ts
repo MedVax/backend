@@ -9,6 +9,7 @@ import { UserProfileType, UserType } from 'generated/prisma/enums';
 import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.service';
 import { CreateConsultantDto } from '../dtos/create-consultant.dto';
 import { UpdateConsultantDto } from '../dtos/update-consultant.dto';
+import { UpdateConsultantStatusDto } from '../dtos/update-consultant-status.dto';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { normalizeString } from 'utils/string-util';
 import { BcryptService } from 'services/bcrypt.service';
@@ -21,7 +22,7 @@ export class ConsultantsService {
     private prismaService: PrismaTenancyService,
     private bcryptService: BcryptService,
     private mailService: MailService,
-  ) {}
+  ) { }
 
   private logger = new Logger(ConsultantsService.name);
 
@@ -135,6 +136,7 @@ export class ConsultantsService {
                 firstName: true,
                 lastName: true,
                 avatar: true,
+                status: true,
               },
             },
           },
@@ -161,6 +163,7 @@ export class ConsultantsService {
                 firstName: true,
                 lastName: true,
                 avatar: true,
+                status: true,
               },
             },
           },
@@ -197,6 +200,7 @@ export class ConsultantsService {
                 firstName: true,
                 lastName: true,
                 avatar: true,
+                status: true,
               },
             },
           },
@@ -267,6 +271,7 @@ export class ConsultantsService {
                 firstName: true,
                 lastName: true,
                 avatar: true,
+                status: true,
               },
             },
           },
@@ -279,10 +284,42 @@ export class ConsultantsService {
     await this.findOneOrThrow(id);
     this.logger.log(`Soft deleting consultant profile - ID: ${id}`);
 
-    // Soft delete by setting deletedAt
     return this.prismaService.tenancy.userProfileConsultant.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
+  }
+
+  async updateStatus(id: string, dto: UpdateConsultantStatusDto) {
+    const consultant = await this.findOneOrThrow(id);
+    this.logger.log(
+      `Updating status for consultant profile ${id} to ${dto.status}`,
+    );
+
+    const userId = (consultant as any).userProfile?.user?.id;
+    if (!userId) {
+      throw new NotFoundException(
+        'Could not resolve user for this consultant profile',
+      );
+    }
+
+    const updatedUser = await this.prismaService.corePrismaService.user.update({
+      where: { id: userId },
+      data: { status: dto.status },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatar: true,
+        status: true,
+      },
+    });
+
+    this.logger.log(
+      `Consultant ${id} (user ${userId}) status updated to ${dto.status}`,
+    );
+
+    return updatedUser;
   }
 }

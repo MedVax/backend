@@ -8,6 +8,7 @@ import {
   IsArray,
   Min,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ProductType } from 'generated/prisma/enums';
 
 export class CreateProductDto {
@@ -30,6 +31,9 @@ export class CreateProductDto {
   brandId?: string;
 
   @ApiProperty({ example: 4500 })
+  @Transform(({ value }) =>
+    value !== undefined && value !== null ? Number(value) : value,
+  )
   @IsNumber()
   @Min(0)
   price: number;

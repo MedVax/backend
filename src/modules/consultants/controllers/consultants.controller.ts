@@ -5,6 +5,7 @@ import {
   Get,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -18,6 +19,7 @@ import { ConsultantsService } from '../services/consultants.service';
 import { CreateConsultantDto } from '../dtos/create-consultant.dto';
 import { UpdateConsultantDto } from '../dtos/update-consultant.dto';
 import { GetConsultantDto } from '../dtos/get-consultant.dto';
+import { UpdateConsultantStatusDto } from '../dtos/update-consultant-status.dto';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { ApiPaginatedResponse } from 'src/decorators/api-paginated-response.decorator';
 import { AuthUserGuard } from 'metadatas/auth-user-guard.metadata';
@@ -74,6 +76,19 @@ export class ConsultantsController {
   ])
   update(@AuthUser() user: AuthUserType, @Body() dto: UpdateConsultantDto) {
     return this.consultantsService.update(user, dto);
+  }
+
+  @Patch(':id/status')
+  @Response({
+    status: HttpStatus.OK,
+    message: 'Consultant status updated successfully',
+  })
+  @AuthUserGuard([UserType.SUPER_ADMIN, UserType.ADMIN])
+  updateStatus(
+    @Param() params: GetConsultantDto,
+    @Body() dto: UpdateConsultantStatusDto,
+  ) {
+    return this.consultantsService.updateStatus(params.id, dto);
   }
 
   @Delete(':id')

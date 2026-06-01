@@ -38,11 +38,7 @@ export class CalendarIntegrationController {
     @Query('state') state: string,
     @AuthUser() user: User,
   ) {
-    return this.calendarIntegrationService.getAuthUrl(
-      user.id,
-      provider,
-      state,
-    );
+    return this.calendarIntegrationService.getAuthUrl(user.id, provider, state);
   }
 
   @Post('connect')

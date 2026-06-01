@@ -122,7 +122,7 @@ export class ProductsService {
               name: dto.name,
               sku: dto.sku,
               description: dto.description,
-              price: dto.price,
+              price: Number(dto.price),
               currency: dto.currency,
               requiresPrescription:
                 typeof dto.requiresPrescription === 'string'
@@ -229,7 +229,9 @@ export class ProductsService {
         ...(dto?.description !== undefined
           ? { description: dto.description }
           : {}),
-        ...(dto?.price ? { price: dto.price } : {}),
+        ...(dto?.price !== undefined && dto?.price !== null
+          ? { price: Number(dto.price) }
+          : {}),
         ...(dto?.currency ? { currency: dto.currency } : {}),
         ...(dto?.requiresPrescription !== undefined
           ? {
