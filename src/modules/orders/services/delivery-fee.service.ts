@@ -11,7 +11,7 @@ export class DeliveryFeeService {
   // Default delivery fee configuration
   // This can be moved to a database table for admin management
   private defaultConfig: DeliveryFeeConfig = {
-    deliveryFee: 1000, // ₦1,000 - same-day delivery fee
+    deliveryFee: 4000, // ₦4,000 - same-day delivery fee
   };
 
   constructor() {}

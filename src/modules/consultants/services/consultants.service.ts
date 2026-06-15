@@ -22,7 +22,7 @@ export class ConsultantsService {
     private prismaService: PrismaTenancyService,
     private bcryptService: BcryptService,
     private mailService: MailService,
-  ) { }
+  ) {}
 
   private logger = new Logger(ConsultantsService.name);
 
