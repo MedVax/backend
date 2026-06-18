@@ -9,7 +9,10 @@ import {
 import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.service';
 import { CreateOrderDto } from '../dtos/create-order.dto';
 import { UpdateOrderStatusDto } from '../dtos/update-order-status.dto';
-import { PaystackService } from 'modules/services/paystack-service';
+import {
+  PaystackService,
+  ALL_PAYSTACK_CHANNELS,
+} from 'modules/services/paystack-service';
 import { StockService } from 'modules/stock/services/stock.service';
 import type { PaymentStatus, Prisma } from 'generated/prisma/client';
 import { OrderRecurringFrequency } from 'generated/prisma/enums';
@@ -428,6 +431,10 @@ export class OrdersService {
             },
             amount: amountInNaira, // Amount in Naira (PaystackService will convert to kobo)
             currencyCode: 'NGN',
+            // For one-time orders, accept every channel Paystack offers. When a
+            // recurring order is being set up, restrict to card so Paystack
+            // returns a reusable authorization code for the automatic charges.
+            channels: recurringOrderResult ? ['card'] : ALL_PAYSTACK_CHANNELS,
             metadata: {
               orderId: order.id,
               userId: userId || null,
@@ -1032,6 +1039,11 @@ export class OrdersService {
         status: transactionStatus,
         metadata: paystackTransaction,
         providerResponse: paystackTransaction,
+        // Record the channel the customer actually paid with (card, bank,
+        // ussd, bank_transfer, etc.) rather than the initial guess.
+        ...(paystackTransaction.channel && {
+          paymentChannel: paystackTransaction.channel,
+        }),
         webhookEvent:
           transactionStatus === TransactionStatus.SUCCESS
             ? 'charge.success'

@@ -29,6 +29,7 @@ export interface CreateTransactionDto {
 
 export interface UpdateTransactionDto {
   status?: TransactionStatus;
+  paymentChannel?: string;
   metadata?: any;
   providerResponse?: any;
   providerMetadata?: any;

@@ -279,6 +279,28 @@ export class PaystackException extends HttpException {
   }
 }
 
+export type PaystackChannel =
+  | 'card'
+  | 'bank'
+  | 'ussd'
+  | 'qr'
+  | 'mobile_money'
+  | 'bank_transfer'
+  | 'eft';
+
+// All payment channels Paystack supports. Use for one-time payments where any
+// channel is acceptable. Recurring payments should stay card-only because only
+// card transactions return a reusable authorization code for automatic charges.
+export const ALL_PAYSTACK_CHANNELS: PaystackChannel[] = [
+  'card',
+  'bank',
+  'ussd',
+  'qr',
+  'mobile_money',
+  'bank_transfer',
+  'eft',
+];
+
 export interface CustomerOptions {
   firstName?: string;
   lastName?: string;
@@ -292,15 +314,7 @@ export interface BillingInitOptions {
   customer: CustomerOptions;
   currencyCode?: string;
   amount?: number;
-  channels?: (
-    | 'card'
-    | 'bank'
-    | 'ussd'
-    | 'qr'
-    | 'mobile_money'
-    | 'bank_transfer'
-    | 'eft'
-  )[];
+  channels?: PaystackChannel[];
   returnUrl?: string;
   cancelUrl?: string;
   description?: string;
@@ -316,15 +330,7 @@ export interface BillingMethodInitOptions {
   customer: CustomerOptions;
   currencyCode?: string;
   amount?: number;
-  channels?: (
-    | 'card'
-    | 'bank'
-    | 'ussd'
-    | 'qr'
-    | 'mobile_money'
-    | 'bank_transfer'
-    | 'eft'
-  )[];
+  channels?: PaystackChannel[];
   returnUrl?: string;
   cancelUrl?: string;
   description?: string;
