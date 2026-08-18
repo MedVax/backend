@@ -15,7 +15,7 @@ import {
 } from 'modules/services/paystack-service';
 import { StockService } from 'modules/stock/services/stock.service';
 import type { PaymentStatus, Prisma } from 'generated/prisma/client';
-import { OrderRecurringFrequency } from 'generated/prisma/enums';
+import { OrderRecurringFrequency, UserProfileType } from 'generated/prisma/enums';
 import { randomUUID } from 'crypto';
 import { addWeeks, addMonths } from 'date-fns';
 import { MailService } from 'src/mail/services/mail.service';
@@ -624,6 +624,16 @@ export class OrdersService {
             firstName: true,
             lastName: true,
             email: true,
+            userProfiles: {
+              where: { type: UserProfileType.CLIENT },
+              select: {
+                id: true,
+                userProfileClients: {
+                  where: { deletedAt: null },
+                  select: { id: true },
+                },
+              },
+            },
           },
         },
         prescriptions: true,
@@ -729,6 +739,16 @@ export class OrdersService {
             firstName: true,
             lastName: true,
             email: true,
+            userProfiles: {
+              where: { type: UserProfileType.CLIENT },
+              select: {
+                id: true,
+                userProfileClients: {
+                  where: { deletedAt: null },
+                  select: { id: true },
+                },
+              },
+            },
           },
         },
         prescriptions: true,
