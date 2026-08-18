@@ -11,6 +11,7 @@ import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.serv
 import { CreateClientDto } from '../dtos/create-client.dto';
 import { UpdateClientDto } from '../dtos/update-client.dto';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
+import { GetClientsFilterQuery } from '../dtos/get-clients-filter-query.dto';
 import { normalizeString } from 'utils/string-util';
 import { BcryptService } from 'services/bcrypt.service';
 import { AuthUserType } from 'types/user.types';
@@ -83,9 +84,33 @@ export class ClientsService {
     return user;
   }
 
-  async findAll(paginationQuery?: PaginationQuery) {
+  async findAll(
+    paginationQuery?: PaginationQuery,
+    filterQuery?: GetClientsFilterQuery,
+  ) {
+    const search = filterQuery?.search?.trim();
+
     const where: Prisma.UserProfileClientWhereInput = {
       deletedAt: null,
+      ...(search
+        ? {
+            OR: [
+              { coverName: { contains: search, mode: 'insensitive' } },
+              { referral: { contains: search, mode: 'insensitive' } },
+              {
+                userProfile: {
+                  user: {
+                    OR: [
+                      { email: { contains: search, mode: 'insensitive' } },
+                      { firstName: { contains: search, mode: 'insensitive' } },
+                      { lastName: { contains: search, mode: 'insensitive' } },
+                    ],
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
     };
 
     return this.prismaService.tenancy.userProfileClient.paginate({
@@ -120,7 +145,8 @@ export class ClientsService {
   async findOne(id: string): Promise<UserProfileClient | null> {
     return this.prismaService.tenancy.userProfileClient.findFirst({
       where: {
-        OR: [{ id }, { userProfileId: id }],
+        deletedAt: null,
+        OR: [{ id }, { userProfileId: id }, { userProfile: { userId: id } }],
       },
       include: {
         userProfile: {

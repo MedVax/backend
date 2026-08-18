@@ -19,6 +19,7 @@ import { ClientsService } from '../services/clients.service';
 import { CreateClientDto } from '../dtos/create-client.dto';
 import { UpdateClientDto } from '../dtos/update-client.dto';
 import { GetClientDto } from '../dtos/get-client.dto';
+import { GetClientsFilterQuery } from '../dtos/get-clients-filter-query.dto';
 import { AssignConsultantDto } from '../dtos/assign-consultant.dto';
 import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { ApiPaginatedResponse } from 'src/decorators/api-paginated-response.decorator';
@@ -49,8 +50,11 @@ export class ClientsController {
     message: 'Client profiles fetched successfully',
   })
   @ApiPaginatedResponse(CreateClientDto)
-  findAll(@Query() paginationQuery?: PaginationQuery) {
-    return this.clientsService.findAll(paginationQuery);
+  findAll(
+    @Query() paginationQuery?: PaginationQuery,
+    @Query() filterQuery?: GetClientsFilterQuery,
+  ) {
+    return this.clientsService.findAll(paginationQuery, filterQuery);
   }
 
   @Get(':id')
