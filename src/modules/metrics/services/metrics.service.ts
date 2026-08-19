@@ -13,12 +13,19 @@ import {
   endOfWeek,
   subYears,
 } from 'date-fns';
-import { OrderStatus, PaymentStatus } from 'generated/prisma/enums';
+import {
+  OrderStatus,
+  PaymentStatus,
+  UserStatus,
+  UserType,
+} from 'generated/prisma/enums';
+import type { Prisma } from 'generated/prisma/client';
 import { GetReviewMetricsDto } from '../dtos/get-review-metrics.dto';
 import {
   GetDashboardMetricsDto,
   DateRangePreset,
 } from '../dtos/get-dashboard-metrics.dto';
+import { GetUserMetricsDto } from '../dtos/get-user-metrics.dto';
 
 @Injectable()
 export class MetricsService {
@@ -124,10 +131,16 @@ export class MetricsService {
         _sum: { totalAmount: true },
       }),
 
-      // Users
-      this.prismaService.tenancy.user.count(),
+      // Customers. Admins and super admins are staff, not customers, so
+      // counting every user would inflate this card.
       this.prismaService.tenancy.user.count({
-        where: { createdAt: { gte: monthStart, lte: monthEnd } },
+        where: { type: UserType.USER },
+      }),
+      this.prismaService.tenancy.user.count({
+        where: {
+          type: UserType.USER,
+          createdAt: { gte: monthStart, lte: monthEnd },
+        },
       }),
 
       // Status distribution
@@ -244,6 +257,196 @@ export class MetricsService {
       activeProducts,
       inactiveProducts,
       newProductsThisMonth,
+    };
+  }
+
+  /**
+   * Totals for the Orders list page. The page can only ever hold one page of
+   * orders in memory, so every one of these has to be counted by the database.
+   */
+  async getOrderMetrics() {
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+
+    const [
+      totalOrders,
+      pendingOrders,
+      paidOrders,
+      revenue,
+      revenueThisMonth,
+      ordersThisMonth,
+    ] = await Promise.all([
+      this.prismaService.tenancy.order.count(),
+
+      this.prismaService.tenancy.order.count({
+        where: { orderStatus: OrderStatus.PENDING },
+      }),
+
+      this.prismaService.tenancy.order.count({
+        where: { paymentStatus: PaymentStatus.PAID },
+      }),
+
+      this.prismaService.tenancy.order.aggregate({
+        where: { paymentStatus: PaymentStatus.PAID },
+        _sum: { totalAmount: true },
+      }),
+
+      this.prismaService.tenancy.order.aggregate({
+        where: {
+          paymentStatus: PaymentStatus.PAID,
+          createdAt: { gte: monthStart, lte: monthEnd },
+        },
+        _sum: { totalAmount: true },
+      }),
+
+      this.prismaService.tenancy.order.count({
+        where: { createdAt: { gte: monthStart, lte: monthEnd } },
+      }),
+    ]);
+
+    return {
+      totalOrders,
+      pendingOrders,
+      paidOrders,
+      ordersThisMonth,
+      totalRevenue: revenue._sum.totalAmount || 0,
+      revenueThisMonth: revenueThisMonth._sum.totalAmount || 0,
+    };
+  }
+
+  /**
+   * Totals for the user list pages. `type` mirrors the filter the calling page
+   * lists by, so the cards and the table below them always agree.
+   */
+  async getUserMetrics(dto?: GetUserMetricsDto) {
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+
+    const where: Prisma.UserWhereInput = dto?.type?.length
+      ? { type: { in: dto.type } }
+      : {};
+
+    const [totalUsers, activeUsers, inactiveUsers, newUsersThisMonth] =
+      await Promise.all([
+        this.prismaService.tenancy.user.count({ where }),
+
+        this.prismaService.tenancy.user.count({
+          where: { ...where, status: UserStatus.ACTIVE },
+        }),
+
+        // Deactivated accounts read as inactive to an admin - the distinction
+        // only matters to the account holder.
+        this.prismaService.tenancy.user.count({
+          where: {
+            ...where,
+            status: { in: [UserStatus.INACTIVE, UserStatus.DEACTIVATED] },
+          },
+        }),
+
+        this.prismaService.tenancy.user.count({
+          where: { ...where, createdAt: { gte: monthStart, lte: monthEnd } },
+        }),
+      ]);
+
+    return { totalUsers, activeUsers, inactiveUsers, newUsersThisMonth };
+  }
+
+  /**
+   * Totals for the Clients list page. Soft-deleted clients are excluded to
+   * match what `ClientsService.findAll` lists.
+   */
+  async getClientMetrics() {
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+
+    const where: Prisma.UserProfileClientWhereInput = { deletedAt: null };
+
+    const [totalClients, activeClients, inactiveClients, newClientsThisMonth] =
+      await Promise.all([
+        this.prismaService.tenancy.userProfileClient.count({ where }),
+
+        // A client profile has no status of its own; the account behind it does.
+        this.prismaService.tenancy.userProfileClient.count({
+          where: {
+            ...where,
+            userProfile: { user: { status: UserStatus.ACTIVE } },
+          },
+        }),
+
+        this.prismaService.tenancy.userProfileClient.count({
+          where: {
+            ...where,
+            userProfile: {
+              user: {
+                status: { in: [UserStatus.INACTIVE, UserStatus.DEACTIVATED] },
+              },
+            },
+          },
+        }),
+
+        this.prismaService.tenancy.userProfileClient.count({
+          where: { ...where, createdAt: { gte: monthStart, lte: monthEnd } },
+        }),
+      ]);
+
+    return {
+      totalClients,
+      activeClients,
+      inactiveClients,
+      newClientsThisMonth,
+    };
+  }
+
+  /**
+   * Totals for the Consultants list page. Soft-deleted consultants are excluded
+   * to match what `ConsultantsService.findAll` lists.
+   */
+  async getConsultantMetrics() {
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+
+    const where: Prisma.UserProfileConsultantWhereInput = { deletedAt: null };
+
+    const [
+      totalConsultants,
+      activeConsultants,
+      inactiveConsultants,
+      newConsultantsThisMonth,
+    ] = await Promise.all([
+      this.prismaService.tenancy.userProfileConsultant.count({ where }),
+
+      this.prismaService.tenancy.userProfileConsultant.count({
+        where: {
+          ...where,
+          userProfile: { user: { status: UserStatus.ACTIVE } },
+        },
+      }),
+
+      this.prismaService.tenancy.userProfileConsultant.count({
+        where: {
+          ...where,
+          userProfile: {
+            user: {
+              status: { in: [UserStatus.INACTIVE, UserStatus.DEACTIVATED] },
+            },
+          },
+        },
+      }),
+
+      this.prismaService.tenancy.userProfileConsultant.count({
+        where: { ...where, createdAt: { gte: monthStart, lte: monthEnd } },
+      }),
+    ]);
+
+    return {
+      totalConsultants,
+      activeConsultants,
+      inactiveConsultants,
+      newConsultantsThisMonth,
     };
   }
 
@@ -533,7 +736,8 @@ export class MetricsService {
   }
 
   private async getCustomerGrowthData(startDate: Date, endDate: Date) {
-    // Use raw SQL to count new customers by date in a single query
+    // Use raw SQL to count new customers by date in a single query.
+    // Staff accounts are excluded to match the customers card above.
     const customersData = await this.prismaService.tenancy.$queryRaw<
       Array<{
         date: Date;
@@ -544,7 +748,8 @@ export class MetricsService {
         DATE(u."createdAt")::text as date,
         COUNT(*)::bigint as customers
       FROM "User" u
-      WHERE u."createdAt" >= ${startDate}
+      WHERE u."type" = 'USER'
+        AND u."createdAt" >= ${startDate}
         AND u."createdAt" <= ${endDate}
       GROUP BY DATE(u."createdAt")
       ORDER BY date ASC

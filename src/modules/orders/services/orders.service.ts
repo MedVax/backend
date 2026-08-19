@@ -565,6 +565,63 @@ export class OrdersService {
     }
   }
 
+  /**
+   * Turns the admin search box into an order filter.
+   *
+   * The box is the only way to find an order, so it has to cover how staff
+   * actually refer to one: the short id printed in the table, the Paystack
+   * reference from a payment query, a customer's name, email or phone, or the
+   * product a caller is asking about. Guest orders carry their customer details
+   * on the order itself rather than on a user row, so both have to be searched
+   * or half the orders become unfindable.
+   *
+   * Multi-word input is matched word by word - every word must hit something,
+   * but each may hit a different field. That is what makes "Jane Doe" find the
+   * order that "Jane" and "Doe" each only half-match.
+   */
+  private buildSearchFilter(search?: string): Prisma.OrderWhereInput {
+    // The table renders ids as "#1a2b3c4d"; the hash is decoration, not data.
+    const terms = (search ?? '')
+      .replace(/#/g, ' ')
+      .split(/\s+/)
+      .map((term) => term.trim())
+      .filter(Boolean);
+
+    if (!terms.length) return {};
+
+    return {
+      AND: terms.map((term) => {
+        const like = { contains: term, mode: 'insensitive' as const };
+
+        return {
+          OR: [
+            // Ids and references: the table shows only the first 8 characters
+            // of the id, so this has to match a fragment, not the whole value.
+            { id: like },
+            { paymentReference: like },
+
+            // Registered customer
+            { user: { firstName: like } },
+            { user: { lastName: like } },
+            { user: { email: like } },
+
+            // Guest customer - these live on the order, not on a user row
+            { guestFirstName: like },
+            { guestLastName: like },
+            { guestEmail: like },
+            { guestPhone: like },
+
+            // Whoever the parcel is going to
+            { deliveryAddress: { phone: like } },
+
+            // What was ordered
+            { items: { some: { product: { name: like } } } },
+          ],
+        };
+      }),
+    };
+  }
+
   async findAll(
     paginationQueryParams: PaginationQuery,
     filterQueryParams: GetOrdersFilterQuery,
@@ -586,37 +643,7 @@ export class OrdersService {
         ...(isRecurringActive
           ? [{ isRecurringActive: true }]
           : [{ isRecurringActive: false }]),
-        search
-          ? {
-              OR: [
-                { id: { contains: search, mode: 'insensitive' } },
-                {
-                  user: {
-                    OR: [
-                      {
-                        email: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
-                      },
-                      {
-                        firstName: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
-                      },
-                      {
-                        lastName: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            }
-          : {},
+        this.buildSearchFilter(search),
         orderStatus
           ? {
               ...(isArray(orderStatus)
@@ -682,37 +709,7 @@ export class OrdersService {
     const where: Prisma.OrderWhereInput = {
       AND: [
         userId ? { userId } : {},
-        search
-          ? {
-              OR: [
-                { id: { contains: search, mode: 'insensitive' } },
-                {
-                  user: {
-                    OR: [
-                      {
-                        email: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
-                      },
-                      {
-                        firstName: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
-                      },
-                      {
-                        lastName: {
-                          contains: search,
-                          mode: 'insensitive',
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            }
-          : {},
+        this.buildSearchFilter(search),
         orderStatus
           ? {
               ...(isArray(orderStatus)
