@@ -91,3 +91,14 @@ export const DYTE_S3_ACCESS_KEY = config.get('DYTE_S3_ACCESS_KEY');
 export const DYTE_S3_SECRET_KEY = config.get('DYTE_S3_SECRET_KEY');
 export const DYTE_S3_BUCKET = config.get('DYTE_S3_BUCKET');
 export const DYTE_S3_REGION = config.get('DYTE_S3_REGION') || 'us-east-1';
+
+// Web Push (VAPID) Configuration
+// Generate a key pair with: npx web-push generate-vapid-keys
+// Push notifications are silently disabled when the keys are absent.
+export const VAPID_PUBLIC_KEY = config.get('VAPID_PUBLIC_KEY');
+export const VAPID_PRIVATE_KEY = config.get('VAPID_PRIVATE_KEY');
+export const VAPID_SUBJECT =
+  config.get('VAPID_SUBJECT') || 'mailto:support@medvaxhealth.com';
+
+// Base URL of the admin dashboard, used to deep-link push notifications.
+export const ADMIN_URL = config.get('ADMIN_URL') || 'http://localhost:5173';

@@ -29,6 +29,12 @@ import { PaginationQuery } from 'src/dtos/paginated-query.dto';
 import { GetOrdersFilterQuery } from '../dtos/get-orders-filter-query.dto';
 import { isArray } from 'class-validator';
 import { DeliveryFeeService } from './delivery-fee.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { NOTIFICATION_EVENTS } from 'modules/notifications/constants/notifications.constant';
+import {
+  OrderCreatedEvent,
+  OrderPaidEvent,
+} from 'modules/notifications/events/notifications.event';
 
 @Injectable()
 export class OrdersService {
@@ -43,6 +49,7 @@ export class OrdersService {
     private mailService: MailService,
     @Inject(forwardRef(() => TransactionsService))
     private transactionsService: TransactionsService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(
@@ -225,6 +232,14 @@ export class OrdersService {
                 },
               },
               deliveryAddress: true,
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                },
+              },
             },
           });
 
@@ -336,6 +351,20 @@ export class OrdersService {
 
       this.logger.log(
         `Order created successfully - ID: ${order.id}, User: ${userId}, Amount: ${order.totalAmount}, Recurring: ${recurringOrderResult ? 'Yes' : 'No'}`,
+      );
+
+      // Alert the admin dashboard. Emitted (not awaited) so a notification
+      // failure can never roll back or slow down checkout.
+      this.eventEmitter.emit(
+        NOTIFICATION_EVENTS.ORDER_CREATED,
+        new OrderCreatedEvent(
+          order.id,
+          order.totalAmount,
+          order.currency,
+          orderItems.length,
+          this.resolveCustomerName(order, dto),
+          !!recurringOrderResult,
+        ),
       );
 
       // Send email notification if recurring order was created
@@ -1138,9 +1167,45 @@ export class OrdersService {
       }
     }
 
+    if (paymentStatus === 'PAID') {
+      this.eventEmitter.emit(
+        NOTIFICATION_EVENTS.ORDER_PAID,
+        new OrderPaidEvent(
+          updatedOrder.id,
+          updatedOrder.totalAmount,
+          updatedOrder.currency,
+          this.resolveCustomerName(updatedOrder),
+        ),
+      );
+    }
+
     return {
       order: updatedOrder,
     };
+  }
+
+  /** Display name for notifications, falling back through guest fields. */
+  private resolveCustomerName(
+    order: {
+      user?: { firstName?: string; lastName?: string } | null;
+      guestFirstName?: string | null;
+      guestLastName?: string | null;
+      guestEmail?: string | null;
+    },
+    dto?: CreateOrderDto,
+  ): string {
+    const first =
+      order.user?.firstName ||
+      order.guestFirstName ||
+      dto?.guestInfo?.firstName;
+    const last =
+      order.user?.lastName || order.guestLastName || dto?.guestInfo?.lastName;
+
+    const name = [first, last].filter(Boolean).join(' ').trim();
+
+    return (
+      name || order.guestEmail || dto?.guestInfo?.email || 'Guest customer'
+    );
   }
 
   async handleFailedPayment(

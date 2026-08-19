@@ -71,7 +71,8 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "sharp": "^0.34.5",
-    "stripe": "^20.1.0"
+    "stripe": "^20.1.0",
+    "web-push": "^3.6.7"
   },
   "optionalDependencies": {
     "@css-inline/css-inline-linux-arm64-musl": "^0.20.0"
@@ -89,6 +90,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.0.3",
     "@types/supertest": "^6.0.2",
+    "@types/web-push": "^3.6.4",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",

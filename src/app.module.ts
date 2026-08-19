@@ -50,6 +50,7 @@ import { TransactionsModule } from './modules/transactions/transactions.module';
 import { CalendarIntegrationModule } from './modules/calendar-integration/calendar-integration.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
 import { BlogModule } from './modules/blog/blog.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middleware';
 
 @Module({
@@ -216,6 +217,7 @@ import { TokenToAuthUserMiddleware } from 'middlewares/token-to-auth-user-middle
     CalendarIntegrationModule,
     MetricsModule,
     BlogModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
