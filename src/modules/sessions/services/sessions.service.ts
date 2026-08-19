@@ -8,7 +8,10 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaTenancyService } from 'modules/prisma-tenancy/prisma-tenancy.service';
-import { PaystackService } from 'modules/services/paystack-service';
+import {
+  ALL_PAYSTACK_CHANNELS,
+  PaystackService,
+} from 'modules/services/paystack-service';
 import { CreateSessionsDto } from '../dtos/create-sessions.dto';
 import { RescheduleSessionsDto } from '../dtos/reschedule-sessions.dto';
 import { CancelSessionsDto } from '../dtos/cancel-sessions.dto';
@@ -1630,6 +1633,9 @@ export class SessionsService {
           },
           amount: totalAmount, // Convert from kobo to naira
           currencyCode: 'NGN',
+          // Session bookings are one-time payments, so accept every channel
+          // Paystack offers (bank transfer, USSD, QR, etc.) - not just card.
+          channels: ALL_PAYSTACK_CHANNELS,
           metadata: {
             type: 'session_booking',
             sessionType: dto.sessionType,
