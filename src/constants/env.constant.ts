@@ -99,6 +99,3 @@ export const VAPID_PUBLIC_KEY = config.get('VAPID_PUBLIC_KEY');
 export const VAPID_PRIVATE_KEY = config.get('VAPID_PRIVATE_KEY');
 export const VAPID_SUBJECT =
   config.get('VAPID_SUBJECT') || 'mailto:support@medvaxhealth.com';
-
-// Base URL of the admin dashboard, used to deep-link push notifications.
-export const ADMIN_URL = config.get('ADMIN_URL') || 'http://localhost:5173';

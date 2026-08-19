@@ -42,8 +42,12 @@ checkout.
    VAPID_PUBLIC_KEY=<publicKey>
    VAPID_PRIVATE_KEY=<privateKey>
    VAPID_SUBJECT=mailto:support@medvaxhealth.com   # a contact URL the push service can reach
-   ADMIN_URL=https://admin.medvaxhealth.com
    ```
+
+   These live on the **API only**. The admin frontend needs no new environment
+   variables: it fetches the public key at runtime from
+   `GET /notifications/push/public-key`, and the private key must never leave
+   the server.
 
    With the keys absent the module still loads, `GET /notifications/push/public-key`
    reports `enabled: false`, and the admin UI explains that push is not
